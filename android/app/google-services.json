@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "373635829159",
+    "project_id": "buyers-app-930a3",
+    "storage_bucket": "buyers-app-930a3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:373635829159:android:0b6fc6cd7c5bdd6df17a82",
+        "android_client_info": {
+          "package_name": "com.example.buy_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBFIrTkbs-0myLm-8yJPA72_Ng1Q8nuIhM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
