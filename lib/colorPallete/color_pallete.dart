@@ -6,3 +6,4 @@ class colorPallete {
   static Color color3 = Colors.black;
   static Color color4 = Colors.transparent;
 }
+  

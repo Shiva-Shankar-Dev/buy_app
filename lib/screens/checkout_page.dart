@@ -12,7 +12,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Checkout')),
-      body: Column(),
+      body: Column(children: [Text('Placeholder text ')]),
     );
   }
 }

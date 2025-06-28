@@ -6,6 +6,7 @@ import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:buy_app/services/auth.dart';
+import '../debug_users.dart';
 
 class CartItem {
   final Product product;
@@ -29,6 +30,8 @@ class Product {
     required this.images,
     required this.extraFields,
   });
+
+  num? get length => null;
 }
 
 class HomePage extends StatefulWidget {
@@ -106,7 +109,7 @@ class _HomePage extends State<HomePage> {
         final description = productMap['Description']?.toString() ?? '';
         final price = _parsePrice(productMap['Price']);
         final deliveryTime = productMap['DeliveryTime']?.toString() ?? 'N/A';
-        final reviews = productMap['Reviews']?.toString() ?? 'No Reviews';
+        final reviews = productMap['Ratings']?.toString() ?? 'No Ratings';
 
         // Split images by comma if multiple provided
         final imageField = productMap['Images']?.toString() ?? '';
@@ -199,6 +202,17 @@ class _HomePage extends State<HomePage> {
               onTap: () async {
                 Navigator.pop(context);
                 await pickAndStoreExcel();
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.bug_report),
+              title: Text('Debug Users'),
+              onTap: () async {
+                Navigator.pop(context);
+                await DebugUsers.listAllUsers();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Check console for debug output')),
+                );
               },
             ),
           ],

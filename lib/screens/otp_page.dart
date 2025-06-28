@@ -6,11 +6,13 @@ import '../colorPallete/color_pallete.dart';
 class OtpPage extends StatefulWidget {
   final String phone;
   final String verificationId;
+  final int? resendToken;
 
   const OtpPage({
     super.key,
     required this.phone,
     required this.verificationId,
+    this.resendToken,
   });
 
   @override
@@ -20,20 +22,46 @@ class OtpPage extends StatefulWidget {
 class _OtpPageState extends State<OtpPage> {
   final _otpController = TextEditingController();
   bool _isVerifying = false;
+  bool _isResending = false;
   late String verificationId;
   late String phone;
+  int? resendToken;
+  int _resendTimer = 30;
+  bool _canResend = false;
 
   @override
   void initState() {
     super.initState();
     verificationId = widget.verificationId;
     phone = widget.phone;
+    resendToken = widget.resendToken;
+    _startResendTimer();
+  }
+
+  void _startResendTimer() {
+    Future.delayed(Duration(seconds: 1), () {
+      if (mounted && _resendTimer > 0) {
+        setState(() => _resendTimer--);
+        _startResendTimer();
+      } else if (mounted) {
+        setState(() => _canResend = true);
+      }
+    });
   }
 
   void _verifyOtp() async {
     final otp = _otpController.text.trim();
-    if (otp.isEmpty) return;
+    if (otp.isEmpty) {
+      _showError('Please enter the OTP');
+      return;
+    }
+    
+    if (otp.length != 6) {
+      _showError('Please enter a valid 6-digit OTP');
+      return;
+    }
 
+    print('🔐 Verifying OTP: $otp');
     setState(() => _isVerifying = true);
 
     try {
@@ -43,13 +71,97 @@ class _OtpPageState extends State<OtpPage> {
       );
 
       await FirebaseAuth.instance.signInWithCredential(credential);
-
-      Navigator.pushReplacementNamed(context, '/home'); // ✅ OTP success
+      print('✅ OTP verification successful!');
+      
+      Navigator.pushReplacementNamed(context, '/home');
     } on FirebaseAuthException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message ?? 'Error')));
+      print('❌ OTP verification failed: ${e.code} - ${e.message}');
+      
+      String errorMessage;
+      switch (e.code) {
+        case 'invalid-verification-code':
+          errorMessage = 'Invalid OTP. Please check and try again.';
+          break;
+        case 'session-expired':
+          errorMessage = 'OTP expired. Please request a new one.';
+          break;
+        default:
+          errorMessage = e.message ?? 'Verification failed';
+      }
+      _showError(errorMessage);
+    } catch (e) {
+      print('💥 Unexpected error during verification: $e');
+      _showError('Network error. Please try again.');
     }
 
     setState(() => _isVerifying = false);
+  }
+
+  void _resendOtp() async {
+    if (!_canResend || _isResending) return;
+    
+    print('📱 Resending OTP to: $phone');
+    setState(() => _isResending = true);
+
+    try {
+      await FirebaseAuth.instance.verifyPhoneNumber(
+        phoneNumber: phone,
+        timeout: const Duration(seconds: 60),
+        forceResendingToken: resendToken,
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          print('🎉 Auto verification completed on resend!');
+          try {
+            await FirebaseAuth.instance.signInWithCredential(credential);
+            Navigator.pushReplacementNamed(context, '/home');
+          } catch (e) {
+            print('❌ Auto verification failed: $e');
+          }
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          print('❌ Resend verification failed: ${e.code} - ${e.message}');
+          _showError('Failed to resend OTP: ${e.message}');
+        },
+        codeSent: (String newVerificationId, int? newResendToken) {
+          print('📨 OTP resent successfully!');
+          setState(() {
+            verificationId = newVerificationId;
+            resendToken = newResendToken;
+            _resendTimer = 30;
+            _canResend = false;
+          });
+          _startResendTimer();
+          _showSuccess('OTP sent successfully!');
+        },
+        codeAutoRetrievalTimeout: (String newVerificationId) {
+          print('⏰ Auto retrieval timeout for resend: $newVerificationId');
+        },
+      );
+    } catch (e) {
+      print('💥 Unexpected error during resend: $e');
+      _showError('Failed to resend OTP. Please try again.');
+    }
+
+    setState(() => _isResending = false);
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: Duration(seconds: 4),
+      ),
+    );
+  }
+
+  void _showSuccess(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+        duration: Duration(seconds: 3),
+      ),
+    );
   }
 
   @override
@@ -103,6 +215,32 @@ class _OtpPageState extends State<OtpPage> {
                       ? CircularProgressIndicator()
                       : Text('Verify', style: TextStyle(color: Colors.white,fontSize: 18)),
                 ),
+              ),
+              SizedBox(height: 20),
+              TextButton(
+                onPressed: _canResend && !_isResending ? _resendOtp : null,
+                child: _isResending
+                    ? Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          SizedBox(width: 8),
+                          Text('Resending...'),
+                        ],
+                      )
+                    : Text(
+                        _canResend 
+                            ? 'Resend OTP' 
+                            : 'Resend OTP ($_resendTimer)s',
+                        style: TextStyle(
+                          color: _canResend ? colorPallete.color1 : Colors.grey,
+                          fontSize: 16,
+                        ),
+                      ),
               ),
             ],
           ),

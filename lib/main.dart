@@ -1,6 +1,7 @@
 import 'package:buy_app/animated_splash_screen_widget.dart';
 import 'package:buy_app/screens/add_page.dart';
 import 'package:buy_app/screens/cart_page.dart';
+import 'package:buy_app/screens/checkout_page.dart';
 import 'package:buy_app/screens/otp_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -40,7 +41,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(brightness: Brightness.dark),
+      theme: ThemeData(brightness: Brightness.light),
       initialRoute: '/',
       routes: {
         '/': (context) => AnimatedSplashScreenWidget(),
@@ -50,6 +51,7 @@ class MyApp extends StatelessWidget {
         '/mobile': (context) => MobileLoginPage(),
         '/cart': (context) => CartPage(),
         '/add': (context) => AddPage(),
+        '/checkout': (context) => CheckoutPage(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/otp') {

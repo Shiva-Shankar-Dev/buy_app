@@ -134,6 +134,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "8.10.1"
+  carousel_slider:
+    dependency: "direct main"
+    description:
+      name: carousel_slider
+      sha256: bcc61735345c9ab5cb81073896579e735f81e35fd588907a393143ea986be8ff
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.1.1"
   characters:
     dependency: transitive
     description:
@@ -167,7 +175,7 @@ packages:
     source: hosted
     version: "1.1.2"
   cloud_firestore:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: cloud_firestore
       sha256: a0f161b92610e078b4962d7e6ebeb66dc9cce0ada3514aeee442f68165d78185
@@ -318,14 +326,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.12.0"
-  firebase_cloud_firestore:
-    dependency: "direct main"
-    description:
-      name: firebase_cloud_firestore
-      sha256: "071812c6135e9792999f4409c2a7fb6f330547815b866e9370299a59e224b114"
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.17.3"
   firebase_core:
     dependency: "direct main"
     description:
@@ -509,14 +509,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.3.0"
-  intl:
-    dependency: transitive
-    description:
-      name: intl
-      sha256: d6f56758b7d3014a48af9701c085700aac781a92a87a62b1333b46d8879661cf
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.19.0"
   io:
     dependency: transitive
     description:
@@ -629,14 +621,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
-  object:
-    dependency: transitive
-    description:
-      name: object
-      sha256: "4fdad44a2d80c21e55ab37b91024613b9c47133131bf96ae41fe55ccead33292"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.3"
   package_config:
     dependency: transitive
     description:
@@ -778,6 +762,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  smooth_page_indicator:
+    dependency: "direct main"
+    description:
+      name: smooth_page_indicator
+      sha256: b21ebb8bc39cf72d11c7cfd809162a48c3800668ced1c9da3aade13a32cf6c1c
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.1"
   source_gen:
     dependency: transitive
     description:

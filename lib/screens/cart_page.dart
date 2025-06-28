@@ -60,9 +60,7 @@ class _CartPageState extends State<CartPage> {
                       ElevatedButton(
                         onPressed: () {
                           // Placeholder: handle checkout
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Checkout not implemented')),
-                          );
+                          Navigator.pushNamed(context, '/checkout');
                         },
                         child: Text("Checkout"),
                       ),

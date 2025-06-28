@@ -13,23 +13,35 @@ class AuthService {
     required String mobile,
   }) async {
     try {
+      print('🔥 Creating Firebase Auth user...');
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
       String uid = userCredential.user!.uid;
-
-      await _firestore.collection('users').doc(uid).set({
+      print('✅ Firebase Auth user created with UID: $uid');
+      
+      final userData = {
         'name': name,
         'email': email,
-        'mobile': mobile,
+        'phone': mobile,  // This is what mobile login searches for
+        'mobile': mobile, // Keep both for compatibility
         'createdAt': Timestamp.now(),
-      });
+      };
+      
+      print('💾 Saving user data to Firestore:');
+      print('   - Name: $name');
+      print('   - Email: $email');
+      print('   - Phone: $mobile');
+      print('   - UID: $uid');
+
+      await _firestore.collection('users').doc(uid).set(userData);
+      print('✅ User data saved to Firestore successfully!');
 
       return null; // success
     } catch (e) {
-      print('Firebase SignUp error: $e');
+      print('❌ Firebase SignUp error: $e');
       return e.toString(); // return error message
     }
   }
