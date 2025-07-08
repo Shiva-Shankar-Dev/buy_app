@@ -14,29 +14,28 @@ class AuthService {
   }) async {
     try {
       print('🔥 Creating Firebase Auth user...');
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      UserCredential userCredential = await _auth
+          .createUserWithEmailAndPassword(email: email, password: password);
 
       String uid = userCredential.user!.uid;
       print('✅ Firebase Auth user created with UID: $uid');
-      
+
       final userData = {
         'name': name,
         'email': email,
-        'phone': mobile,  // This is what mobile login searches for
+        'phone': mobile, // This is what mobile login searches for
         'mobile': mobile, // Keep both for compatibility
+        'role': "customer",
         'createdAt': Timestamp.now(),
       };
-      
+
       print('💾 Saving user data to Firestore:');
       print('   - Name: $name');
       print('   - Email: $email');
       print('   - Phone: $mobile');
       print('   - UID: $uid');
 
-      await _firestore.collection('users').doc(uid).set(userData);
+      await _firestore.collection('customers').doc(uid).set(userData);
       print('✅ User data saved to Firestore successfully!');
 
       return null; // success
@@ -72,7 +71,7 @@ class AuthService {
   // Get user details
   Future<DocumentSnapshot> getUserDetails() async {
     final uid = getCurrentUID();
-    return _firestore.collection('users').doc(uid).get();
+    return _firestore.collection('customers').doc(uid).get();
   }
 
   Future<String?> signInUser({
@@ -89,5 +88,11 @@ class AuthService {
       print('Login error: $e');
       return e.toString(); // return error string
     }
+  }
+
+  Future<Map<String, dynamic>?> getUserDetailsAsMap() async {
+    final uid = getCurrentUID();
+    final doc = await _firestore.collection('customers').doc(uid).get();
+    return doc.exists ? doc.data() : null;
   }
 }

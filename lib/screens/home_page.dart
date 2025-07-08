@@ -1,5 +1,7 @@
 import 'dart:typed_data';
+import 'package:buy_app/colorPallete/color_pallete.dart';
 import 'package:buy_app/screens/product_detail_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:excel/excel.dart';
 import 'package:hive/hive.dart';
@@ -42,117 +44,63 @@ class HomePage extends StatefulWidget {
 class _HomePage extends State<HomePage> {
   AuthService _authService = AuthService();
   List<Product> products = [];
-
+  int _selectedIndex = 0;
   get data => null;
 
-  Future<List<Map<String, dynamic>>> readExcelFromHive() async {
-    final box = Hive.box('filesBox');
-    final Uint8List? bytes = box.get('excelFile');
+  Future<List<Map<String, dynamic>>> fetchAllProducts() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('products')
+          .get();
 
-    if (bytes == null) {
-      print("No Excel file found in Hive.");
+      final products = snapshot.docs.map((doc) => doc.data()).toList();
+      return products;
+    } catch (e) {
+      print("🔥 Error fetching products: $e");
       return [];
     }
-
-    final excel = Excel.decodeBytes(bytes);
-    final sheet = excel.tables[excel.tables.keys.first]; // First sheet
-
-    if (sheet == null) return [];
-
-    final headers = sheet.rows.first
-        .map((cell) => cell?.value?.toString() ?? "")
-        .toList();
-    final products = <Map<String, dynamic>>[];
-
-    for (var i = 1; i < sheet.rows.length; i++) {
-      final row = sheet.rows[i];
-      final product = <String, dynamic>{};
-
-      for (var j = 0; j < headers.length; j++) {
-        product[headers[j]] = row[j]?.value;
-      }
-
-      products.add(product);
-    }
-
-    return products;
   }
 
   @override
   void initState() {
     super.initState();
-    loadProducts();
+    loadProductsFromFirestore();
   }
 
-  double _parsePrice(dynamic value) {
-    if (value == null) return 0.0;
+  void loadProductsFromFirestore() async {
+    final docs = await fetchAllProducts();
 
-    if (value is double) return value;
-
-    if (value is int) return value.toDouble();
-
-    if (value is DateTime) return 0.0; // Don't treat dates as price
-
-    final str = value.toString().replaceAll(RegExp(r'[^\d.]'), '');
-
-    return double.tryParse(str) ?? 0.0;
-  }
-
-  Future<void> loadProducts() async {
-    final excelData = await readExcelFromHive();
-    print("Excel rows loaded: $excelData");
+    final loadedProducts = docs.map((doc) {
+      return Product(
+        title: doc['title'] ?? 'Untitled',
+        description: doc['description'] ?? '',
+        price: (doc['price'] ?? 0).toDouble(),
+        deliveryTime: doc['Delivery Time'] ?? 'N/A',
+        reviews: doc['ratings'] ?? 'No ratings',
+        images: List<String>.from(doc['images'] ?? []),
+        extraFields: Map<String, dynamic>.from(doc['extraFields'] ?? {}),
+      );
+    }).toList();
 
     setState(() {
-      products = excelData.map((productMap) {
-        // Extract known fields
-        final title = productMap['Title']?.toString() ?? 'No Title';
-        final description = productMap['Description']?.toString() ?? '';
-        final price = _parsePrice(productMap['Price']);
-        final deliveryTime = productMap['DeliveryTime']?.toString() ?? 'N/A';
-        final reviews = productMap['Ratings']?.toString() ?? 'No Ratings';
-
-        // Split images by comma if multiple provided
-        final imageField = productMap['Images']?.toString() ?? '';
-        final images = imageField.split(',').map((e) => e.trim()).toList();
-
-        // Create extraFields by filtering out known ones
-        final extraFields = Map<String, dynamic>.from(productMap)
-          ..remove('Title')
-          ..remove('Images')
-          ..remove('Description')
-          ..remove('Price')
-          ..remove('DeliveryTime')
-          ..remove('Reviews');
-
-        return Product(
-          title: title,
-          description: description,
-          price: price,
-          deliveryTime: deliveryTime,
-          reviews: reviews,
-          images: images,
-          extraFields: extraFields,
-        );
-      }).toList();
+      products = loadedProducts;
     });
-
-    print("Products after parsing: $products");
   }
 
-  Future<void> pickAndStoreExcel() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles();
-
-    if (result != null && result.files.single.bytes != null) {
-      final box = await Hive.openBox('filesBox');
-      await box.put('excelFile', result.files.single.bytes);
-      print("Excel file saved to Hive.");
-      await loadProducts(); // Reload products after storing
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Excel file uploaded and products loaded!')),
-      );
-    } else {
-      print("File picking canceled or failed.");
-    }
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+      switch (index) {
+        case 0:
+          Navigator.pushNamed(context, '/home');
+          break;
+        case 1:
+          Navigator.pushNamed(context, '/category');
+          break;
+        case 2:
+          Navigator.pushNamed(context, '/account');
+      }
+    });
   }
 
   Widget build(BuildContext context) {
@@ -160,6 +108,7 @@ class _HomePage extends State<HomePage> {
       appBar: AppBar(
         title: Text("Home Page"),
         automaticallyImplyLeading: true,
+        backgroundColor: colorPallete.color1,
         actions: [
           IconButton(
             icon: Icon(Icons.shopping_bag_outlined),
@@ -194,14 +143,6 @@ class _HomePage extends State<HomePage> {
               onTap: () {
                 _authService.signOut();
                 Navigator.pushNamed(context, '/login');
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.upload),
-              title: Text('Upload'),
-              onTap: () async {
-                Navigator.pop(context);
-                await pickAndStoreExcel();
               },
             ),
             ListTile(
@@ -274,6 +215,7 @@ class _HomePage extends State<HomePage> {
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
+                                  SizedBox(width: 10),
                                   Image.network(
                                     product.images.first,
                                     width: 100,
@@ -333,6 +275,21 @@ class _HomePage extends State<HomePage> {
                   ),
                 ],
               ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.category),
+            label: 'category',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.account_circle_sharp),
+            label: 'Account',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
       ),
     );
   }

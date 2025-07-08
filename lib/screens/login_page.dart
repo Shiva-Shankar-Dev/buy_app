@@ -6,7 +6,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
-
   @override
   State<LoginPage> createState() => _LoginPage();
 }
@@ -16,18 +15,20 @@ class _LoginPage extends State<LoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final AuthService _authService = AuthService();
-  void loginhandle() async{
+  void loginhandle() async {
     String? result = await _authService.signInUser(
       email: emailController.text,
       password: passwordController.text,
     );
-    if(result==null){
+    if (result == null) {
       Navigator.pushNamed(context, '/home');
-    }
-    else{
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result)));
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(result)));
     }
   }
+
   @override
   void dispose() {
     emailController.dispose();
@@ -46,7 +47,7 @@ class _LoginPage extends State<LoginPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                SizedBox(height: 30,),
+                SizedBox(height: 30),
                 Container(
                   margin: EdgeInsets.fromLTRB(0, 150, 0, 100),
                   child: Column(
@@ -73,10 +74,20 @@ class _LoginPage extends State<LoginPage> {
                               controller: passwordController,
                               hide: true,
                             ),
+                            SizedBox(height: 10),
+                            /*Row(
+                              children: [
+                                Checkbox(value: true, onChanged: (value) {}),
+                                Text('Remeber Me'),
+                              ],
+                            ),*/
                             SizedBox(height: 20),
-                            AuthButton(hintText: 'Login', onPressed: () {
-                              loginhandle();
-                            }),
+                            AuthButton(
+                              hintText: 'Login',
+                              onPressed: () {
+                                loginhandle();
+                              },
+                            ),
                           ],
                         ),
                       ),
@@ -85,7 +96,7 @@ class _LoginPage extends State<LoginPage> {
                       SizedBox(height: 10),
                       RichText(
                         text: TextSpan(
-                          text: 'Login using ',
+                          text: 'Use ',
                           children: [
                             TextSpan(
                               text: 'Mobile instead?',

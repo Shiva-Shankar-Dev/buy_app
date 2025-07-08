@@ -4,9 +4,17 @@ import '../colorPallete/color_pallete.dart';
 
 // ignore: must_be_immutable
 class NormalButton extends StatelessWidget {
-  NormalButton({super.key, required this.hintText, required this.onPressed});
+  NormalButton({
+    super.key,
+    required this.hintText,
+    required this.onPressed,
+    this.length = 320,
+    this.height = 55,
+  });
   String hintText;
   VoidCallback onPressed;
+  double length;
+  double height;
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -21,7 +29,7 @@ class NormalButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          fixedSize: const Size(double.infinity, 55),
+          fixedSize: Size(length, height),
           shadowColor: colorPallete.color4,
           backgroundColor: colorPallete.color4,
           shape: RoundedRectangleBorder(

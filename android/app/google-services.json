@@ -1,26 +1,36 @@
 {
   "project_info": {
-    "project_number": "373635829159",
-    "project_id": "buyers-app-930a3",
-    "storage_bucket": "buyers-app-930a3.firebasestorage.app"
+    "project_number": "720739834245",
+    "project_id": "ecom-app-af213",
+    "storage_bucket": "ecom-app-af213.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:373635829159:android:0b6fc6cd7c5bdd6df17a82",
+        "mobilesdk_app_id": "1:720739834245:android:258b055c58eb166c02ccec",
         "android_client_info": {
           "package_name": "com.example.buy_app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "720739834245-s47s0vm0qq6shkapcrodautm7fnfqgdf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyBFIrTkbs-0myLm-8yJPA72_Ng1Q8nuIhM"
+          "current_key": "AIzaSyC1NasrGGb8izlcMCU8TzBHuJp6Xt4INlA"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "720739834245-s47s0vm0qq6shkapcrodautm7fnfqgdf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

@@ -26,7 +26,7 @@ class _SignUpPage extends State<SignUpPage> {
     print("📝 Starting signup process...");
     print("📱 Mobile number being saved: $mobile");
     final valid = await FirebaseFirestore.instance
-        .collection('users')
+        .collection('customers')
         .where('mobile', isEqualTo: mobile)
         .get();
     if (valid.docs.isEmpty) {

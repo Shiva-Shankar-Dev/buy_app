@@ -46,6 +46,7 @@ dependencies:
   hive: ^2.2.3
   hive_flutter: 
   carousel_slider: 
+  http: 
   smooth_page_indicator: ^1.2.1
 
 flutter_icons:

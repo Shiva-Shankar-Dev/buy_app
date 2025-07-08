@@ -19,7 +19,7 @@ class ProductDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final images = product.images
-        .map<Widget>((imgPath) => Image.asset(imgPath, fit: BoxFit.cover))
+        .map<Widget>((imgPath) => Image.network(imgPath, fit: BoxFit.cover))
         .toList();
 
     return Scaffold(
@@ -38,7 +38,12 @@ class ProductDetailPage extends StatelessWidget {
                   height: 500,
                   child: CarouselSlider(
                     items: images,
-                    options: CarouselOptions(scrollDirection: Axis.horizontal),
+                    options: CarouselOptions(
+                      scrollDirection: Axis.horizontal,
+                      enableInfiniteScroll: false,
+                      enlargeCenterPage: true,
+                      pageSnapping: true,
+                    ),
                   ),
                 ),
 
@@ -74,21 +79,27 @@ class ProductDetailPage extends StatelessWidget {
                 const SizedBox(height: 10),
                 Row(
                   children: [
-                    NormalButton(
-                      hintText: 'Add to Cart',
-                      onPressed: () {
-                        Cart.instance.add(product); // or use a provider pattern
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Added to cart')),
-                        );
-                      },
+                    Expanded(
+                      child: NormalButton(
+                        hintText: 'Add to Cart',
+                        onPressed: () {
+                          Cart.instance.add(
+                            product,
+                          ); // or use a provider pattern
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Added to cart')),
+                          );
+                        },
+                      ),
                     ),
-                    const SizedBox(height: 10),
-                    CustomOutlineButton(
-                      hintText: 'Buy Now',
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/checkout');
-                      },
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: CustomOutlineButton(
+                        hintText: 'Buy Now',
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/checkout');
+                        },
+                      ),
                     ),
                   ],
                 ),

@@ -25,7 +25,10 @@ class AuthTextField extends StatelessWidget {
             hintText: hintText,
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: Colors.white54, width: 3),
+              borderSide: BorderSide(
+                color: const Color.fromARGB(137, 0, 0, 0),
+                width: 3,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),

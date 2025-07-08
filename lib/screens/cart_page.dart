@@ -1,3 +1,5 @@
+import 'package:buy_app/widgets/normal_button.dart';
+import 'package:buy_app/widgets/outline_button.dart';
 import 'package:flutter/material.dart';
 import 'package:buy_app/services/cart_manager.dart'; // the singleton
 
@@ -24,22 +26,72 @@ class _CartPageState extends State<CartPage> {
                     itemCount: cart.items.length,
                     itemBuilder: (context, index) {
                       final product = cart.items[index];
-                      return ListTile(
-                        leading: Image.network(
-                          product.images.isNotEmpty ? product.images[0] : '',
-                          width: 50,
-                          height: 50,
-                          errorBuilder: (_, __, ___) => Icon(Icons.image),
-                        ),
-                        title: Text(product.title),
-                        subtitle: Text('₹ ${product.price}'),
-                        trailing: IconButton(
-                          icon: Icon(Icons.delete),
-                          onPressed: () {
-                            setState(() {
-                              cart.remove(product);
-                            });
-                          },
+                      return InkWell(
+                        child: Card(
+                          child: Padding(
+                            padding: EdgeInsetsGeometry.only(
+                              top: 10,
+                              bottom: 10,
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                const SizedBox(width: 10),
+                                Image.network(
+                                  product.images.first,
+                                  height: 100,
+                                  width: 100,
+                                  fit: BoxFit.cover,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        product.title,
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Text(
+                                        product.reviews,
+                                        style: TextStyle(color: Colors.amber),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Column(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    Text(
+                                      '₹${product.price}',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 50),
+                                    CustomOutlineButton(
+                                      hintText: 'Remove',
+                                      onPressed: () {
+                                        setState(() {
+                                          cart.remove(product);
+                                        });
+                                      },
+                                      height: 110,
+                                      width: 35,
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(width: 10),
+                              ],
+                            ),
+                          ),
                         ),
                       );
                     },
@@ -57,12 +109,12 @@ class _CartPageState extends State<CartPage> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      ElevatedButton(
+                      NormalButton(
+                        hintText: 'Checkout',
                         onPressed: () {
-                          // Placeholder: handle checkout
                           Navigator.pushNamed(context, '/checkout');
                         },
-                        child: Text("Checkout"),
+                        length: 130,
                       ),
                     ],
                   ),
