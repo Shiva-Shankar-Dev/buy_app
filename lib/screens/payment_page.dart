@@ -71,7 +71,7 @@ class _PaymentPageState extends State<PaymentPage> {
     required String message,
   }) async {
     final url = Uri.parse(
-      'http://192.168.189.250:3000/send',
+      'http://192.168.29.41:3000/send',
     ); // replace with your IP
 
     try {
@@ -114,11 +114,6 @@ class _PaymentPageState extends State<PaymentPage> {
                           subject: "Your Order has been placed!",
                           message:
                               "$name,\nYour order has been successfully placed.\n\nThank you!",
-                        );
-                        sendEmail(
-                          to: "",
-                          subject: "New order placed!",
-                          message: "",
                         );
                         print('Mail sent');
                       } else {
