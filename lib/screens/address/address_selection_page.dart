@@ -22,7 +22,12 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
 
   Future<void> loadAddresses() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
+    if (uid == null) {
+      print("❌ No user logged in");
+      return;
+    }
+
+    print("🔍 Loading addresses for user: $uid");
 
     final snapshot = await FirebaseFirestore.instance
         .collection('customers')
@@ -30,8 +35,15 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
         .collection('addresses')
         .get();
 
+    print("📊 Found ${snapshot.docs.length} addresses");
+
     final addresses = snapshot.docs.map((doc) {
-      return Address.fromMap(doc.data(), doc.id);
+      print("📝 Document data: ${doc.data()}");
+      final address = Address.fromMap(doc.data(), doc.id);
+      print(
+        "✅ Parsed address: first='${address.first}', last='${address.last}', line1='${address.line1}', city='${address.city}', state='${address.state}'",
+      );
+      return address;
     }).toList();
 
     setState(() {
@@ -49,7 +61,7 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
   void selectAddress() {
     if (selectedAddressId == null) return;
     final selected = addressList.firstWhere((a) => a.id == selectedAddressId);
-    print('Selected address: ${selected.line1}, ${selected.cityState}');
+    print('Selected address: ${selected.line1}, ${selected.city}');
     Navigator.pushNamed(
       context,
       '/payment',
@@ -77,11 +89,51 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
                         selectedAddressId = value as String;
                       });
                     },
-                    title: Text("Address ${index + 1}"),
+                    title: Text(
+                      "${address.first.isEmpty ? 'No' : address.first} ${address.last.isEmpty ? 'Name' : address.last}",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
                     subtitle: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        "\n${address.line1}, \n\n${address.line2},\n\n${address.cityState} - ${address.pincode}",
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            address.line1.isEmpty
+                                ? "No address line 1"
+                                : address.line1,
+                            style: TextStyle(fontSize: 14),
+                          ),
+                          if (address.line2.isNotEmpty)
+                            Text(address.line2, style: TextStyle(fontSize: 14)),
+                          SizedBox(height: 4),
+                          Text(
+                            "${address.city.isEmpty ? 'No City' : address.city}, ${address.state.isEmpty ? 'No State' : address.state} - ${address.pincode.isEmpty ? 'No PIN' : address.pincode}",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          // Debug info - remove this later
+                          Container(
+                            padding: EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              "DEBUG: first='${address.first}', last='${address.last}', state='${address.state}'",
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

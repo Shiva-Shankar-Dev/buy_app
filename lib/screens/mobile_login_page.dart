@@ -2,7 +2,6 @@ import 'package:buy_app/colorPallete/color_pallete.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../debug_users.dart';
 
 class MobileLoginPage extends StatefulWidget {
   const MobileLoginPage({Key? key}) : super(key: key);
@@ -41,7 +40,7 @@ class _MobileLoginPageState extends State<MobileLoginPage> {
       // Step 1: Check if the phone number exists in Firestore
       print("🔍 Checking if user exists in Firestore...");
       final result = await FirebaseFirestore.instance
-          .collection('users')
+          .collection('customers')
           .where('phone', isEqualTo: phone)
           .get();
 
@@ -84,6 +83,13 @@ class _MobileLoginPageState extends State<MobileLoginPage> {
               break;
             case 'quota-exceeded':
               errorMessage = 'SMS quota exceeded. Try again tomorrow';
+              break;
+            case 'invalid-app-credential':
+              errorMessage =
+                  'reCAPTCHA verification failed. Please refresh the page and try again.';
+              break;
+            case 'web-context-cancelled':
+              errorMessage = 'reCAPTCHA was cancelled. Please try again.';
               break;
             default:
               errorMessage = e.message ?? 'Verification failed';
@@ -140,7 +146,11 @@ class _MobileLoginPageState extends State<MobileLoginPage> {
             children: [
               Text(
                 'Enter your Mobile',
-                style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 36,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'PlayfairDisplay',
+                ),
               ),
               SizedBox(height: 50),
               TextField(

@@ -31,6 +31,25 @@
 
   <title>buy_app</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+  
+  <!-- Firebase Configuration -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBb_1jJnMQy2qAebBpDnojunskioxt7omg",
+      authDomain: "ecom-app-af213.firebaseapp.com",
+      projectId: "ecom-app-af213",
+      storageBucket: "ecom-app-af213.appspot.com",
+      messagingSenderId: "720739834245",
+      appId: "1:720739834245:android:258b055c58eb166c02ccec"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>

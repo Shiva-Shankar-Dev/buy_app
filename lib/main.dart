@@ -1,4 +1,5 @@
 import 'package:buy_app/animated_splash_screen_widget.dart';
+import 'package:buy_app/colorPallete/color_pallete.dart';
 import 'package:buy_app/screens/address/account_page.dart';
 import 'package:buy_app/screens/address/add_new_address.dart';
 import 'package:buy_app/screens/add_page.dart';
@@ -39,7 +40,21 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(brightness: Brightness.light),
+      theme: ThemeData(
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: colorPallete.color6,
+        appBarTheme: AppBarTheme(
+          backgroundColor: colorPallete.color1,
+          elevation: 0,
+          titleTextStyle: TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            fontFamily: 'PlayfairDisplay',
+          ),
+          toolbarHeight: 70,
+        ),
+      ),
       initialRoute: '/',
       routes: {
         '/': (context) => AnimatedSplashScreenWidget(),

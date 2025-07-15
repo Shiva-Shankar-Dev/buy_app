@@ -8,32 +8,57 @@ app.use(express.json());
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
   auth: {
-    user: 'c62425773@gmail.com',           // 🔁 Replace with your Gmail address
-    pass: 'sirhtrlijukmrgkq' // 🔁 Replace with App Password (no spaces)
+    user: 'c62425773@gmail.com',           // Your Gmail address
+    pass: 'sirhtrlijukmrgkq' // App Password (no spaces)
+  },
+  tls: {
+    rejectUnauthorized: false
   }
 });
 
 app.post('/send', async (req, res) => {
   const { to, subject, text } = req.body;
+  
+  console.log(`📧 Attempting to send email to: ${to}`);
+  console.log(`📧 Subject: ${subject}`);
 
   try {
-    await transporter.sendMail({
-      from: 'yourgmail@gmail.com',
-      to,
-      subject,
-      text
+    const info = await transporter.sendMail({
+      from: '"Your App" <c62425773@gmail.com>', // sender address
+      to: to,                                   // recipient (Yahoo, Gmail, etc.)
+      subject: subject,
+      text: text,
+      html: `<p>${text}</p>` // also send as HTML
     });
 
-    res.status(200).send('✅ Email sent successfully');
+    console.log('✅ Email sent successfully:', info.messageId);
+    res.status(200).json({ 
+      success: true, 
+      message: 'Email sent successfully',
+      messageId: info.messageId 
+    });
   } catch (error) {
     console.error('❌ Email sending failed:', error);
-    res.status(500).send('❌ Failed to send email');
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to send email',
+      error: error.message 
+    });
   }
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'Server is running', timestamp: new Date() });
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`📧 Email server running on port ${PORT}`);
+  console.log(`📧 Ready to send emails from Gmail to any provider (including Yahoo)`);
 });
 

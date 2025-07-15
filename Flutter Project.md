@@ -1,0 +1,32 @@
+## So far..
+- Separate apps for seller and buyers
+- ### Sellers app
+	- Authentication with email and mobile
+	- Excel products upload in seller app
+		- The products details are pushed to firebase firestore
+
+- ### Buyers app
+	- Authentication with email and mobile
+	-  Rendering of products in buyers app
+		- The product details are read from firebase
+	- Cart Page 
+	- Checkoutpage 
+	- Storing address details
+	- Sending mails about the order placement
+## Things need to be added
+- #### Excel update
+	- Any changes about the product details can be changed in the excel and the seller can be re-upload the excel file with update information which should reflect in the database
+	-  SKU_ID for products
+		- To uniquely identify the seller's products
+- #### Whatsapp and E-Mail
+	- Order placement information and invoices to be sent to customers
+- #### Name and phone number in address
+	- Address missing the name and phone number field in the buyers app
+- #### DOB and Name
+	- Additional details to be stored in Account details
+- #### Payment and invoice (PDFs)
+	- The invoice is sent in the form of PDF
+- #### Order Details
+	- Order ID generation
+- #### Visual changes
+	- Themes, Color Palletes etc. 

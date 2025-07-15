@@ -1,11 +1,6 @@
-import 'dart:typed_data';
 import 'package:buy_app/colorPallete/color_pallete.dart';
 import 'package:buy_app/screens/product_detail_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:excel/excel.dart';
-import 'package:hive/hive.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:buy_app/services/auth.dart';
 import '../debug_users.dart';
@@ -22,6 +17,7 @@ class Product {
   final double price;
   final List<String> images;
   final Map<String, dynamic> extraFields; // ← dynamic extras
+  final String? sellerId; // ← Add seller ID field
 
   Product({
     required this.title,
@@ -31,6 +27,7 @@ class Product {
     required this.reviews,
     required this.images,
     required this.extraFields,
+    this.sellerId, // ← Add seller ID parameter
   });
 
   num? get length => null;
@@ -79,6 +76,7 @@ class _HomePage extends State<HomePage> {
         reviews: doc['ratings'] ?? 'No ratings',
         images: List<String>.from(doc['images'] ?? []),
         extraFields: Map<String, dynamic>.from(doc['extraFields'] ?? {}),
+        sellerId: doc['sellerId'], // ← Add seller ID from Firestore
       );
     }).toList();
 
@@ -87,26 +85,17 @@ class _HomePage extends State<HomePage> {
     });
   }
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-      switch (index) {
-        case 0:
-          Navigator.pushNamed(context, '/home');
-          break;
-        case 1:
-          Navigator.pushNamed(context, '/category');
-          break;
-        case 2:
-          Navigator.pushNamed(context, '/account');
-      }
-    });
-  }
-
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Home Page"),
+        title: Text(
+          "Home Page",
+          style: TextStyle(
+            fontSize: 30,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'PlayfairDisplay',
+          ),
+        ),
         automaticallyImplyLeading: true,
         backgroundColor: colorPallete.color1,
         actions: [
@@ -184,10 +173,6 @@ class _HomePage extends State<HomePage> {
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Products',
-                    style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
-                  ),
                   SizedBox(height: 10),
                   Expanded(
                     child: ListView.builder(
@@ -206,7 +191,11 @@ class _HomePage extends State<HomePage> {
                           },
                           child: Card(
                             margin: EdgeInsets.symmetric(vertical: 10),
-
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            shadowColor: Colors.transparent,
+                            color: Color(0xFFFFFFFF).withAlpha(84),
                             child: Padding(
                               padding: const EdgeInsets.only(
                                 bottom: 20,
@@ -234,6 +223,7 @@ class _HomePage extends State<HomePage> {
                                         style: TextStyle(
                                           fontSize: 22,
                                           fontWeight: FontWeight.bold,
+                                          fontFamily: 'PlayfairDisplay',
                                         ),
                                       ),
                                       Row(
@@ -275,21 +265,6 @@ class _HomePage extends State<HomePage> {
                   ),
                 ],
               ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.category),
-            label: 'category',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_circle_sharp),
-            label: 'Account',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
       ),
     );
   }

@@ -1,10 +1,7 @@
-import 'package:buy_app/colorPallete/color_pallete.dart';
 import 'package:buy_app/services/cart_manager.dart';
-import 'package:buy_app/widgets/auth_button.dart';
 import 'package:buy_app/widgets/normal_button.dart';
 import 'package:buy_app/widgets/outline_button.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'home_page.dart'; // For Product

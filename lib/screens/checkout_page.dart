@@ -1,13 +1,6 @@
 import 'package:buy_app/services/cart_manager.dart';
-import 'package:buy_app/widgets/auth_text_field.dart';
 import 'package:buy_app/widgets/normal_button.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:buy_app/screens/payment_page.dart';
 
 class CheckoutPage extends StatefulWidget {
   const CheckoutPage({super.key});
