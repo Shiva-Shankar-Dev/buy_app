@@ -48,7 +48,8 @@ dependencies:
   carousel_slider: 
   http: 
   smooth_page_indicator: ^1.2.1
-
+  flutter_animate: ^4.5.2
+  page_transition: ^2.2.1
 flutter_icons:
   android: true
   ios: true

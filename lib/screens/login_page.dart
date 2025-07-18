@@ -4,6 +4,7 @@ import 'package:buy_app/widgets/auth_button.dart';
 import 'package:buy_app/widgets/auth_text_field.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -53,46 +54,58 @@ class _LoginPage extends State<LoginPage> {
                   child: Column(
                     children: [
                       Text(
-                        'Login',
-                        style: TextStyle(
-                          fontSize: 50,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'PlayfairDisplay',
-                        ),
-                        textAlign: TextAlign.left,
-                      ),
+                            'Login',
+                            style: TextStyle(
+                              fontSize: 50,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'PlayfairDisplay',
+                            ),
+                            textAlign: TextAlign.left,
+                          )
+                          .animate()
+                          .slideY(
+                            begin: 0.5,
+                            duration: Duration(milliseconds: 500),
+                          )
+                          .then()
+                          .fadeIn(duration: Duration(milliseconds: 1500)),
                       SizedBox(height: 32),
                       Form(
-                        key: _formKey,
-                        child: Column(
-                          children: [
-                            AuthTextField(
-                              hintText: 'Email',
-                              controller: emailController,
-                            ),
-                            AuthTextField(
-                              hintText: 'Password',
-                              controller: passwordController,
-                              hide: true,
-                            ),
-                            SizedBox(height: 10),
-                            /*Row(
+                            key: _formKey,
+                            child: Column(
+                              children: [
+                                AuthTextField(
+                                  hintText: 'Email',
+                                  controller: emailController,
+                                ),
+                                AuthTextField(
+                                  hintText: 'Password',
+                                  controller: passwordController,
+                                  hide: true,
+                                ),
+                                SizedBox(height: 10),
+                                /*Row(
                               children: [
                                 Checkbox(value: true, onChanged: (value) {}),
                                 Text('Remeber Me'),
                               ],
                             ),*/
-                            SizedBox(height: 20),
-                            AuthButton(
-                              hintText: 'Login',
-                              onPressed: () {
-                                loginhandle();
-                              },
+                                SizedBox(height: 20),
+                                AuthButton(
+                                  hintText: 'Login',
+                                  onPressed: () {
+                                    FadeEffect(
+                                      duration: Duration(milliseconds: 500),
+                                    );
+                                    loginhandle();
+                                  },
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
-
+                          )
+                          .animate()
+                          .fadeIn(duration: Duration(milliseconds: 1000))
+                          .then(),
                       SizedBox(height: 10),
                       SizedBox(height: 10),
                       RichText(

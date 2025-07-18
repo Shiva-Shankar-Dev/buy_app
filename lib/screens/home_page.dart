@@ -3,6 +3,7 @@ import 'package:buy_app/screens/product_detail_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:buy_app/services/auth.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../debug_users.dart';
 
 class CartItem {
@@ -175,93 +176,101 @@ class _HomePage extends State<HomePage> {
                 children: [
                   SizedBox(height: 10),
                   Expanded(
-                    child: ListView.builder(
-                      itemCount: products.length,
-                      itemBuilder: (context, index) {
-                        final product = products[index];
-                        return InkWell(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    ProductDetailPage(product: product),
-                              ),
-                            );
-                          },
-                          child: Card(
-                            margin: EdgeInsets.symmetric(vertical: 10),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(5),
-                            ),
-                            shadowColor: Colors.transparent,
-                            color: Color(0xFFFFFFFF).withAlpha(84),
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                bottom: 20,
-                                top: 20,
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  SizedBox(width: 10),
-                                  Image.network(
-                                    product.images.first,
-                                    width: 100,
-                                    height: 100,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) =>
-                                        Icon(Icons.image),
+                    child:
+                        ListView.builder(
+                          itemCount: products.length,
+                          itemBuilder: (context, index) {
+                            final product = products[index];
+                            return InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        ProductDetailPage(product: product),
                                   ),
-                                  SizedBox(width: 15),
-                                  Column(
+                                );
+                              },
+                              child: Card(
+                                margin: EdgeInsets.symmetric(vertical: 10),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(5),
+                                ),
+                                shadowColor: Colors.transparent,
+                                color: Color(0xFFFFFFFF).withAlpha(84),
+                                child: Padding(
+                                  padding: const EdgeInsets.only(
+                                    bottom: 20,
+                                    top: 20,
+                                  ),
+                                  child: Row(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        product.title,
-                                        style: TextStyle(
-                                          fontSize: 22,
-                                          fontWeight: FontWeight.bold,
-                                          fontFamily: 'PlayfairDisplay',
+                                      SizedBox(width: 10),
+                                      Hero(
+                                        tag: 'dash-${product.title}',
+                                        child: Image.network(
+                                          product.images.first,
+                                          width: 100,
+                                          height: 100,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) =>
+                                              Icon(Icons.image),
                                         ),
                                       ),
-                                      Row(
+                                      SizedBox(width: 15),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          Icon(
-                                            Icons.star,
-                                            color: Colors.orange,
-                                            size: 12,
-                                          ),
-                                          SizedBox(width: 5),
                                           Text(
-                                            product.reviews,
+                                            product.title,
                                             style: TextStyle(
-                                              color: Colors.orange,
+                                              fontSize: 22,
+                                              fontWeight: FontWeight.bold,
+                                              fontFamily: 'PlayfairDisplay',
                                             ),
+                                          ),
+                                          Row(
+                                            children: [
+                                              Icon(
+                                                Icons.star,
+                                                color: Colors.orange,
+                                                size: 12,
+                                              ),
+                                              SizedBox(width: 5),
+                                              Text(
+                                                product.reviews,
+                                                style: TextStyle(
+                                                  color: Colors.orange,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          Text(
+                                            '\₹${product.price.toStringAsFixed(2)}',
+                                            style: TextStyle(
+                                              fontSize: 22,
+                                              fontWeight: FontWeight.w800,
+                                            ),
+                                          ),
+                                          Text(
+                                            'Delivery Time | ${product.deliveryTime}',
+                                            style: TextStyle(fontSize: 12),
                                           ),
                                         ],
                                       ),
-                                      Text(
-                                        '\₹${product.price.toStringAsFixed(2)}',
-                                        style: TextStyle(
-                                          fontSize: 22,
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                      ),
-                                      Text(
-                                        'Delivery Time | ${product.deliveryTime}',
-                                        style: TextStyle(fontSize: 12),
-                                      ),
                                     ],
                                   ),
-                                ],
+                                ),
                               ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+                            );
+                          },
+                        ).animate().slide(
+                          duration: Duration(milliseconds: 1000),
+                          curve: Curves.easeInOutCubic,
+                        ),
                   ),
                 ],
               ),
