@@ -56,6 +56,7 @@ class MyApp extends StatelessWidget {
             fontFamily: 'PlayfairDisplay',
           ),
           toolbarHeight: 70,
+          iconTheme: IconThemeData(color: Colors.white),
         ),
       ),
       initialRoute: '/',

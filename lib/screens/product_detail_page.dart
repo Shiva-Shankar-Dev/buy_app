@@ -20,7 +20,8 @@ class ProductDetailPage extends StatelessWidget {
         .toList();
 
     return Scaffold(
-      appBar: AppBar(title: Text(product.title)),
+      appBar: AppBar(iconTheme: IconThemeData(color: Colors.white)),
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Container(
@@ -31,16 +32,13 @@ class ProductDetailPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // 🖼️ Image Gallery
-                SizedBox(
-                  height: 500,
-                  child: CarouselSlider(
-                    items: images,
-                    options: CarouselOptions(
-                      scrollDirection: Axis.horizontal,
-                      enableInfiniteScroll: false,
-                      enlargeCenterPage: true,
-                      pageSnapping: true,
-                    ),
+                CarouselSlider(
+                  items: images,
+                  options: CarouselOptions(
+                    scrollDirection: Axis.horizontal,
+                    enableInfiniteScroll: false,
+                    enlargeCenterPage: true,
+                    pageSnapping: true,
                   ),
                 ),
 
