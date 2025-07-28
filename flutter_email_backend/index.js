@@ -21,18 +21,22 @@ const transporter = nodemailer.createTransport({
 });
 
 app.post('/send', async (req, res) => {
-  const { to, subject, text } = req.body;
-  
+  const { to, subject, text, html, message } = req.body;
+
+  // Prefer html > message > text
+  const htmlBody = html || message || `<p>${text || ''}</p>`;
+  const textBody = text || message || '';
+
   console.log(`📧 Attempting to send email to: ${to}`);
   console.log(`📧 Subject: ${subject}`);
 
   try {
     const info = await transporter.sendMail({
-      from: '"Your App" <c62425773@gmail.com>', // sender address
-      to: to,                                   // recipient (Yahoo, Gmail, etc.)
+      from: '"Your App" <c62425773@gmail.com>',
+      to: to,
       subject: subject,
-      text: text,
-      html: `<p>${text}</p>` // also send as HTML
+      text: textBody,
+      html: htmlBody
     });
 
     console.log('✅ Email sent successfully:', info.messageId);
@@ -61,4 +65,5 @@ app.listen(PORT, () => {
   console.log(`📧 Email server running on port ${PORT}`);
   console.log(`📧 Ready to send emails from Gmail to any provider (including Yahoo)`);
 });
+
 
