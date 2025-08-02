@@ -2,8 +2,8 @@ import 'package:buy_app/colorPallete/color_pallete.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import '../widgets/auth_text_field.dart';
-import '../widgets/auth_button.dart';
+import '../../widgets/auth_text_field.dart';
+import '../../widgets/auth_button.dart';
 import 'package:buy_app/services/auth.dart';
 
 class SignUpPage extends StatefulWidget {
@@ -118,7 +118,6 @@ class _SignUpPage extends State<SignUpPage> {
                       AuthTextField(
                         hintText: 'Password',
                         controller: passwordController,
-                        hide: true,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Password cannot be empty';

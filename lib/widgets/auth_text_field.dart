@@ -7,12 +7,10 @@ class AuthTextField extends StatelessWidget {
     super.key,
     required this.hintText,
     required this.controller,
-    this.hide = false,
     this.validator,
   });
   final String? Function(String?)? validator;
   String hintText;
-  bool hide;
   TextEditingController controller;
   @override
   Widget build(BuildContext context) {
@@ -20,19 +18,20 @@ class AuthTextField extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(15.0),
         child: TextFormField(
-          obscureText: hide,
           decoration: InputDecoration(
             hintText: hintText,
+            filled: true,
+            fillColor: Colors.grey.shade400.withAlpha(100),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide(
-                color: const Color.fromARGB(137, 0, 0, 0),
-                width: 3,
+                color: Colors.grey.shade400.withAlpha(100),
+                width: 1.5,
               ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: colorPallete.color1, width: 3),
+              borderSide: BorderSide(color: Colors.black, width: 1.5),
             ),
           ),
           controller: controller,
@@ -47,3 +46,60 @@ class AuthTextField extends StatelessWidget {
     );
   }
 }
+
+class AuthPassword extends StatefulWidget {
+  final TextEditingController passwordController;
+  const AuthPassword({super.key, required this.passwordController});
+
+  @override
+  State<AuthPassword> createState() => _AuthPasswordState();
+}
+
+class _AuthPasswordState extends State<AuthPassword> {
+  bool isPasswordVisible = true;
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(15.0),
+        child: TextFormField(
+          obscureText: isPasswordVisible,
+          decoration: InputDecoration(
+            hintText: "Password",
+            filled: true,
+            fillColor: Colors.grey.shade400.withAlpha(100),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(
+                color: Colors.grey.shade400.withAlpha(100),
+                width: 1.5,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: Colors.black, width: 1.5),
+            ),
+            suffixIcon: IconButton(
+              onPressed: () {
+                setState(() {
+                  isPasswordVisible = !isPasswordVisible;
+                });
+              },
+              icon: isPasswordVisible
+                  ? Icon(Icons.visibility_outlined)
+                  : Icon(Icons.visibility_off_outlined),
+            ),
+          ),
+          controller: widget.passwordController,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'please enter your mobile number';
+            }
+            return null;
+          },
+        ),
+      ),
+    );
+  }
+}
+

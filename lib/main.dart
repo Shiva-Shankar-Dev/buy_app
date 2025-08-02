@@ -6,17 +6,14 @@ import 'package:buy_app/screens/add_page.dart';
 import 'package:buy_app/screens/address/address_selection_page.dart';
 import 'package:buy_app/screens/cart_page.dart';
 import 'package:buy_app/screens/checkout_page.dart';
-import 'package:buy_app/screens/otp_page.dart';
+import 'package:buy_app/screens/auth/otp_page.dart';
 import 'package:buy_app/screens/payment_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'screens/login_page.dart';
-import 'screens/signup_page.dart';
+import 'screens/auth/login_page.dart';
+import 'screens/auth/signup_page.dart';
 import 'screens/home_page.dart';
-import 'screens/mobile_login_page.dart';
-import 'screens/payment_completed_page.dart';
-import 'screens/payment_card_page.dart';
-import 'screens/payment_upi_page.dart';
+import 'screens/auth/mobile_login_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -73,7 +70,6 @@ class MyApp extends StatelessWidget {
         '/address_select': (context) => AddressSelectionPage(),
         '/add_address': (context) => AddAddressPage(),
         '/payment': (context) => PaymentPage(),
-        '/order_success': (context) => OrderSuccessPage(isCOD: false),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/otp') {
@@ -82,36 +78,6 @@ class MyApp extends StatelessWidget {
             builder: (_) => OtpPage(
               phone: args['phone'],
               verificationId: args['verificationId'],
-            ),
-          );
-        }
-        if (settings.name == '/payment_upi') {
-          final args = settings.arguments as Map<String, dynamic>;
-          return MaterialPageRoute(
-            builder: (_) => PaymentUpiPage(
-              customer: args['customer'],
-              address: args['address'],
-            ),
-          );
-        }
-        if (settings.name == '/payment_card') {
-          final args = settings.arguments as Map<String, dynamic>;
-          return MaterialPageRoute(
-            builder: (_) => PaymentCardPage(
-              customer: args['customer'],
-              address: args['address'],
-            ),
-          );
-        }
-        if (settings.name == '/payment_completed') {
-          final args = settings.arguments as Map<String, dynamic>;
-          return MaterialPageRoute(
-            builder: (_) => PaymentCompletedPage(
-              message: args['message'] ?? '',
-              paymentMethod: args['paymentMethod'] ?? '',
-              txnId: args['txnId'] ?? '',
-              customer: args['customer'],
-              address: args['address'],
             ),
           );
         }
