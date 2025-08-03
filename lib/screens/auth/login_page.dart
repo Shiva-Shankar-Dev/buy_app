@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
   State<LoginPage> createState() => _LoginPage();
 }
@@ -16,7 +18,8 @@ class _LoginPage extends State<LoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final AuthService _authService = AuthService();
-  void loginhandle() async {
+
+  void loginHandle() async {
     debugPrint("Password: ${passwordController.text}");
     String? result = await _authService.signInUser(
       email: emailController.text,
@@ -41,113 +44,138 @@ class _LoginPage extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(toolbarHeight: 0, backgroundColor: Colors.white,),
       body: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.start,
-          spacing: 30,
-          children: [
-            Container(
-              margin: EdgeInsets.fromLTRB(0, 150, 0, 100),
-              child: Column(
+        child: Padding(
+          padding: const EdgeInsets.only(left: 5.0, right: 5.0, top: 50.0, bottom: 10.0),
+          child: Column(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        colorPallete.color1,
+                        colorPallete.color2,
+                      ]
+                  ),
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Icon(Icons.person_2_outlined, size: 80, color: Colors.white,),
+                ),
+              ),
+              SizedBox(height: 10,),
+              Column(
                 children: [
-                  Text('Login',
-                        style: TextStyle(
-                          fontSize: 50,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'PlayfairDisplay',
-                        ),
-                        textAlign: TextAlign.left,
-                      )
-                      .animate()
-                      .slideY(
-                        begin: 0.5,
-                        duration: Duration(milliseconds: 500),
-                      )
-                      .then()
-                      .fadeIn(duration: Duration(milliseconds: 1500)),
-                  SizedBox(height: 32),
-                  Form(
-                        key: _formKey,
-                        child: Column(
-                          children: [
-                            AuthTextField(
-                              hintText: 'Email',
-                              controller: emailController,
-                            ),
-                            AuthPassword(
-                              passwordController: passwordController,
-                            ),
-                            SizedBox(height: 10),
-                            /*Row(
-                          children: [
-                            Checkbox(value: true, onChanged: (value) {}),
-                            Text('Remeber Me'),
-                          ],
-                        ),*/
-                            SizedBox(height: 20),
-                            AuthButton(
-                              hintText: 'Login',
-                              onPressed: () {
-                                FadeEffect(
-                                  duration: Duration(milliseconds: 500),
-                                );
-                                loginhandle();
-                              },
-                            ),
-                          ],
-                        ),
-                      )
-                      .animate()
-                      .fadeIn(duration: Duration(milliseconds: 1000))
-                      .then(),
-                  SizedBox(height: 10),
-                  SizedBox(height: 10),
-                  RichText(
+                  Text('Welcome', style: TextStyle(
+                      fontSize: 40,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: "Poppins"
+                    ),
+                  ).animate().slideY(
+                    begin: 0.5,
+                    duration: Duration(milliseconds: 500),
+                  ).then().fadeIn(
+                     duration: Duration(milliseconds: 1500)
+                  ),
+                  Text('Continue with your Email and Password', style: TextStyle(
+                      fontSize: 15,
+                      color: Colors.grey
+                  ),
+                  ).animate().slideY(
+                    begin: 0.5,
+                    duration: Duration(milliseconds: 500),
+                  ).then().fadeIn(
+                      duration: Duration(milliseconds: 1500)
+                  ),
+                ],
+              ),
+              SizedBox(height: 20.0,),
+              Form(
+                key: _formKey,
+                child: Column(
+                  spacing: 3,
+                  children: [
+                    AuthTextField(
+                      hintText: 'Email',
+                      controller: emailController,
+                    ),
+                    AuthPassword(
+                      passwordController: passwordController,
+                    ),
+                    SizedBox(height: 10),
+                    AuthButton(
+                      hintText: 'Login',
+                      onPressed: () {
+                        FadeEffect(
+                          duration: Duration(milliseconds: 500),
+                        );
+                        loginHandle();
+                      },
+                    ),
+                  ],
+                ),
+              ).animate().fadeIn(
+                  duration: Duration(milliseconds: 1000)
+              ).then(),
+              SizedBox(height: 20,),
+              Container(
+                width: MediaQuery.of(context).size.width - 30,
+                height: 56,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(15)
+                ),
+                child: Center(
+                  child: RichText(
                     text: TextSpan(
                       text: 'Use ',
+                      style: TextStyle(color: Colors.black),
                       children: [
                         TextSpan(
-                          text: 'Mobile instead?',
-                          style: TextStyle(color: colorPallete.color1),
-                          recognizer: TapGestureRecognizer()
-                            ..onTap = () {
+                          text: 'Phone Number instead?',
+                          style: TextStyle(color: colorPallete.color1, fontSize: 15),
+                          recognizer: TapGestureRecognizer()..onTap = () {
                               Navigator.pushNamed(context, '/mobile');
                             },
                         ),
                       ],
                     ),
                   ),
-                  SizedBox(height: 0),
-                ],
+                ),
               ),
-            ),
-
-            Container(
-              margin: EdgeInsets.only(top: 100),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  RichText(
+              SizedBox(height: 12,),
+              Container(
+                width: MediaQuery.of(context).size.width - 30,
+                height: 56,
+                decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(15)
+                ),
+                child: Center(
+                  child: RichText(
                     text: TextSpan(
                       text: 'Don\'t have an account? ',
+                      style: TextStyle(color: Colors.black),
                       children: [
                         TextSpan(
-                          text: 'Sign Up',
-                          style: TextStyle(color: colorPallete.color1),
-                          recognizer: TapGestureRecognizer()
-                            ..onTap = () {
-                              Navigator.pushNamed(context, '/signup');
-                            },
+                          text: 'Sign Up Now',
+                          style: TextStyle(color: colorPallete.color1, fontSize: 15),
+                          recognizer: TapGestureRecognizer()..onTap = () {
+                            Navigator.pushNamed(context, '/signup');
+                          },
                         ),
                       ],
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       // This trailing comma makes auto-formatting nicer for build methods.

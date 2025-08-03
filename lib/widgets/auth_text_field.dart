@@ -16,7 +16,7 @@ class AuthTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       child: Padding(
-        padding: const EdgeInsets.all(15.0),
+        padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 10.0),
         child: TextFormField(
           decoration: InputDecoration(
             hintText: hintText,
@@ -61,7 +61,7 @@ class _AuthPasswordState extends State<AuthPassword> {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       child: Padding(
-        padding: const EdgeInsets.all(15.0),
+        padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 10.0),
         child: TextFormField(
           obscureText: isPasswordVisible,
           decoration: InputDecoration(

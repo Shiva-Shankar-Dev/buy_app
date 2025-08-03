@@ -16,12 +16,12 @@ class AuthButton extends StatelessWidget {
           begin: Alignment.bottomLeft,
           end: Alignment.topRight,
         ),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(15),
       ),
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          fixedSize: const Size(320, 55),
+          fixedSize: Size(MediaQuery.of(context).size.width - 25, 55),
           shadowColor: colorPallete.color4,
           backgroundColor: colorPallete.color4,
         ),

@@ -3,7 +3,6 @@ import 'package:buy_app/screens/product_detail_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:buy_app/services/auth.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import '../debug_users.dart';
 
 class CartItem {
@@ -35,15 +34,17 @@ class Product {
 }
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   @override
   State<HomePage> createState() => _HomePage();
 }
 
 class _HomePage extends State<HomePage> {
-  AuthService _authService = AuthService();
+  final AuthService _authService = AuthService();
   List<Product> products = [];
-  int _selectedIndex = 0;
-  get data => null;
+  //final int _selectedIndex = 0;
+  Null get data => null;
 
   Future<List<Map<String, dynamic>>> fetchAllProducts() async {
     try {
@@ -54,7 +55,7 @@ class _HomePage extends State<HomePage> {
       final products = snapshot.docs.map((doc) => doc.data()).toList();
       return products;
     } catch (e) {
-      print("🔥 Error fetching products: $e");
+      debugPrint("🔥 Error fetching products: $e");
       return [];
     }
   }
@@ -86,29 +87,9 @@ class _HomePage extends State<HomePage> {
     });
   }
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          "Home Page",
-          style: TextStyle(
-            fontSize: 30,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'PlayfairDisplay',
-          ),
-        ),
-        automaticallyImplyLeading: true,
-        backgroundColor: colorPallete.color1,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.shopping_bag_outlined),
-            tooltip: 'Your Cart',
-            onPressed: () {
-              Navigator.pushNamed(context, '/cart');
-            },
-          ),
-        ],
-      ),
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
@@ -141,6 +122,7 @@ class _HomePage extends State<HomePage> {
               onTap: () async {
                 Navigator.pop(context);
                 await DebugUsers.listAllUsers();
+                if(!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Check console for debug output')),
                 );
@@ -150,130 +132,186 @@ class _HomePage extends State<HomePage> {
         ),
       ),
 
-      body: Padding(
-        padding: const EdgeInsets.all(10.0),
-        child: products.isEmpty
-            ? Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Products',
-                      style: TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
+      body: products.isEmpty
+          ? Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.store, size: 64, color: Colors.grey),
+            SizedBox(height: 10),
+            Text(
+              'No Products Available',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              'Check back later for amazing deals!',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ],
+        ),
+      ) : CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            pinned: true,
+            floating: false,
+            backgroundColor: colorPallete.color1,
+            expandedHeight: 100,
+            title: const Text("eCommerce", style: TextStyle(
+                fontWeight: FontWeight.bold
+            )),
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(60),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical:10.0, horizontal: 8.0),
+                child: Material(
+                  elevation: 2,
+                  borderRadius: BorderRadius.circular(30),
+                  child: TextField(
+                    autofocus: false,  // you can set true if you want keyboard up immediately
+                    decoration: InputDecoration(
+                      hintText: "Search Products…",
+                      prefixIcon: const Icon(Icons.search),
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 0,
+                        horizontal: 20,
                       ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        borderSide: BorderSide.none,
+                      ),
+                      suffixIcon: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(onPressed: (){}, icon: Icon(Icons.camera_alt_outlined)),
+                          IconButton(onPressed: (){}, icon: Icon(Icons.mic_none)),
+                        ],
+                      )
                     ),
-                    Text(
-                      'There are no products available to display!',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  ],
+                  ),
                 ),
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: 10),
-                  Expanded(
-                    child:
-                        ListView.builder(
-                          itemCount: products.length,
-                          itemBuilder: (context, index) {
-                            final product = products[index];
-                            return InkWell(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        ProductDetailPage(product: product),
-                                  ),
-                                );
-                              },
-                              child: Card(
-                                margin: EdgeInsets.symmetric(vertical: 10),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(5),
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Image.asset(
+              "assets/banner.jpg",
+              width: double.infinity,
+              height: 200,
+              fit: BoxFit.cover,
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.all(8.0),
+            sliver: SliverGrid(
+              delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                  final product = products[index];
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              ProductDetailPage(product: product),
+                        ),
+                      );
+                    },
+                    child: Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 4,
+                      shadowColor: Colors.black12,
+                      child: Padding(
+                        padding: const EdgeInsets.all(2.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Hero(
+                              tag: 'dash-${product.title}',
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: Image.network(
+                                  product.images.first,
+                                  height: 140,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, _, _) =>
+                                      Icon(Icons.image, size: 100),
                                 ),
-                                shadowColor: Colors.transparent,
-                                color: Color(0xFFFFFFFF).withAlpha(84),
-                                child: Padding(
-                                  padding: const EdgeInsets.only(
-                                    bottom: 20,
-                                    top: 20,
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    product.title,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 16,
+                                    ),
                                   ),
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                  SizedBox(height: 4),
+                                  Row(
                                     children: [
-                                      SizedBox(width: 10),
-                                      Hero(
-                                        tag: 'dash-${product.title}',
-                                        child: Image.network(
-                                          product.images.first,
-                                          width: 100,
-                                          height: 100,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) =>
-                                              Icon(Icons.image),
+                                      Icon(Icons.star, color: Colors.orange, size: 14),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        product.reviews,
+                                        style: TextStyle(
+                                          color: Colors.orange,
+                                          fontSize: 13,
                                         ),
-                                      ),
-                                      SizedBox(width: 15),
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            product.title,
-                                            style: TextStyle(
-                                              fontSize: 22,
-                                              fontWeight: FontWeight.bold,
-                                              fontFamily: 'PlayfairDisplay',
-                                            ),
-                                          ),
-                                          Row(
-                                            children: [
-                                              Icon(
-                                                Icons.star,
-                                                color: Colors.orange,
-                                                size: 12,
-                                              ),
-                                              SizedBox(width: 5),
-                                              Text(
-                                                product.reviews,
-                                                style: TextStyle(
-                                                  color: Colors.orange,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          Text(
-                                            '\₹${product.price.toStringAsFixed(2)}',
-                                            style: TextStyle(
-                                              fontSize: 22,
-                                              fontWeight: FontWeight.w800,
-                                            ),
-                                          ),
-                                          Text(
-                                            'Delivery Time | ${product.deliveryTime}',
-                                            style: TextStyle(fontSize: 12),
-                                          ),
-                                        ],
                                       ),
                                     ],
                                   ),
-                                ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    '₹${product.price.toStringAsFixed(2)}',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  SizedBox(height: 2),
+                                  Text(
+                                    'Delivery by ${product.deliveryTime}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
                               ),
-                            );
-                          },
-                        ).animate().slide(
-                          duration: Duration(milliseconds: 1000),
-                          curve: Curves.easeInOutCubic,
+                            ),
+                          ],
                         ),
-                  ),
-                ],
+                      ),
+                    ),
+                  );
+                },
+                childCount: products.length,
               ),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 3,
+                mainAxisSpacing: 3,
+                childAspectRatio: 0.65,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

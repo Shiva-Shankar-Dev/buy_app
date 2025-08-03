@@ -133,75 +133,107 @@ class _MobileLoginPageState extends State<MobileLoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        foregroundColor: Colors.white,
-        backgroundColor: colorPallete.color4,
+        leading: CloseButton(color: Colors.black,),
+        backgroundColor: Colors.white,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Enter your Mobile',
-                style: TextStyle(
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'PlayfairDisplay',
+        padding: const EdgeInsets.all(5.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      colorPallete.color1,
+                      colorPallete.color2,
+                    ]
+                  ),
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: Colors.grey)
                 ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Icon(Icons.call_outlined, size: 50, color: Colors.white,),
+                )
               ),
-              SizedBox(height: 50),
-              TextField(
+            ),
+            Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Continue with your Mobile Number...',
+                    style: TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                  Text(
+                    'Verify your account using your mobile number.',
+                    style: TextStyle(fontSize: 15, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.all(5.0),
+              child: TextField(
                 controller: mobileController,
                 keyboardType: TextInputType.phone,
                 decoration: InputDecoration(
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: Colors.grey, width: 3),
+                    borderRadius: BorderRadius.circular(15),
+                    borderSide: BorderSide(color: Colors.grey, width: 1.5),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(
-                      color: colorPallete.color1,
-                      width: 3,
-                    ),
+                    borderRadius: BorderRadius.circular(15),
+                    borderSide: BorderSide(color: colorPallete.color1, width: 1.5),
                   ),
                   hintText: 'Mobile',
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(15),
                   ),
                 ),
               ),
-              SizedBox(height: 50),
-              Container(
+            ),
+            SizedBox(height: 50),
+            Align(
+              alignment: Alignment.center,
+              child: Container(
+                width: MediaQuery.of(context).size.width - 30,
+                height: 55,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [colorPallete.color1, colorPallete.color2],
                     begin: Alignment.bottomLeft,
                     end: Alignment.topRight,
                   ),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(15),
                 ),
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    fixedSize: const Size(320, 55),
                     shadowColor: colorPallete.color4,
                     backgroundColor: colorPallete.color4,
                   ),
                   onPressed: _isSending ? null : _sendOtp,
-                  child: _isSending
-                      ? CircularProgressIndicator()
-                      : Text(
-                          'Send OTP',
-                          style: TextStyle(color: Colors.white, fontSize: 18),
+                  child: _isSending ? CircularProgressIndicator() : Text(
+                          'Send OTP', style: TextStyle(color: Colors.white, fontSize: 18),
                         ),
                 ),
               ),
-              SizedBox(height: 50),
-            ],
-          ),
+            ),
+            SizedBox(height: 50),
+          ],
         ),
       ),
     );

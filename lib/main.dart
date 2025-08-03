@@ -1,5 +1,6 @@
 import 'package:buy_app/animated_splash_screen_widget.dart';
 import 'package:buy_app/colorPallete/color_pallete.dart';
+import 'package:buy_app/index.dart';
 import 'package:buy_app/screens/address/account_page.dart';
 import 'package:buy_app/screens/address/add_new_address.dart';
 import 'package:buy_app/screens/add_page.dart';
@@ -61,7 +62,7 @@ class MyApp extends StatelessWidget {
         '/': (context) => AnimatedSplashScreenWidget(),
         '/login': (context) => LoginPage(),
         '/signup': (context) => SignUpPage(),
-        '/home': (context) => HomePage(),
+        '/home': (context) => Index(),
         '/mobile': (context) => MobileLoginPage(),
         '/cart': (context) => CartPage(),
         '/add': (context) => AddPage(),

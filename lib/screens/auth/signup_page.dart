@@ -7,6 +7,8 @@ import '../../widgets/auth_button.dart';
 import 'package:buy_app/services/auth.dart';
 
 class SignUpPage extends StatefulWidget {
+  const SignUpPage({super.key});
+
   @override
   State<SignUpPage> createState() => _SignUpPage();
 }
@@ -18,17 +20,14 @@ class _SignUpPage extends State<SignUpPage> {
   final mobileController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   final AuthService _authService = AuthService();
+  Null get result => null;
 
-  get result => null;
-
-  void handleSingup() async {
+  void handleSignup() async {
     final mobile = mobileController.text.trim();
-    print("📝 Starting signup process...");
-    print("📱 Mobile number being saved: $mobile");
-    final valid = await FirebaseFirestore.instance
-        .collection('customers')
-        .where('mobile', isEqualTo: mobile)
-        .get();
+    debugPrint("📝 Starting signup process...");
+    debugPrint("📱 Mobile number being saved: $mobile");
+    final valid = await FirebaseFirestore.instance.collection('customers')
+        .where('mobile', isEqualTo: mobile).get();
     if (valid.docs.isEmpty) {
       String? result = await _authService.signUpUser(
         name: fullNameController.text.trim(),
@@ -37,22 +36,26 @@ class _SignUpPage extends State<SignUpPage> {
         mobile: mobile,
       );
       if (result == null) {
-        print(" Signup success! User created with mobile: $mobile");
+        debugPrint(" Signup success! User created with mobile: $mobile");
+        if(!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Account created successfully!'),
             backgroundColor: Colors.green,
           ),
         );
+        if(!mounted) return;
         Navigator.pushNamed(context, '/home');
       } else {
-        print("❌ Signup error: $result");
+        debugPrint("❌ Signup error: $result");
+        if(!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(result), backgroundColor: Colors.red),
         );
       }
     } else {
-      print("Sign Up error!");
+      debugPrint("Sign Up error!");
+      if(!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -65,6 +68,7 @@ class _SignUpPage extends State<SignUpPage> {
     }
   }
 
+  @override
   void dispose() {
     super.dispose();
     fullNameController.dispose();
@@ -76,22 +80,41 @@ class _SignUpPage extends State<SignUpPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        leading: CloseButton(color: Colors.black,),
+        backgroundColor: Colors.white,
+        elevation: 0,
+      ),
       body: SingleChildScrollView(
-        child: Container(
-          height: MediaQuery.of(context).size.height,
-          alignment: Alignment.center,
+        child: Padding(
+          padding: const EdgeInsets.all(5.0),
           child: Form(
             key: _formKey,
             child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                SizedBox(height: 85),
-                Text(
-                  'Sign Up.',
-                  style: TextStyle(fontSize: 50, fontWeight: FontWeight.bold),
+                Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Create Account...', style: TextStyle(
+                        fontSize: 35,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: "Poppins",
+                      )),
+                      Padding(
+                        padding: const EdgeInsets.all(2.0),
+                        child: Text('Create your account with your Email and Password', style: TextStyle(
+                            fontSize: 15,
+                            color: Colors.grey,
+                        )),
+                      ),
+                    ],
+                  ),
                 ),
-                SizedBox(height: 27),
+                SizedBox(height: 15),
                 Form(
                   child: Column(
                     children: [
@@ -115,15 +138,8 @@ class _SignUpPage extends State<SignUpPage> {
                           return null;
                         },
                       ),
-                      AuthTextField(
-                        hintText: 'Password',
-                        controller: passwordController,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Password cannot be empty';
-                          }
-                          return null;
-                        },
+                      AuthPassword(
+                        passwordController: passwordController,
                       ),
                       AuthTextField(
                         hintText: 'Mobile (+91xxxxxxxxxx)',
@@ -147,28 +163,47 @@ class _SignUpPage extends State<SignUpPage> {
                 ),
 
                 SizedBox(height: 20),
-                AuthButton(
-                  hintText: 'Sign Up',
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      handleSingup();
-                    }
-                  },
+                Align(
+                  alignment: Alignment.center,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: AuthButton(
+                      hintText: 'Sign Up',
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          handleSignup();
+                        }
+                      },
+                    ),
+                  ),
                 ),
                 SizedBox(height: 36),
-                RichText(
-                  text: TextSpan(
-                    text: 'Already have an account? ',
-                    children: [
-                      TextSpan(
-                        text: 'Login',
-                        style: TextStyle(color: colorPallete.color1),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = () {
-                            Navigator.pushNamed(context, '/login');
-                          },
+                Align(
+                  alignment: Alignment.center,
+                  child: Container(
+                    width: MediaQuery.of(context).size.width - 30,
+                    height: 56,
+                    decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(15)
+                    ),
+                    child: Center(
+                      child: RichText(
+                        text: TextSpan(
+                          text: 'Already have an account? ',
+                          style: TextStyle(color: Colors.black),
+                          children: [
+                            TextSpan(
+                              text: 'Login Now',
+                              style: TextStyle(color: colorPallete.color1, fontSize: 15),
+                              recognizer: TapGestureRecognizer()..onTap = () {
+                                Navigator.pushNamed(context, '/login');
+                              },
+                            ),
+                          ],
+                        ),
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ],
