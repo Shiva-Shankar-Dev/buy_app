@@ -7,7 +7,7 @@ import 'package:buy_app/screens/address/address_selection_page.dart';
 import 'package:buy_app/screens/cart_page.dart';
 import 'package:buy_app/screens/checkout_page.dart';
 import 'package:buy_app/screens/auth/otp_page.dart';
-import 'package:buy_app/screens/payment_page.dart';
+import 'package:buy_app/screens/payments/payment_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'screens/auth/login_page.dart';
