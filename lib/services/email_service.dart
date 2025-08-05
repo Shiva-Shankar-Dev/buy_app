@@ -5,8 +5,6 @@ import 'package:buy_app/services/seller_service.dart';
 import 'package:buy_app/services/cart_manager.dart';
 import 'package:buy_app/screens/home_page.dart'; // For Product model
 //Code + Generate and save to database
-import 'package:intl/intl.dart';
-import 'dart:math';
 
 class EmailService {
   static const String _emailServerUrl = 'http://localhost:3000/send';
@@ -52,33 +50,53 @@ class EmailService {
       (sum, product) => sum + product.price,
     );
 
-    String message1 = "Dear $customerName,\n\n";
-    message1 += "Your order has been successfully placed!\n\n";
-    message1 += "ORDER SUMMARY:\n\n";
-    message1 += "Order ID: $ordId\n\n";
-    message1 += "Ordered Products:\n\n";
+    String message1 = "<html><body>";
+    message1 += "<h2>Dear $customerName,</h2>";
+    message1 += "<p>Your order has been successfully placed!</p>";
+    message1 += "<h3>ORDER SUMMARY</h3>";
+    message1 += "<p><strong>Order ID:</strong> $ordId</p>";
+
+    // Create HTML table for products
+    message1 += "<h4>Ordered Products:</h4>";
+    message1 +=
+        "<table border='1' cellpadding='8' cellspacing='0' style='border-collapse: collapse; width: 100%; margin: 10px 0;'>";
+    message1 += "<thead style='background-color: #f0f0f0;'>";
+    message1 +=
+        "<tr><th style='text-align: left; padding: 10px;'>Product Name</th><th style='text-align: right; padding: 10px;'>Price</th></tr>";
+    message1 += "</thead><tbody>";
+
     for (final product in orderedProducts) {
-      message1 += "- ${product.title} - ₹${product.price.toStringAsFixed(2)}\n";
+      message1 += "<tr>";
+      message1 +=
+          "<td style='padding: 8px; border-bottom: 1px solid #ddd;'>${product.title}</td>";
+      message1 +=
+          "<td style='padding: 8px; text-align: right; border-bottom: 1px solid #ddd;'>₹${product.price.toStringAsFixed(2)}</td>";
+      message1 += "</tr>";
     }
 
-    message1 += "\nTOTAL AMOUNT: ₹${totalAmount.toStringAsFixed(2)}\n\n";
-    message1 += "Payment Method: $paymentMethod\n\n";
-    message1 += "Transaction ID: $txnId\n\n";
-    message1 += "\n\nSHIPPING ADDRESS:\n";
-    message1 += "${shippingAddress.first} ${shippingAddress.last}\n";
-    message1 += "${shippingAddress.line1}\n";
+    message1 += "</tbody></table>";
+    message1 +=
+        "<p><strong>TOTAL AMOUNT: ₹${totalAmount.toStringAsFixed(2)}</strong></p>";
+    message1 += "<p><strong>Payment Method:</strong> $paymentMethod</p>";
+    message1 += "<p><strong>Transaction ID:</strong> $txnId</p>";
+
+    message1 += "<h4>SHIPPING ADDRESS:</h4>";
+    message1 +=
+        "<div style='background-color: #f9f9f9; padding: 10px; border-left: 4px solid #007bff; margin: 10px 0;'>";
+    message1 += "<p>${shippingAddress.first} ${shippingAddress.last}<br>";
+    message1 += "${shippingAddress.line1}<br>";
     if (shippingAddress.line2.isNotEmpty) {
-      message1 += "${shippingAddress.line2}\n";
+      message1 += "${shippingAddress.line2}<br>";
     }
-
-    // Use HTML line breaks for email formatting
-
     message1 +=
-        "${shippingAddress.city}, ${shippingAddress.state} - ${shippingAddress.pincode}\n\n";
+        "${shippingAddress.city}, ${shippingAddress.state} - ${shippingAddress.pincode}</p>";
+    message1 += "</div>";
+
+    message1 += "<hr style='margin: 20px 0;'>";
     message1 +=
-        "\nYour order will be processed soon. You will receive updates via email and SMS.\n\n";
-    message1 += "Thank you for shopping with us!";
-    message1 = message1.replaceAll('\n', '<br>');
+        "<p>Your order will be processed soon. You will receive updates via email and SMS.</p>";
+    message1 += "<p><strong>Thank you for shopping with us!</strong></p>";
+    message1 += "</body></html>";
     return await sendEmail(
       to: customerEmail,
       subject: "Order Confirmation - Your order has been placed!",
@@ -192,44 +210,75 @@ class EmailService {
       final customerEmail = customer['email'] ?? 'Not provided';
       final customerPhone = customer['phone'] ?? 'Not provided';
 
-      String orderDetails = "Dear Seller,\n\n";
+      String orderDetails = "<html><body>";
+      orderDetails += "<h2>Dear Seller,</h2>";
       orderDetails +=
-          "🎉 You have received a new order from $customerName!\n\n";
-      orderDetails += "📋 CUSTOMER DETAILS:\n";
-      orderDetails += "Name: $customerName\n";
-      orderDetails += "Email: $customerEmail\n";
-      orderDetails += "Phone: $customerPhone\n\n";
-      orderDetails += "📦 SHIPPING ADDRESS:\n";
-      orderDetails += "${shippingAddress.first} ${shippingAddress.last}\n";
-      orderDetails += "${shippingAddress.line1}\n";
-      if (shippingAddress.line2.isNotEmpty) {
-        orderDetails += "${shippingAddress.line2}\n";
-      }
+          "<p>🎉 You have received a new order from <strong>$customerName</strong>!</p>";
 
+      orderDetails += "<h3>📋 CUSTOMER DETAILS</h3>";
       orderDetails +=
-          "${shippingAddress.city}, ${shippingAddress.state} - ${shippingAddress.pincode}\n\n";
-      orderDetails += "🛍️ ORDERED PRODUCTS:\n";
+          "<div style='background-color: #f0f8ff; padding: 10px; border-radius: 5px; margin: 10px 0;'>";
+      orderDetails += "<p><strong>Name:</strong> $customerName<br>";
+      orderDetails += "<strong>Email:</strong> $customerEmail<br>";
+      orderDetails += "<strong>Phone:</strong> $customerPhone</p>";
+      orderDetails += "</div>";
+
+      orderDetails += "<h3>📦 SHIPPING ADDRESS</h3>";
+      orderDetails +=
+          "<div style='background-color: #f9f9f9; padding: 10px; border-left: 4px solid #28a745; margin: 10px 0;'>";
+      orderDetails += "<p>${shippingAddress.first} ${shippingAddress.last}<br>";
+      orderDetails += "${shippingAddress.line1}<br>";
+      if (shippingAddress.line2.isNotEmpty) {
+        orderDetails += "${shippingAddress.line2}<br>";
+      }
+      orderDetails +=
+          "${shippingAddress.city}, ${shippingAddress.state} - ${shippingAddress.pincode}</p>";
+      orderDetails += "</div>";
+
+      orderDetails += "<h3>🛍️ ORDERED PRODUCTS</h3>";
+      orderDetails += "<p><strong>Order ID:</strong> $ordId</p>";
+
+      // Create HTML table for products
+      orderDetails +=
+          "<table border='1' cellpadding='8' cellspacing='0' style='border-collapse: collapse; width: 100%; margin: 10px 0;'>";
+      orderDetails +=
+          "<thead style='background-color: #28a745; color: white;'>";
+      orderDetails +=
+          "<tr><th style='text-align: left; padding: 10px;'>Product Name</th><th style='text-align: right; padding: 10px;'>Price</th></tr>";
+      orderDetails += "</thead><tbody>";
 
       double totalAmount = 0;
-      orderDetails += "Order ID: $ordId\n\n";
       for (final product in products) {
+        orderDetails += "<tr>";
         orderDetails +=
-            "• ${product.title} - ₹${product.price.toStringAsFixed(2)}\n";
+            "<td style='padding: 8px; border-bottom: 1px solid #ddd;'>${product.title}</td>";
+        orderDetails +=
+            "<td style='padding: 8px; text-align: right; border-bottom: 1px solid #ddd;'>₹${product.price.toStringAsFixed(2)}</td>";
+        orderDetails += "</tr>";
         totalAmount += product.price;
       }
 
+      orderDetails += "</tbody></table>";
       orderDetails +=
-          "\n💰 TOTAL AMOUNT: ₹${totalAmount.toStringAsFixed(2)}\n\n";
-      orderDetails += "Payment Method: $paymentMethod\n";
-      orderDetails += "Transaction ID: $txnId\n\n";
+          "<p><strong>💰 TOTAL AMOUNT: ₹${totalAmount.toStringAsFixed(2)}</strong></p>";
+      orderDetails += "<p><strong>Payment Method:</strong> $paymentMethod<br>";
+      orderDetails += "<strong>Transaction ID:</strong> $txnId</p>";
+
+      orderDetails += "<hr style='margin: 20px 0;'>";
+      orderDetails += "<h4>📞 Next Steps:</h4>";
       orderDetails +=
-          "📞 Please process this order and contact the customer if needed.\n";
-      orderDetails += "📧 Customer Email: $customerEmail\n";
-      orderDetails += "📱 Customer Phone: $customerPhone\n\n";
-      orderDetails += "Thank you for using our platform! 🙏";
+          "<p>Please process this order and contact the customer if needed.</p>";
+      orderDetails +=
+          "<div style='background-color: #fff3cd; padding: 10px; border-radius: 5px; border-left: 4px solid #ffc107;'>";
+      orderDetails +=
+          "<p><strong>📧 Customer Email:</strong> $customerEmail<br>";
+      orderDetails += "<strong>📱 Customer Phone:</strong> $customerPhone</p>";
+      orderDetails += "</div>";
+      orderDetails +=
+          "<p><strong>Thank you for using our platform! 🙏</strong></p>";
+      orderDetails += "</body></html>";
 
       // Convert newlines to <br> for HTML emails
-      orderDetails = orderDetails.replaceAll('\n', '<br>');
 
       // Send email to seller
       final success = await sendEmail(

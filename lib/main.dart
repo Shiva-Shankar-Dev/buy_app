@@ -13,8 +13,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'screens/auth/login_page.dart';
 import 'screens/auth/signup_page.dart';
-import 'screens/home_page.dart';
 import 'screens/auth/mobile_login_page.dart';
+import 'screens/payments/payment_card_page.dart';
+import 'screens/payments/payment_upi_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -79,6 +80,24 @@ class MyApp extends StatelessWidget {
             builder: (_) => OtpPage(
               phone: args['phone'],
               verificationId: args['verificationId'],
+            ),
+          );
+        }
+        if (settings.name == '/payment_upi') {
+          final args = settings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (_) => PaymentUpiPage(
+              customer: args['customer'],
+              address: args['address'],
+            ),
+          );
+        }
+        if (settings.name == '/payment_card') {
+          final args = settings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (_) => PaymentCardPage(
+              customer: args['customer'],
+              address: args['address'],
             ),
           );
         }

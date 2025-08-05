@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'payment_completed_page.dart';
+import 'package:buy_app/screens/payments/payment_completed_page.dart';
 import 'dart:math';
 import 'package:intl/intl.dart';
 
