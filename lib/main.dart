@@ -1,7 +1,7 @@
 import 'package:buy_app/animated_splash_screen_widget.dart';
 import 'package:buy_app/colorPallete/color_pallete.dart';
 import 'package:buy_app/index.dart';
-import 'package:buy_app/screens/address/account_page.dart';
+import 'package:buy_app/screens/account_page.dart'; // FIXED: Changed from address/account_page.dart
 import 'package:buy_app/screens/address/add_new_address.dart';
 import 'package:buy_app/screens/add_page.dart';
 import 'package:buy_app/screens/address/address_selection_page.dart';
@@ -16,6 +16,7 @@ import 'screens/auth/signup_page.dart';
 import 'screens/auth/mobile_login_page.dart';
 import 'screens/payments/payment_card_page.dart';
 import 'screens/payments/payment_upi_page.dart';
+import 'package:buy_app/screens/account/order_history.dart'; // FIXED: Changed from order_history.dart
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -68,10 +69,13 @@ class MyApp extends StatelessWidget {
         '/cart': (context) => CartPage(),
         '/add': (context) => AddPage(),
         '/checkout': (context) => CheckoutPage(),
-        '/account': (context) => AccountPage(),
+        '/account': (context) =>
+            AccountPage(), // Now points to correct AccountPage
         '/address_select': (context) => AddressSelectionPage(),
-        '/add_address': (context) => AddAddressPage(),
+        '/add_address': (context) => AddNewAddressPage(),
         '/payment': (context) => PaymentPage(),
+        '/order_history': (context) =>
+            OrderHistoryPage(), // FIXED: Now points to correct page
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/otp') {

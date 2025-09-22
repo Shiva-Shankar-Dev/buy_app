@@ -4,6 +4,7 @@ import 'package:buy_app/services/sms_service.dart';
 import 'package:buy_app/services/email_service.dart';
 import 'package:buy_app/services/cart_manager.dart';
 import 'package:buy_app/widgets/normal_button.dart';
+import 'package:buy_app/colorPallete/color_pallete.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:intl/intl.dart';
@@ -30,17 +31,20 @@ class _PaymentPageState extends State<PaymentPage> {
   final AuthService _authService = AuthService();
   Map<String, dynamic>? customer;
   Address? address;
-  String? _selectedPaymentMode = 'COD'; // Default to COD
+  String? _selectedPaymentMode = 'COD';
   bool _isProcessing = false;
 
-  double get totalAmount =>
-      Cart.instance.items.fold(0.0, (sum, item) => sum + item.price);
+  // Fix: Use item.product.price instead of item.price
+  double get totalAmount => Cart.instance.items.fold(
+    0.0,
+    (sum, item) => sum + (item.product.price * item.quantity),
+  );
 
   @override
   void initState() {
     super.initState();
     loadCustomer();
-    _selectedPaymentMode = 'COD'; // Set default payment mode
+    _selectedPaymentMode = 'COD';
   }
 
   String formatPhoneNumber(String rawPhone) {
@@ -63,26 +67,26 @@ class _PaymentPageState extends State<PaymentPage> {
     final cart = Cart.instance;
     final email = customer!['email'];
     final name = customer!['name'] ?? 'Customer';
-    final phone = formatPhoneNumber(customer?['phone']);
+    final phone = formatPhoneNumber(customer?['phone'] ?? '');
     final paymentMethod = _selectedPaymentMode ?? 'COD';
 
     try {
-      // Generate consistent Order ID and Transaction ID
       final ordId = generateOrderId();
       final txnId = paymentMethod == 'COD' ? 'N/A' : ordId;
 
       // 1. Send confirmation email to customer
+      // Fix: Use orderedItems instead of orderedProducts
       await EmailService.sendCustomerConfirmationEmail(
         customerEmail: email,
         customerName: name,
         shippingAddress: address!,
-        orderedProducts: cart.items,
+        orderedItems: cart.items, // Changed from orderedProducts
         ordId: ordId,
         paymentMethod: paymentMethod,
         txnId: txnId,
       );
 
-      // 2. Send order details to all relevant sellers
+      // 2. Send order details to sellers
       await EmailService.sendOrderDetailsToSellers(
         customer: customer!,
         shippingAddress: address!,
@@ -101,14 +105,14 @@ class _PaymentPageState extends State<PaymentPage> {
         );
       }
 
-      // 4. Clear the cart **after** all notifications are sent successfully
+      // 4. Clear cart after notifications
       print('🛒 Clearing cart after notifications sent successfully');
       cart.clear();
       print('🛒 Cart cleared. Items count: ${cart.items.length}');
     } catch (e) {
-      cart.clear();
       print("❌ Error sending notifications: $e");
-      // Do NOT clear the cart here!
+      // Clear cart even on error to prevent duplicate orders
+      cart.clear();
     }
   }
 
@@ -116,7 +120,6 @@ class _PaymentPageState extends State<PaymentPage> {
     if (_selectedPaymentMode == null) return;
     setState(() => _isProcessing = true);
 
-    // Simulate payment delay for non-COD
     if (_selectedPaymentMode == 'COD') {
       setState(() => _isProcessing = false);
       if (!mounted) return;
@@ -129,19 +132,21 @@ class _PaymentPageState extends State<PaymentPage> {
         ),
       );
     } else if (_selectedPaymentMode == 'UPI') {
+      setState(() => _isProcessing = false);
       Navigator.of(context).pushNamed(
         '/payment_upi',
         arguments: {'customer': customer, 'address': address},
       );
       return;
     } else if (_selectedPaymentMode == 'Card') {
+      setState(() => _isProcessing = false);
       Navigator.of(context).pushNamed(
         '/payment_card',
         arguments: {'customer': customer, 'address': address},
       );
       return;
     } else {
-      await Future.delayed(Duration(seconds: 2)); // Simulate payment
+      await Future.delayed(Duration(seconds: 2));
       setState(() => _isProcessing = false);
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
@@ -157,61 +162,138 @@ class _PaymentPageState extends State<PaymentPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Get address from arguments if not already set
     address ??= ModalRoute.of(context)?.settings.arguments as Address?;
 
     if (customer == null || address == null) {
       return Scaffold(
-        appBar: AppBar(title: Text('Payment Details')),
+        appBar: AppBar(
+          title: Text('Payment Details'),
+          backgroundColor: colorPallete.color1,
+          foregroundColor: Colors.white,
+        ),
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text('Payment Details')),
-      body: Center(
+      appBar: AppBar(
+        title: Text('Payment Details'),
+        backgroundColor: colorPallete.color1,
+        foregroundColor: Colors.white,
+      ),
+      body: Padding(
+        padding: EdgeInsets.all(16),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Order Summary Card
+            Card(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Order Summary',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text('Items: ${Cart.instance.totalItems}'),
+                    Text(
+                      'Total: ₹${totalAmount.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: colorPallete.color1,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            SizedBox(height: 20),
+
+            // Payment Options
             Text(
-              "Total Amount: ₹${totalAmount.toStringAsFixed(2)}",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              "Select Payment Method:",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 24),
-            Text("Select Payment Mode:", style: TextStyle(fontSize: 18)),
-            ListTile(
-              title: Text("Cash on Delivery (COD)"),
-              leading: Radio<String>(
-                value: 'COD',
-                groupValue: _selectedPaymentMode,
-                onChanged: (val) => setState(() => _selectedPaymentMode = val),
-              ),
-            ),
-            ListTile(
-              title: Text("UPI"),
-              leading: Radio<String>(
-                value: 'UPI',
-                groupValue: _selectedPaymentMode,
-                onChanged: (val) => setState(() => _selectedPaymentMode = val),
-              ),
-            ),
-            ListTile(
-              title: Text("Credit/Debit Card"),
-              leading: Radio<String>(
-                value: 'Card',
-                groupValue: _selectedPaymentMode,
-                onChanged: (val) => setState(() => _selectedPaymentMode = val),
-              ),
-            ),
-            SizedBox(height: 24),
-            _isProcessing
-                ? CircularProgressIndicator()
-                : NormalButton(
-                    hintText: _selectedPaymentMode == 'COD'
-                        ? 'Place Order'
-                        : 'Pay & Place Order',
-                    onPressed: _isProcessing ? () {} : _handlePayment,
+            SizedBox(height: 10),
+
+            Card(
+              child: Column(
+                children: [
+                  ListTile(
+                    title: Text("Cash on Delivery (COD)"),
+                    subtitle: Text("Pay when you receive"),
+                    leading: Radio<String>(
+                      value: 'COD',
+                      groupValue: _selectedPaymentMode,
+                      onChanged: (val) =>
+                          setState(() => _selectedPaymentMode = val),
+                    ),
+                    trailing: Icon(Icons.local_shipping),
                   ),
+                  Divider(height: 1),
+                  ListTile(
+                    title: Text("UPI Payment"),
+                    subtitle: Text("Pay using UPI apps"),
+                    leading: Radio<String>(
+                      value: 'UPI',
+                      groupValue: _selectedPaymentMode,
+                      onChanged: (val) =>
+                          setState(() => _selectedPaymentMode = val),
+                    ),
+                    trailing: Icon(Icons.account_balance_wallet),
+                  ),
+                  Divider(height: 1),
+                  ListTile(
+                    title: Text("Credit/Debit Card"),
+                    subtitle: Text("Pay using card"),
+                    leading: Radio<String>(
+                      value: 'Card',
+                      groupValue: _selectedPaymentMode,
+                      onChanged: (val) =>
+                          setState(() => _selectedPaymentMode = val),
+                    ),
+                    trailing: Icon(Icons.credit_card),
+                  ),
+                ],
+              ),
+            ),
+
+            Spacer(),
+
+            // Payment Button
+            Container(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isProcessing ? null : _handlePayment,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colorPallete.color1,
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: _isProcessing
+                    ? CircularProgressIndicator(color: Colors.white)
+                    : Text(
+                        _selectedPaymentMode == 'COD'
+                            ? 'Place Order'
+                            : 'Pay ₹${totalAmount.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+              ),
+            ),
           ],
         ),
       ),
@@ -222,6 +304,7 @@ class _PaymentPageState extends State<PaymentPage> {
 class OrderSuccessPage extends StatefulWidget {
   final bool isCOD;
   final Future<void> Function()? sendNotifications;
+
   const OrderSuccessPage({
     super.key,
     required this.isCOD,
@@ -252,23 +335,36 @@ class _OrderSuccessPageState extends State<OrderSuccessPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.check_circle, color: Colors.green, size: 80),
+            Icon(Icons.check_circle, color: Colors.green, size: 100),
             SizedBox(height: 20),
             Text(
               widget.isCOD
                   ? "Order Placed Successfully!"
-                  : "Payment Successful\nOrder Placed Successfully!",
+                  : "Payment Successful!\nOrder Placed Successfully!",
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.green.shade700,
+              ),
+            ),
+            SizedBox(height: 10),
+            Text(
+              "Thank you for your order!",
+              style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
             ),
             SizedBox(height: 30),
-            CircularProgressIndicator(),
+            CircularProgressIndicator(color: colorPallete.color1),
             SizedBox(height: 10),
-            Text("Redirecting to Home...", style: TextStyle(fontSize: 16)),
+            Text(
+              "Redirecting to Home...",
+              style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+            ),
           ],
         ),
       ),

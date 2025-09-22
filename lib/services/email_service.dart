@@ -3,8 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:buy_app/services/addresses.dart';
 import 'package:buy_app/services/seller_service.dart';
 import 'package:buy_app/services/cart_manager.dart';
-import 'package:buy_app/screens/home_page.dart'; // For Product model
-//Code + Generate and save to database
+import 'package:buy_app/models/models.dart'; // Import from models file
 
 class EmailService {
   static const String _emailServerUrl = 'http://localhost:3000/send';
@@ -40,14 +39,15 @@ class EmailService {
     required String customerEmail,
     required String customerName,
     required Address shippingAddress,
-    required List<Product> orderedProducts,
+    required List<CartItem> orderedItems,
     required String ordId,
     required String paymentMethod,
     required String txnId,
   }) async {
-    double totalAmount = orderedProducts.fold(
+    // Calculate total amount considering quantities
+    double totalAmount = orderedItems.fold(
       0.0,
-      (sum, product) => sum + product.price,
+      (sum, item) => sum + (item.product.price * item.quantity),
     );
 
     String message1 = "<html><body>";
@@ -56,21 +56,26 @@ class EmailService {
     message1 += "<h3>ORDER SUMMARY</h3>";
     message1 += "<p><strong>Order ID:</strong> $ordId</p>";
 
-    // Create HTML table for products
+    // Create HTML table for products with quantities
     message1 += "<h4>Ordered Products:</h4>";
     message1 +=
         "<table border='1' cellpadding='8' cellspacing='0' style='border-collapse: collapse; width: 100%; margin: 10px 0;'>";
     message1 += "<thead style='background-color: #f0f0f0;'>";
     message1 +=
-        "<tr><th style='text-align: left; padding: 10px;'>Product Name</th><th style='text-align: right; padding: 10px;'>Price</th></tr>";
+        "<tr><th style='text-align: left; padding: 10px;'>Product Name</th><th style='text-align: center; padding: 10px;'>Quantity</th><th style='text-align: right; padding: 10px;'>Unit Price</th><th style='text-align: right; padding: 10px;'>Total</th></tr>";
     message1 += "</thead><tbody>";
 
-    for (final product in orderedProducts) {
+    for (final item in orderedItems) {
+      final itemTotal = item.product.price * item.quantity;
       message1 += "<tr>";
       message1 +=
-          "<td style='padding: 8px; border-bottom: 1px solid #ddd;'>${product.title}</td>";
+          "<td style='padding: 8px; border-bottom: 1px solid #ddd;'>${item.product.title}</td>";
       message1 +=
-          "<td style='padding: 8px; text-align: right; border-bottom: 1px solid #ddd;'>₹${product.price.toStringAsFixed(2)}</td>";
+          "<td style='padding: 8px; text-align: center; border-bottom: 1px solid #ddd;'>${item.quantity}</td>";
+      message1 +=
+          "<td style='padding: 8px; text-align: right; border-bottom: 1px solid #ddd;'>₹${item.product.price.toStringAsFixed(2)}</td>";
+      message1 +=
+          "<td style='padding: 8px; text-align: right; border-bottom: 1px solid #ddd;'>₹${itemTotal.toStringAsFixed(2)}</td>";
       message1 += "</tr>";
     }
 
@@ -97,6 +102,7 @@ class EmailService {
         "<p>Your order will be processed soon. You will receive updates via email and SMS.</p>";
     message1 += "<p><strong>Thank you for shopping with us!</strong></p>";
     message1 += "</body></html>";
+
     return await sendEmail(
       to: customerEmail,
       subject: "Order Confirmation - Your order has been placed!",
@@ -120,57 +126,57 @@ class EmailService {
     }
 
     print(
-      "🛒 Cart items: ${cart.items.map((e) => {'title': e.title, 'sellerId': e.sellerId}).toList()}",
+      "🛒 Cart items: ${cart.items.map((item) => {'title': item.product.title, 'sellerId': item.product.sellerId}).toList()}",
     );
 
-    // Group products by seller ID
-    Map<String?, List<Product>> productsBySeller = {};
-    int productsWithoutSellerId = 0;
+    // Group cart items by seller ID
+    Map<String?, List<CartItem>> itemsBySeller = {};
+    int itemsWithoutSellerId = 0;
 
-    for (final product in cart.items) {
-      final sellerId = product.sellerId;
+    for (final item in cart.items) {
+      final sellerId = item.product.sellerId;
       if (sellerId == null || sellerId.isEmpty) {
         print(
-          "⚠️ Product '${product.title}' without seller ID found, skipping...",
+          "⚠️ Product '${item.product.title}' without seller ID found, skipping...",
         );
-        productsWithoutSellerId++;
+        itemsWithoutSellerId++;
         continue;
       }
-      if (productsBySeller[sellerId] == null) {
-        productsBySeller[sellerId] = [];
+      if (itemsBySeller[sellerId] == null) {
+        itemsBySeller[sellerId] = [];
       }
-      productsBySeller[sellerId]!.add(product);
+      itemsBySeller[sellerId]!.add(item);
     }
 
-    if (productsWithoutSellerId > 0) {
-      print("⚠️ Found $productsWithoutSellerId products without seller IDs");
+    if (itemsWithoutSellerId > 0) {
+      print("⚠️ Found $itemsWithoutSellerId items without seller IDs");
     }
 
-    if (productsBySeller.isEmpty) {
-      print("❌ No products with valid seller IDs found");
+    if (itemsBySeller.isEmpty) {
+      print("❌ No items with valid seller IDs found");
       return false;
     }
 
-    print("📊 Found ${productsBySeller.length} sellers to notify");
+    print("📊 Found ${itemsBySeller.length} sellers to notify");
 
     bool allEmailsSent = true;
     // Send email to each seller
-    for (final entry in productsBySeller.entries) {
+    for (final entry in itemsBySeller.entries) {
       final sellerId = entry.key;
-      final products = entry.value;
+      final items = entry.value;
 
       if (sellerId == null || sellerId.isEmpty) {
-        print("⚠️ Product without seller ID found in group, skipping...");
+        print("⚠️ Item without seller ID found in group, skipping...");
         continue;
       }
 
       print(
-        "📧 Sending email to sellerId: $sellerId for products: ${products.map((e) => e.title).toList()}",
+        "📧 Sending email to sellerId: $sellerId for products: ${items.map((item) => item.product.title).toList()}",
       );
 
       final success = await _sendSellerOrderEmail(
         sellerId: sellerId,
-        products: products,
+        items: items,
         customer: customer,
         shippingAddress: shippingAddress,
         ordId: ordId,
@@ -189,7 +195,7 @@ class EmailService {
   /// Private method to send email to individual seller
   static Future<bool> _sendSellerOrderEmail({
     required String sellerId,
-    required List<Product> products,
+    required List<CartItem> items,
     required Map<String, dynamic> customer,
     required Address shippingAddress,
     required String ordId,
@@ -238,24 +244,29 @@ class EmailService {
       orderDetails += "<h3>🛍️ ORDERED PRODUCTS</h3>";
       orderDetails += "<p><strong>Order ID:</strong> $ordId</p>";
 
-      // Create HTML table for products
+      // Create HTML table for products with quantities
       orderDetails +=
           "<table border='1' cellpadding='8' cellspacing='0' style='border-collapse: collapse; width: 100%; margin: 10px 0;'>";
       orderDetails +=
           "<thead style='background-color: #28a745; color: white;'>";
       orderDetails +=
-          "<tr><th style='text-align: left; padding: 10px;'>Product Name</th><th style='text-align: right; padding: 10px;'>Price</th></tr>";
+          "<tr><th style='text-align: left; padding: 10px;'>Product Name</th><th style='text-align: center; padding: 10px;'>Quantity</th><th style='text-align: right; padding: 10px;'>Unit Price</th><th style='text-align: right; padding: 10px;'>Total</th></tr>";
       orderDetails += "</thead><tbody>";
 
       double totalAmount = 0;
-      for (final product in products) {
+      for (final item in items) {
+        final itemTotal = item.product.price * item.quantity;
         orderDetails += "<tr>";
         orderDetails +=
-            "<td style='padding: 8px; border-bottom: 1px solid #ddd;'>${product.title}</td>";
+            "<td style='padding: 8px; border-bottom: 1px solid #ddd;'>${item.product.title}</td>";
         orderDetails +=
-            "<td style='padding: 8px; text-align: right; border-bottom: 1px solid #ddd;'>₹${product.price.toStringAsFixed(2)}</td>";
+            "<td style='padding: 8px; text-align: center; border-bottom: 1px solid #ddd;'>${item.quantity}</td>";
+        orderDetails +=
+            "<td style='padding: 8px; text-align: right; border-bottom: 1px solid #ddd;'>₹${item.product.price.toStringAsFixed(2)}</td>";
+        orderDetails +=
+            "<td style='padding: 8px; text-align: right; border-bottom: 1px solid #ddd;'>₹${itemTotal.toStringAsFixed(2)}</td>";
         orderDetails += "</tr>";
-        totalAmount += product.price;
+        totalAmount += itemTotal;
       }
 
       orderDetails += "</tbody></table>";
@@ -277,8 +288,6 @@ class EmailService {
       orderDetails +=
           "<p><strong>Thank you for using our platform! 🙏</strong></p>";
       orderDetails += "</body></html>";
-
-      // Convert newlines to <br> for HTML emails
 
       // Send email to seller
       final success = await sendEmail(
@@ -320,14 +329,12 @@ class EmailService {
 }
 
 Future<void> placeOrder(Map<String, dynamic> customer, Address address) async {
-  // ... existing order placement code ...
-
   await EmailService.sendOrderDetailsToSellers(
     customer: customer,
     shippingAddress: address,
     ordId: 'N/A',
-    paymentMethod: 'COD', // Assuming COD for this example
-    txnId: 'N/A', // No transaction ID for COD
+    paymentMethod: 'COD',
+    txnId: 'N/A',
   );
   Cart.instance.clear();
 }

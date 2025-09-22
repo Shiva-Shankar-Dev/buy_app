@@ -1,7 +1,9 @@
 import 'package:buy_app/widgets/normal_button.dart';
 import 'package:buy_app/widgets/outline_button.dart';
+import 'package:buy_app/colorPallete/color_pallete.dart';
 import 'package:flutter/material.dart';
-import 'package:buy_app/services/cart_manager.dart'; // the singleton
+import 'package:buy_app/services/cart_manager.dart';
+import 'package:buy_app/models/models.dart'; // Add this import for CartItem
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -13,108 +15,249 @@ class CartPage extends StatefulWidget {
 class _CartPageState extends State<CartPage> {
   final cart = Cart.instance;
 
+  Widget _buildQuantityControls(CartItem item) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Decrease button
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                if (item.quantity > 1) {
+                  cart.updateQuantity(item.product, item.quantity - 1);
+                } else {
+                  cart.remove(item.product);
+                }
+              });
+            },
+            child: Container(
+              padding: EdgeInsets.all(8),
+              child: Icon(
+                item.quantity > 1 ? Icons.remove : Icons.delete,
+                color: item.quantity > 1 ? Colors.black : Colors.red,
+                size: 18,
+              ),
+            ),
+          ),
+
+          // Quantity display
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text(
+              '${item.quantity}',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ),
+
+          // Increase button
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                cart.updateQuantity(item.product, item.quantity + 1);
+              });
+            },
+            child: Container(
+              padding: EdgeInsets.all(8),
+              child: Icon(Icons.add, color: Colors.black, size: 18),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Your Cart")),
+      appBar: AppBar(
+        backgroundColor: colorPallete.color1,
+        title: Text(
+          'Cart (${cart.totalItems} items)',
+          style: TextStyle(color: Colors.white),
+        ),
+        iconTheme: IconThemeData(color: Colors.white),
+      ),
       body: cart.items.isEmpty
-          ? Center(child: Text("Your cart is empty"))
+          ? Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.shopping_cart_outlined,
+                    size: 64,
+                    color: Colors.grey,
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Your cart is empty',
+                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                  ),
+                  SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pushNamed(context, '/home'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colorPallete.color1,
+                    ),
+                    child: Text(
+                      'Continue Shopping',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            )
           : Column(
               children: [
                 Expanded(
                   child: ListView.builder(
                     itemCount: cart.items.length,
                     itemBuilder: (context, index) {
-                      final product = cart.items[index];
-                      return InkWell(
-                        child: Card(
-                          child: Padding(
-                            padding: EdgeInsetsGeometry.only(
-                              top: 10,
-                              bottom: 10,
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                const SizedBox(width: 10),
-                                Image.network(
-                                  product.images.first,
-                                  height: 100,
-                                  width: 100,
+                      final item = cart.items[index];
+                      return Card(
+                        margin: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Product Image
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.network(
+                                  item.product.images.isNotEmpty
+                                      ? item.product.images.first
+                                      : '',
+                                  width: 80,
+                                  height: 80,
                                   fit: BoxFit.cover,
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        product.title,
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      Text(
-                                        product.reviews,
-                                        style: TextStyle(color: Colors.amber),
-                                      ),
-                                    ],
+                                  errorBuilder: (_, __, ___) => Container(
+                                    width: 80,
+                                    height: 80,
+                                    color: Colors.grey.shade200,
+                                    child: Icon(
+                                      Icons.image,
+                                      color: Colors.grey,
+                                    ),
                                   ),
                                 ),
-                                const SizedBox(width: 10),
-                                Column(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
+                              ),
+                              SizedBox(width: 16),
+
+                              // Product Details
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      '₹${product.price}',
+                                      item.product.title,
                                       style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      '₹${item.product.price.toStringAsFixed(2)} each',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey.shade600,
                                       ),
                                     ),
-                                    const SizedBox(height: 50),
-                                    CustomOutlineButton(
-                                      hintText: 'Remove',
-                                      onPressed: () {
-                                        setState(() {
-                                          cart.remove(product);
-                                        });
-                                      },
-                                      height: 110,
-                                      width: 35,
+                                    SizedBox(height: 8),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        _buildQuantityControls(item),
+                                        Text(
+                                          '₹${(item.product.price * item.quantity).toStringAsFixed(2)}',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: colorPallete.color1,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
-                                const SizedBox(width: 10),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       );
                     },
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Total: ₹ ${cart.totalPrice.toStringAsFixed(2)}',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+
+                // Cart Summary
+                Container(
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 4,
+                        offset: Offset(0, -2),
                       ),
-                      NormalButton(
-                        hintText: 'Checkout',
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/checkout');
-                        },
-                        length: 130,
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Total (${cart.totalItems} items):',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            '₹${cart.totalAmount.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: colorPallete.color1,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 16),
+                      Container(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/checkout');
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: colorPallete.color1,
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text(
+                            'PROCEED TO CHECKOUT',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
