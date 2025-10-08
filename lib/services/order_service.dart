@@ -1,7 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/models.dart';
-
+import 'dart:math';
+import 'package:intl/intl.dart';
 // Order Item for storage
 class OrderItem {
   final String productTitle;
@@ -118,7 +119,13 @@ class OrderService {
 
   // Generate simple order ID
   static String _generateOrderId() {
-    return 'ORDER-${DateTime.now().millisecondsSinceEpoch}';
+    final now = DateTime.now();
+    final formatter = DateFormat('yyyyMMddHHmmss');
+    final timestamp = formatter.format(now);
+    final random = Random();
+    final randomNumber = random.nextInt(9000) + 1000;
+
+    return 'ORD-$timestamp-$randomNumber';
   }
 
   // Create order - Main method

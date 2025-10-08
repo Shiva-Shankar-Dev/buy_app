@@ -5,6 +5,7 @@ import 'package:buy_app/services/email_service.dart';
 import 'package:buy_app/services/cart_manager.dart';
 import 'package:buy_app/widgets/normal_button.dart';
 import 'package:buy_app/colorPallete/color_pallete.dart';
+import 'package:buy_app/screens/payments/payment_cod_page.dart'; 
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:intl/intl.dart';
@@ -125,10 +126,8 @@ class _PaymentPageState extends State<PaymentPage> {
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (_) => OrderSuccessPage(
-            isCOD: true,
-            sendNotifications: _sendOrderNotifications,
-          ),
+          builder: (_) =>
+              PaymentCodPage(customer: customer!, address: address!),
         ),
       );
     } else if (_selectedPaymentMode == 'UPI') {
