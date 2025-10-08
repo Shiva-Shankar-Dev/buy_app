@@ -16,7 +16,7 @@ import 'screens/auth/signup_page.dart';
 import 'screens/auth/mobile_login_page.dart';
 import 'screens/payments/payment_card_page.dart';
 import 'screens/payments/payment_upi_page.dart';
-import 'package:buy_app/screens/account/order_history.dart'; // FIXED: Changed from order_history.dart
+import 'package:buy_app/screens/order_history.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

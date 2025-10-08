@@ -3,7 +3,8 @@ import 'package:buy_app/colorPallete/color_pallete.dart';
 import 'package:buy_app/services/auth.dart';
 import 'package:buy_app/screens/account/saved_addresses_page.dart';
 import 'package:buy_app/screens/account/wishlist_page.dart'; // Add this import
-import 'package:buy_app/screens/account/order_history.dart';
+import 'package:buy_app/screens/order_history.dart';
+import 'package:buy_app/screens/order_debug_page.dart';
 
 class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
@@ -160,6 +161,21 @@ class _AccountPageState extends State<AccountPage> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => OrderHistoryPage(),
+                        ),
+                      );
+                    },
+                  ),
+
+                  _buildMenuItem(
+                    icon: Icons.bug_report,
+                    title: 'Order Debug',
+                    subtitle: 'Debug order storage and creation issues',
+                    iconColor: Colors.orange,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => OrderDebugPage(),
                         ),
                       );
                     },

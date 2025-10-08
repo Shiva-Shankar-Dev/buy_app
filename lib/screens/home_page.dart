@@ -15,7 +15,16 @@ class HomePage extends StatefulWidget {
 
 class _HomePage extends State<HomePage> {
   final AuthService _authService = AuthService();
+  final TextEditingController _searchController = TextEditingController();
   List<Product> products = [];
+  List<Product> filteredProducts = [];
+  bool isSearching = false;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   Future<List<Map<String, dynamic>>> fetchAllProducts() async {
     try {
@@ -39,9 +48,13 @@ class _HomePage extends State<HomePage> {
 
   void loadProductsFromFirestore() async {
     final docs = await fetchAllProducts();
+    print("📊 Loaded ${docs.length} products from Firestore");
 
-    final loadedProducts = docs.map((doc) {
-      return Product(
+    final loadedProducts = <Product>[];
+
+    for (int i = 0; i < docs.length; i++) {
+      final doc = docs[i];
+      final product = Product(
         title: doc['title'] ?? 'Untitled',
         description: doc['description'] ?? '',
         price: (doc['price'] ?? 0).toDouble(),
@@ -51,10 +64,118 @@ class _HomePage extends State<HomePage> {
         extraFields: Map<String, dynamic>.from(doc['extraFields'] ?? {}),
         sellerId: doc['sellerId'],
       );
-    }).toList();
+
+      // Debug first few products
+      if (i < 3) {
+        print("Product loaded: ${product.title}");
+        print("  ExtraFields: ${product.extraFields}");
+        print(
+          "  Category: ${product.extraFields['category'] ?? 'No category'}",
+        );
+        print("  Brand: ${product.extraFields['brand'] ?? 'No brand'}");
+        print("---");
+      }
+
+      loadedProducts.add(product);
+    }
 
     setState(() {
       products = loadedProducts;
+      filteredProducts = loadedProducts; // Initialize filtered products
+    });
+
+    print("✅ Total products loaded: ${products.length}");
+  }
+
+  bool _matchesSearch(String text, String query) {
+    if (text.isEmpty || query.isEmpty) return false;
+
+    final textLower = text.toLowerCase().trim();
+    final queryLower = query.toLowerCase().trim();
+
+    print("🔍 Checking match: '$textLower' vs '$queryLower'");
+
+    // Check if the whole text starts with the query
+    if (textLower.startsWith(queryLower)) {
+      print("✅ Full text match");
+      return true;
+    }
+
+    // Word-by-word prefix matching (only from start of words)
+    final words = textLower.split(RegExp(r'\s+'));
+    for (String word in words) {
+      if (word.isNotEmpty && word.startsWith(queryLower)) {
+        print("✅ Word match: '$word' starts with '$queryLower'");
+        return true;
+      }
+    }
+
+    // Segment prefix matching for compound words/categories
+    // Split by common separators and check prefixes from start only
+    final segments = textLower.split(RegExp(r'[,\-_\s]+'));
+    for (String segment in segments) {
+      if (segment.isNotEmpty && segment.startsWith(queryLower)) {
+        print("✅ Segment match: '$segment' starts with '$queryLower'");
+        return true;
+      }
+    }
+
+    print("❌ No match found");
+    return false;
+  }
+
+  void searchProducts(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        filteredProducts = products;
+        isSearching = false;
+      } else {
+        isSearching = true;
+        print("🔍 Searching for: '$query'");
+        print("📦 Total products: ${products.length}");
+
+        filteredProducts = products.where((product) {
+          // Search in title with smart matching
+          final titleMatch = _matchesSearch(product.title, query);
+
+          // Search in description with smart matching
+          final descriptionMatch = _matchesSearch(product.description, query);
+
+          // Search in brand (from extraFields) with smart matching
+          final brand = product.extraFields['brand']?.toString() ?? '';
+          final brandMatch = _matchesSearch(brand, query);
+
+          // Search in category (from extraFields) with smart matching
+          final category = product.extraFields['category']?.toString() ?? '';
+          final categoryMatch = _matchesSearch(category, query);
+
+          final isMatch =
+              titleMatch || descriptionMatch || brandMatch || categoryMatch;
+
+          // Debug logging for first few products
+          if (products.indexOf(product) < 3) {
+            print("Product: ${product.title}");
+            print("  Category: '$category'");
+            print("  Brand: '$brand'");
+            print("  Title match: $titleMatch, Desc match: $descriptionMatch");
+            print("  Brand match: $brandMatch, Category match: $categoryMatch");
+            print("  Overall match: $isMatch");
+            print("---");
+          }
+
+          return isMatch;
+        }).toList();
+
+        print("🎯 Found ${filteredProducts.length} matching products");
+      }
+    });
+  }
+
+  void clearSearch() {
+    _searchController.clear();
+    setState(() {
+      filteredProducts = products;
+      isSearching = false;
     });
   }
 
@@ -95,6 +216,14 @@ class _HomePage extends State<HomePage> {
               },
             ),
             ListTile(
+              leading: Icon(Icons.sync),
+              title: Text('Migrate Orders'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/migration-tool');
+              },
+            ),
+            ListTile(
               leading: Icon(Icons.bug_report),
               title: Text('Debug Users'),
               onTap: () async {
@@ -120,6 +249,25 @@ class _HomePage extends State<HomePage> {
                   Text(
                     'Loading Products...',
                     style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            )
+          : isSearching && filteredProducts.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
+                  SizedBox(height: 16),
+                  Text(
+                    'No products found',
+                    style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Try different keywords',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                   ),
                 ],
               ),
@@ -150,10 +298,18 @@ class _HomePage extends State<HomePage> {
                         elevation: 2,
                         borderRadius: BorderRadius.circular(30),
                         child: TextField(
+                          controller: _searchController,
                           autofocus: false,
+                          onChanged: searchProducts,
                           decoration: InputDecoration(
                             hintText: "Search Products…",
                             prefixIcon: const Icon(Icons.search),
+                            suffixIcon: isSearching
+                                ? IconButton(
+                                    icon: const Icon(Icons.clear),
+                                    onPressed: clearSearch,
+                                  )
+                                : null,
                             filled: true,
                             fillColor: Colors.white,
                             contentPadding: const EdgeInsets.symmetric(
@@ -163,19 +319,6 @@ class _HomePage extends State<HomePage> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(15),
                               borderSide: BorderSide.none,
-                            ),
-                            suffixIcon: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  onPressed: () {},
-                                  icon: Icon(Icons.camera_alt_outlined),
-                                ),
-                                IconButton(
-                                  onPressed: () {},
-                                  icon: Icon(Icons.mic_none),
-                                ),
-                              ],
                             ),
                           ),
                         ),
@@ -207,7 +350,7 @@ class _HomePage extends State<HomePage> {
                   padding: const EdgeInsets.all(8.0),
                   sliver: SliverGrid(
                     delegate: SliverChildBuilderDelegate((context, index) {
-                      final product = products[index];
+                      final product = filteredProducts[index];
                       return GestureDetector(
                         onTap: () {
                           Navigator.push(
@@ -313,7 +456,7 @@ class _HomePage extends State<HomePage> {
                           ),
                         ),
                       );
-                    }, childCount: products.length),
+                    }, childCount: filteredProducts.length),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       crossAxisSpacing: 8,

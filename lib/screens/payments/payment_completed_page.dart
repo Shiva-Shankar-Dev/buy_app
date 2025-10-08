@@ -1,8 +1,7 @@
-import 'package:buy_app/services/auth.dart';
 import 'package:buy_app/services/email_service.dart';
 import 'package:buy_app/services/cart_manager.dart';
 import 'package:buy_app/services/addresses.dart';
-import 'package:buy_app/services/simple_order_service.dart'; // Use only this one
+import 'package:buy_app/services/order_service.dart';
 import 'package:buy_app/colorPallete/color_pallete.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
@@ -84,43 +83,22 @@ class _PaymentCompletedPageState extends State<PaymentCompletedPage> {
   }
 
   Future<void> _saveOrderToDatabase() async {
-    final customer = widget.customer;
     final cart = Cart.instance;
-    _orderId = generateOrderId();
-
-    // Create order details map
-    final orderDetails = {
-      'paymentMethod': widget.paymentMethod,
-      'txnId': widget.txnId,
-      'items': cart.items
-          .map(
-            (item) => {
-              'title': item.product.title,
-              'price': item.product.price,
-              'quantity': item.quantity,
-              'description': item.product.description,
-              'images': item.product.images,
-            },
-          )
-          .toList(),
-      'shippingAddress': {
-        'first': widget.address.first,
-        'last': widget.address.last,
-        'line1': widget.address.line1,
-        'line2': widget.address.line2,
-        'city': widget.address.city,
-        'state': widget.address.state,
-        'pincode': widget.address.pincode,
-      },
-      'orderDate': DateTime.now().toIso8601String(),
-    };
 
     try {
-      final orderId = await SimpleOrderService.createOrder(
-        customerEmail: customer['email'] ?? '',
-        customerName: customer['name'] ?? 'Customer',
+      final orderId = await OrderService.createOrder(
+        cartItems: cart.items,
         totalAmount: cart.totalAmount,
-        orderDetails: orderDetails,
+        paymentMethod: widget.paymentMethod,
+        shippingAddress: {
+          'first': widget.address.first,
+          'last': widget.address.last,
+          'line1': widget.address.line1,
+          'line2': widget.address.line2,
+          'city': widget.address.city,
+          'state': widget.address.state,
+          'pincode': widget.address.pincode,
+        },
       );
 
       if (orderId != null) {
