@@ -1,5 +1,4 @@
 import 'package:buy_app/services/cart_manager.dart';
-import 'package:buy_app/services/auth.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:buy_app/colorPallete/color_pallete.dart';
 import 'package:flutter/material.dart';
@@ -15,13 +14,10 @@ class ProductDetailPage extends StatefulWidget {
 }
 
 class _ProductDetailPageState extends State<ProductDetailPage> {
-  int _selectedImageIndex = 0;
   final cart = Cart.instance;
-  final AuthService _authService = AuthService();
   bool isInWishlist = false;
   bool isLoadingWishlist = false;
   bool isCheckingWishlist = true;
-  String? userEmail;
 
   @override
   void initState() {
