@@ -179,6 +179,51 @@ class _HomePage extends State<HomePage> {
     });
   }
 
+  Widget _buildCategoryCard(String categoryName, IconData icon, Color color) {
+    return Container(
+      width: 80,
+      margin: EdgeInsets.only(right: 12),
+      child: GestureDetector(
+        onTap: () {
+          // Filter products by category
+          _searchController.text = categoryName;
+          searchProducts(categoryName);
+        },
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: color.withOpacity(0.3)),
+              ),
+              child: Icon(
+                icon,
+                size: 30,
+                color: color,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              categoryName,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[700],
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -327,23 +372,95 @@ class _HomePage extends State<HomePage> {
                   ),
                 ),
                 SliverToBoxAdapter(
-                  child: Image.asset(
-                    "assets/banner.jpg",
-                    width: double.infinity,
-                    height: 200,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      width: double.infinity,
-                      height: 200,
-                      color: Colors.grey[300],
-                      child: Center(
-                        child: Icon(
-                          Icons.image,
-                          size: 64,
-                          color: Colors.grey[600],
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Categories Section
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Categories',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey[800],
+                              ),
+                            ),
+                            SizedBox(height: 12),
+                            Container(
+                              height: 100,
+                              child: ListView(
+                                scrollDirection: Axis.horizontal,
+                                children: [
+                                  _buildCategoryCard(
+                                    'Mobile',
+                                    Icons.smartphone,
+                                    Colors.blue,
+                                  ),
+                                  _buildCategoryCard(
+                                    'Electronics',
+                                    Icons.electrical_services,
+                                    Colors.orange,
+                                  ),
+                                  _buildCategoryCard(
+                                    'Home Appliances',
+                                    Icons.home,
+                                    Colors.green,
+                                  ),
+                                  _buildCategoryCard(
+                                    'Fashion',
+                                    Icons.shopping_bag,
+                                    Colors.purple,
+                                  ),
+                                  _buildCategoryCard(
+                                    'Books',
+                                    Icons.book,
+                                    Colors.brown,
+                                  ),
+                                  _buildCategoryCard(
+                                    'Sports',
+                                    Icons.sports_football,
+                                    Colors.red,
+                                  ),
+                                  _buildCategoryCard(
+                                    'Beauty',
+                                    Icons.face_retouching_natural,
+                                    Colors.pink,
+                                  ),
+                                  _buildCategoryCard(
+                                    'Groceries',
+                                    Icons.local_grocery_store,
+                                    Colors.teal,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
+                      // Banner Image
+                      Image.asset(
+                        "assets/banner.jpg",
+                        width: double.infinity,
+                        height: 200,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          width: double.infinity,
+                          height: 200,
+                          color: Colors.grey[300],
+                          child: Center(
+                            child: Icon(
+                              Icons.image,
+                              size: 64,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 SliverPadding(
