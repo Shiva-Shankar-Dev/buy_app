@@ -281,7 +281,7 @@ class _HomePage extends State<HomePage> {
                   foregroundColor: Colors.white,
                   expandedHeight: 100,
                   title: const Text(
-                    "eCommerce",
+                    "Buy App",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -372,83 +372,82 @@ class _HomePage extends State<HomePage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Hero(
-                                  tag: 'product-${product.title}-$index',
-                                  child: ClipRRect(
+                                Container(
+                                  height: 200,
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade200,
                                     borderRadius: BorderRadius.circular(10),
-                                    child: Image.network(
-                                      product.images.isNotEmpty
-                                          ? product.images.first
-                                          : '',
-                                      height: 140,
-                                      width: double.infinity,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => Container(
+                                  ),
+                                  child: Hero(
+                                    tag: 'product-${product.title}-$index',
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: Image.network(
+                                        product.images.isNotEmpty
+                                            ? product.images.first
+                                            : '',
                                         height: 140,
-                                        color: Colors.grey[200],
-                                        child: Icon(
-                                          Icons.image,
-                                          size: 50,
-                                          color: Colors.grey[400],
+                                        width: double.infinity,
+                                        fit: BoxFit.contain,
+                                        errorBuilder: (_, _, _) => Container(
+                                          height: 140,
+                                          color: Colors.grey[200],
+                                          child: Icon(
+                                            Icons.image,
+                                            size: 50,
+                                            color: Colors.grey[400],
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
                                 ),
                                 SizedBox(height: 8),
-                                Expanded(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          product.title,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 16,
-                                          ),
+                                Padding(
+                                  padding: const EdgeInsets.all(5.0),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        product.title,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16,
                                         ),
-                                        SizedBox(height: 4),
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.star,
+                                      ),
+                                      SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.star,
+                                            color: Colors.orange,
+                                            size: 14,
+                                          ),
+                                          SizedBox(width: 4),
+                                          Text(
+                                            product.reviews,
+                                            style: TextStyle(
                                               color: Colors.orange,
-                                              size: 14,
+                                              fontSize: 13,
                                             ),
-                                            SizedBox(width: 4),
-                                            Text(
-                                              product.reviews,
-                                              style: TextStyle(
-                                                color: Colors.orange,
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        SizedBox(height: 4),
-                                        Text(
-                                          '₹${product.price.toStringAsFixed(2)}',
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                            color: colorPallete.color1,
                                           ),
+                                        ],
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        '₹${product.price.toStringAsFixed(2)}',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: colorPallete.color1,
                                         ),
-                                        SizedBox(height: 2),
-                                        Text(
-                                          'Delivery by ${product.deliveryTime}',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey[600],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                      ),
+                                      SizedBox(height: 2),
+                                    ],
                                   ),
                                 ),
                               ],
