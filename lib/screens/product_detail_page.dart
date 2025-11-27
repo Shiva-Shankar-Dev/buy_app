@@ -211,7 +211,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Card(
+              Hero(
+                tag: 'product',
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: SizedBox(
@@ -236,116 +237,107 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Card(
-                    elevation: 1,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.product.title,
-                            style: const TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.bold,
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.product.title,
+                          style: const TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+
+                        Row(
+                          children: [
+                            const Icon(Icons.star, color: Colors.orange),
+                            const SizedBox(width: 5),
+                            Text(
+                              widget.product.reviews,
+                              style: const TextStyle(color: Colors.orange),
                             ),
+                          ],
+                        ),
+
+                        Text(
+                          '₹ ${widget.product.price.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.green,
                           ),
-          
-                          Row(
-                            children: [
-                              const Icon(Icons.star, color: Colors.orange),
-                              const SizedBox(width: 5),
-                              Text(
-                                widget.product.reviews,
-                                style: const TextStyle(color: Colors.orange),
-                              ),
-                            ],
-                          ),
-          
-                          Text(
-                            '₹ ${widget.product.price.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.green,
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                          Text(
-                            'Delivery Time: ${widget.product.deliveryTime}',
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                        ],
-                      ),
+                        ),
+                        SizedBox(height: 10),
+                        Text(
+                          'Delivery Time: ${widget.product.deliveryTime}',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      ],
                     ),
                   ),
           
-                  Card(
-                    elevation: 1,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        children: [
-                          Text(
-                            'Description',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            widget.product.description,
-                            style: TextStyle(fontSize: 16, height: 1.5),
-                          ),
-                        ],
-                      ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Description',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          widget.product.description,
+                          style: TextStyle(fontSize: 16, height: 1.5),
+                        ),
+                      ],
                     ),
                   ),
           
                   const SizedBox(height: 20),
                   if (widget.product.extraFields.isNotEmpty)
-                    Card(
-                      elevation: 1,
-                      child: Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Additional Info',
-                              style: TextStyle(
-                                fontSize: 15,
-                                color: Colors.grey,
-                                fontWeight: FontWeight.bold,
-                              ),
+                    Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Additional Info',
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: Colors.grey,
+                              fontWeight: FontWeight.bold,
                             ),
-                            ...widget.product.extraFields.entries.map(
-                              (entry) => Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 4),
-                                child: SizedBox(
-                                  width: MediaQuery.of(context).size.width,
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        '${entry.key}: ',
-                                        style: const TextStyle(
-                                          color: Colors.grey,
-                                          fontSize: 12,
-                                        ),
+                          ),
+                          ...widget.product.extraFields.entries.map(
+                            (entry) => Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: SizedBox(
+                                width: MediaQuery.of(context).size.width,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${entry.key}: ',
+                                      style: const TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 12,
                                       ),
-                                      Text(
-                                        entry.value.toString(),
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold
-                                        ),
+                                    ),
+                                    Text(
+                                      entry.value.toString(),
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 20),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
                       ),
                     ),
           

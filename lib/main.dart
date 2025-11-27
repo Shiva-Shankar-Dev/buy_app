@@ -69,13 +69,11 @@ class MyApp extends StatelessWidget {
         '/cart': (context) => CartPage(),
         '/add': (context) => AddPage(),
         '/checkout': (context) => CheckoutPage(),
-        '/account': (context) =>
-            AccountPage(), // Now points to correct AccountPage
+        '/account': (context) => AccountPage(),
         '/address_select': (context) => AddressSelectionPage(),
         '/add_address': (context) => AddNewAddressPage(),
         '/payment': (context) => PaymentPage(),
-        '/order_history': (context) =>
-            OrderHistoryPage(), // FIXED: Now points to correct page
+        '/order_history': (context) => OrderHistoryPage(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/otp') {
