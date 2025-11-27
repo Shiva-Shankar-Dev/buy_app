@@ -9,6 +9,8 @@ import 'package:buy_app/screens/cart_page.dart';
 import 'package:buy_app/screens/checkout_page.dart';
 import 'package:buy_app/screens/auth/otp_page.dart';
 import 'package:buy_app/screens/payments/payment_page.dart';
+import 'package:buy_app/screens/search_results.dart';
+import 'package:buy_app/screens/search_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'screens/auth/login_page.dart';
@@ -74,6 +76,8 @@ class MyApp extends StatelessWidget {
         '/add_address': (context) => AddNewAddressPage(),
         '/payment': (context) => PaymentPage(),
         '/order_history': (context) => OrderHistoryPage(),
+        '/search': (context) => SearchScreen(),
+        'results': (context) => SearchResults(query: ''),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/otp') {

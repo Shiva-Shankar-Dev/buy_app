@@ -52,6 +52,7 @@ class _LoginPage extends State<LoginPage> {
             children: [
               Container(
                 decoration: BoxDecoration(
+                  shape: BoxShape.circle,
                   gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -61,11 +62,10 @@ class _LoginPage extends State<LoginPage> {
                       ]
                   ),
                   color: Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(15),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: Icon(Icons.person_2_outlined, size: 80, color: Colors.white,),
+                  padding: const EdgeInsets.all(15.0),
+                  child: Icon(Icons.person_2_outlined, size: 50, color: Colors.white,),
                 ),
               ),
               SizedBox(height: 10,),

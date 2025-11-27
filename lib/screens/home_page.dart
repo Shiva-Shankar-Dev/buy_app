@@ -123,98 +123,6 @@ class _HomePage extends State<HomePage> {
     print("✅ Total products loaded: ${products.length}");
   }
 
-  bool _matchesSearch(String text, String query) {
-    if (text.isEmpty || query.isEmpty) return false;
-
-    final textLower = text.toLowerCase().trim();
-    final queryLower = query.toLowerCase().trim();
-
-    print("🔍 Checking match: '$textLower' vs '$queryLower'");
-
-    // Check if the whole text starts with the query
-    if (textLower.startsWith(queryLower)) {
-      print("✅ Full text match");
-      return true;
-    }
-
-    // Word-by-word prefix matching (only from start of words)
-    final words = textLower.split(RegExp(r'\s+'));
-    for (String word in words) {
-      if (word.isNotEmpty && word.startsWith(queryLower)) {
-        print("✅ Word match: '$word' starts with '$queryLower'");
-        return true;
-      }
-    }
-
-    // Segment prefix matching for compound words/categories
-    // Split by common separators and check prefixes from start only
-    final segments = textLower.split(RegExp(r'[,\-_\s]+'));
-    for (String segment in segments) {
-      if (segment.isNotEmpty && segment.startsWith(queryLower)) {
-        print("✅ Segment match: '$segment' starts with '$queryLower'");
-        return true;
-      }
-    }
-
-    print("❌ No match found");
-    return false;
-  }
-
-  void searchProducts(String query) {
-    setState(() {
-      if (query.isEmpty) {
-        filteredProducts = products;
-        isSearching = false;
-      } else {
-        isSearching = true;
-        print("🔍 Searching for: '$query'");
-        print("📦 Total products: ${products.length}");
-
-        filteredProducts = products.where((product) {
-          // Search in title with smart matching
-          final titleMatch = _matchesSearch(product.title, query);
-
-          // Search in description with smart matching
-          final descriptionMatch = _matchesSearch(product.description, query);
-
-          // Search in brand (from extraFields) with smart matching
-          final brand = product.extraFields['brand']?.toString() ?? '';
-          final brandMatch = _matchesSearch(brand, query);
-
-          // Search in category (from extraFields) with smart matching
-          final category = product.extraFields['category']?.toString() ?? '';
-          final categoryMatch = _matchesSearch(category, query);
-
-          final isMatch =
-              titleMatch || descriptionMatch || brandMatch || categoryMatch;
-
-          // Debug logging for first few products
-          if (products.indexOf(product) < 3) {
-            print("Product: ${product.title}");
-            print("  Category: '$category'");
-            print("  Brand: '$brand'");
-            print("  Title match: $titleMatch, Desc match: $descriptionMatch");
-            print("  Brand match: $brandMatch, Category match: $categoryMatch");
-            print("  Overall match: $isMatch");
-            print("---");
-          }
-
-          return isMatch;
-        }).toList();
-
-        print("🎯 Found ${filteredProducts.length} matching products");
-      }
-    });
-  }
-
-  void clearSearch() {
-    _searchController.clear();
-    setState(() {
-      filteredProducts = products;
-      isSearching = false;
-    });
-  }
-
   Widget _buildCategoryCard(
     String categoryName,
     IconData icon,
@@ -227,7 +135,7 @@ class _HomePage extends State<HomePage> {
         onTap: () {
           // Filter products by category
           _searchController.text = categoryName;
-          searchProducts(categoryName);
+          //searchProducts(categoryName);
         },
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -358,6 +266,7 @@ class _HomePage extends State<HomePage> {
           SliverAppBar(
             pinned: true,
             floating: true,
+            titleSpacing: 0,
             backgroundColor: colorPallete.color1,
             foregroundColor: Colors.white,
             expandedHeight: 100,
@@ -369,35 +278,32 @@ class _HomePage extends State<HomePage> {
               ),
             ),
             bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(58),
+              preferredSize: Size.fromHeight(60),
               child: Padding(
-                padding: const EdgeInsets.symmetric(
+                padding: EdgeInsets.symmetric(
                   vertical: 5.0,
                   horizontal: 8.0,
                 ),
                 child: Material(
                   elevation: 2,
                   borderRadius: BorderRadius.circular(30),
-                  child: TextField(
-                    controller: _searchController,
-                    autofocus: false,
-                    onChanged: searchProducts,
-                    decoration: InputDecoration(
-                      hintText: "Search Products…",
-                      prefixIcon: const Icon(Icons.search),
-                      suffixIcon: isSearching ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: clearSearch,
-                      ) : null,
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: 0,
-                        horizontal: 20,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15),
-                        borderSide: BorderSide.none,
+                  child: InkWell(
+                    onTap: () => Navigator.pushNamed(context, '/search'),
+                    borderRadius: BorderRadius.circular(30),
+                    child: Container(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 13.0, horizontal: 10.0),
+                        child: Row(
+                          children: [
+                            SizedBox(width: 5,),
+                            Icon(Icons.search),
+                            SizedBox(width: 5,),
+                            Text("Search products..."),
+                            Spacer(),
+                            Icon(Icons.camera_alt_outlined),
+                            SizedBox(width: 5,),
+                          ],
+                        ),
                       ),
                     ),
                   ),
