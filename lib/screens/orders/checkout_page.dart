@@ -121,7 +121,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                item.product.title,
+                                item.product.name,
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w500,

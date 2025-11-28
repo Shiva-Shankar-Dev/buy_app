@@ -17,7 +17,7 @@ class Cart {
 
   void add(Product product, {int quantity = 1}) {
     final existingIndex = _items.indexWhere(
-      (item) => item.product.title == product.title,
+      (item) => item.product.name == product.name,
     );
 
     if (existingIndex >= 0) {
@@ -32,7 +32,7 @@ class Cart {
 
   void updateQuantity(Product product, int quantity) {
     final existingIndex = _items.indexWhere(
-      (item) => item.product.title == product.title,
+      (item) => item.product.name == product.name,
     );
 
     if (existingIndex >= 0) {
@@ -48,7 +48,7 @@ class Cart {
   }
 
   void remove(Product product) {
-    _items.removeWhere((item) => item.product.title == product.title);
+    _items.removeWhere((item) => item.product.name == product.name);
   }
 
   void clear() {
@@ -57,13 +57,13 @@ class Cart {
 
   int getQuantity(Product product) {
     final item = _items.firstWhere(
-      (item) => item.product.title == product.title,
+      (item) => item.product.name == product.name,
       orElse: () => CartItem(product: product, quantity: 0),
     );
     return item.quantity;
   }
 
   bool isInCart(Product product) {
-    return _items.any((item) => item.product.title == product.title);
+    return _items.any((item) => item.product.name == product.name);
   }
 }

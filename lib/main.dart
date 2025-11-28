@@ -1,4 +1,4 @@
-import 'package:buy_app/animated_splash_screen_widget.dart';
+import 'package:buy_app/splash_screen.dart';
 import 'package:buy_app/colorPallete/color_pallete.dart';
 import 'package:buy_app/index.dart';
 import 'package:buy_app/screens/account/account_page.dart'; // FIXED: Changed from address/account_page.dart

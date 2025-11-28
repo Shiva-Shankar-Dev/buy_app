@@ -91,24 +91,24 @@ class _HomePage extends State<HomePage> {
     for (int i = 0; i < docs.length; i++) {
       final doc = docs[i];
       final product = Product(
-        title: doc['title'] ?? 'Untitled',
+        name: doc['name'] ?? 'Untitled',
+        brand: doc['brand'] ?? '',
         description: doc['description'] ?? '',
         price: (doc['price'] ?? 0).toDouble(),
         deliveryTime: doc['Delivery Time'] ?? 'N/A',
-        reviews: doc['ratings'] ?? 'No ratings',
+        category: doc['category'] ?? '',
         images: List<String>.from(doc['images'] ?? []),
-        extraFields: Map<String, dynamic>.from(doc['extraFields'] ?? {}),
-        sellerId: doc['sellerId'],
+        keywords: List<String>.from(doc['keywords'] ?? []),
+        pid: doc['pid'] ?? '',
+        stockQuantity: doc['stockQuantity'] ?? 0,
       );
 
       // Debug first few products
       if (i < 3) {
-        print("Product loaded: ${product.title}");
-        print("  ExtraFields: ${product.extraFields}");
-        print(
-          "  Category: ${product.extraFields['category'] ?? 'No category'}",
-        );
-        print("  Brand: ${product.extraFields['brand'] ?? 'No brand'}");
+        print("Product loaded: ${product.name}");
+        print("  Brand: ${product.brand}");
+        print("  Category: ${product.category}");
+        print("  Keywords: ${product.keywords}");
         print("---");
       }
 
@@ -561,7 +561,7 @@ class _HomePage extends State<HomePage> {
                                   height: 45,
                                   width: double.infinity,
                                   child: Text(
-                                    product.title,
+                                    product.name,
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
@@ -578,13 +578,6 @@ class _HomePage extends State<HomePage> {
                                       size: 14,
                                     ),
                                     SizedBox(width: 4),
-                                    Text(
-                                      product.reviews,
-                                      style: TextStyle(
-                                        color: Colors.orange,
-                                        fontSize: 13,
-                                      ),
-                                    ),
                                   ],
                                 ),
                                 Text(

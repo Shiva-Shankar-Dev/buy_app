@@ -22,16 +22,16 @@ class _TestOrderPageState extends State<TestOrderPage> {
     try {
       // Create a dummy product for testing
       final testProduct = Product(
-        title: 'Test Product',
+        name: 'Test Product',
+        brand: 'Test Brand',
         description: 'This is a test product',
         deliveryTime: '2-3 days',
-        reviews: '4.5/5 (100 reviews)',
         price: 99.99,
         images: ['test-image.jpg'],
-        extraFields: {
-          'category': 'Test Category',
-          'sizes': ['M', 'L'],
-        },
+        category: 'Test Category',
+        keywords: ['test', 'product'],
+        pid: 'test-001',
+        stockQuantity: 100,
       );
 
       // Create cart item

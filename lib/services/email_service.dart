@@ -70,7 +70,7 @@ class EmailService {
       final itemTotal = item.product.price * item.quantity;
       message1 += "<tr>";
       message1 +=
-          "<td style='padding: 8px; border-bottom: 1px solid #ddd;'>${item.product.title}</td>";
+          "<td style='padding: 8px; border-bottom: 1px solid #ddd;'>${item.product.name}</td>";
       message1 +=
           "<td style='padding: 8px; text-align: center; border-bottom: 1px solid #ddd;'>${item.quantity}</td>";
       message1 +=
@@ -127,18 +127,21 @@ class EmailService {
     }
 
     print(
-      "🛒 Cart items: ${cart.items.map((item) => {'title': item.product.title, 'sellerId': item.product.sellerId}).toList()}",
+      "🛒 Cart items: ${cart.items.map((item) => item.product.name).toList()}",
     );
 
-    // Group cart items by seller ID
+    // Group cart items by seller ID (if available from a separate source)
+    // Note: Product no longer has sellerId field, you may need to fetch this from another service
     Map<String?, List<CartItem>> itemsBySeller = {};
     int itemsWithoutSellerId = 0;
 
     for (final item in cart.items) {
-      final sellerId = item.product.sellerId;
-      if (sellerId == null || sellerId.isEmpty) {
+      // TODO: Fetch seller ID from product or order service
+      // For now, grouping all items together
+      final sellerId = null; // product.sellerId is no longer available
+      if (sellerId == null) {
         print(
-          "⚠️ Product '${item.product.title}' without seller ID found, skipping...",
+          "⚠️ Product '${item.product.name}' seller ID not available...",
         );
         itemsWithoutSellerId++;
         continue;
@@ -172,7 +175,7 @@ class EmailService {
       }
 
       print(
-        "📧 Sending email to sellerId: $sellerId for products: ${items.map((item) => item.product.title).toList()}",
+        "📧 Sending email to sellerId: $sellerId for products: ${items.map((item) => item.product.name).toList()}",
       );
 
       final success = await _sendSellerOrderEmail(
@@ -259,7 +262,7 @@ class EmailService {
         final itemTotal = item.product.price * item.quantity;
         orderDetails += "<tr>";
         orderDetails +=
-            "<td style='padding: 8px; border-bottom: 1px solid #ddd;'>${item.product.title}</td>";
+            "<td style='padding: 8px; border-bottom: 1px solid #ddd;'>${item.product.name}</td>";
         orderDetails +=
             "<td style='padding: 8px; text-align: center; border-bottom: 1px solid #ddd;'>${item.quantity}</td>";
         orderDetails +=

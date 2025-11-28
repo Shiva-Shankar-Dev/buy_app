@@ -20,7 +20,7 @@ class OrderItem {
   // Convert from CartItem
   factory OrderItem.fromCartItem(CartItem cartItem) {
     return OrderItem(
-      productTitle: cartItem.product.title,
+      productTitle: cartItem.product.name,
       productPrice: cartItem.product.price,
       quantity: cartItem.quantity,
       productImage: cartItem.product.images.isNotEmpty

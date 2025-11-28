@@ -8,19 +8,19 @@ class CartItem {
 
   @override
   String toString() {
-    return 'CartItem(product: ${product.title}, quantity: $quantity)';
+    return 'CartItem(product: ${product.name}, quantity: $quantity)';
   }
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is CartItem &&
-        other.product.title == product.title &&
+        other.product.name == product.name &&
         other.quantity == quantity;
   }
 
   @override
-  int get hashCode => product.title.hashCode ^ quantity.hashCode;
+  int get hashCode => product.name.hashCode ^ quantity.hashCode;
 
   // Add toMap method for Firestore
   Map<String, dynamic> toMap() {
@@ -37,62 +37,69 @@ class CartItem {
 }
 
 class Product {
-  final String title, description, deliveryTime, reviews;
+  final String name, brand, description, deliveryTime, pid;
   final double price;
+  final String category;
+  final List<String> keywords;
   final List<String> images;
-  final Map<String, dynamic> extraFields;
-  final String? sellerId;
+  final int stockQuantity;
 
   Product({
-    required this.title,
-    required this.description,
-    required this.deliveryTime,
-    required this.reviews,
-    required this.price,
+    required this.name,
+    required this.brand,
     required this.images,
-    required this.extraFields,
-    this.sellerId,
+    required this.description,
+    required this.category,
+    required this.price,
+    required this.deliveryTime,
+    required this.pid,
+    required this.keywords,
+    required this.stockQuantity,
   });
 
   factory Product.fromFirestore(Map<String, dynamic> data) {
     return Product(
-      title: data['title'] ?? 'Untitled',
+      name: data['name'] ?? 'Untitled',
+      brand: data['brand'] ?? '',
       description: data['description'] ?? '',
-      deliveryTime: data['Delivery Time'] ?? 'N/A',
-      reviews: data['ratings'] ?? 'No ratings',
+      deliveryTime: data['deliveryTime'] ?? 'N/A',
+      pid: data['pid'] ?? '',
       price: (data['price'] ?? 0).toDouble(),
+      category: data['category'] ?? '',
+      keywords: List<String>.from(data['keywords'] ?? []),
       images: List<String>.from(data['images'] ?? []),
-      extraFields: Map<String, dynamic>.from(data['extraFields'] ?? {}),
-      sellerId: data['sellerId'],
+      stockQuantity: data['stockQuantity'] ?? 0,
     );
   }
 
   Map<String, dynamic> toFirestore() {
     return {
-      'title': title,
+      'name': name,
+      'brand': brand,
       'description': description,
-      'Delivery Time': deliveryTime,
-      'ratings': reviews,
+      'deliveryTime': deliveryTime,
+      'pid': pid,
       'price': price,
+      'category': category,
+      'keywords': keywords,
       'images': images,
-      'extraFields': extraFields,
-      'sellerId': sellerId,
+      'stockQuantity': stockQuantity,
     };
   }
 
   @override
   String toString() {
-    return 'Product(title: $title, price: $price, sellerId: $sellerId)';
+    return 'Product(name: $name, price: $price, brand: $brand)';
   }
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is Product && other.title == title;
+    return other is Product && other.name == name;
   }
 
   @override
-  int get hashCode => title.hashCode;
+  int get hashCode => name.hashCode;
 }
 
 class Order {
@@ -166,13 +173,16 @@ class Order {
             // Return a default CartItem with basic Product
             return CartItem(
               product: Product(
-                title: 'Error Product',
+                name: 'Error Product',
+                brand: '',
                 description: '',
                 deliveryTime: '',
-                reviews: '',
+                pid: '',
                 price: 0.0,
+                category: '',
+                keywords: [],
                 images: [],
-                extraFields: {},
+                stockQuantity: 0,
               ),
               quantity: 1,
             );

@@ -40,6 +40,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         setState(() {
           isInWishlist = false;
         });
+        if(!mounted) return;
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Removed from wishlist')));
@@ -50,6 +51,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         setState(() {
           isInWishlist = true;
         });
+        if(!mounted) return;
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Added to wishlist')));
@@ -72,7 +74,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               });
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('${widget.product.title} added to cart!'),
+                  content: Text('${widget.product.name} added to cart!'),
                   backgroundColor: Colors.green,
                   duration: Duration(seconds: 2),
                 ),
@@ -166,6 +168,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Print all product attributes
     final images = widget.product.images.isNotEmpty ?
         widget.product.images.map<Widget>((imgPath) =>
             Image.network(
@@ -186,7 +189,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       appBar: AppBar(
         backgroundColor: colorPallete.color1,
         title: Text(
-          widget.product.title,
+          widget.product.name,
           style: TextStyle(color: Colors.white),
           overflow: TextOverflow.ellipsis,
         ),
@@ -211,24 +214,21 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Hero(
-                tag: 'product',
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: CarouselSlider(
-                      items: images,
-                      options: CarouselOptions(
-                        height: 300,
-                        viewportFraction: 1.0,
-                        scrollDirection: Axis.horizontal,
-                        enableInfiniteScroll: images.length > 1,
-                        enlargeCenterPage: true,
-                        pageSnapping: true,
-                        autoPlay: images.length > 1,
-                        autoPlayInterval: Duration(seconds: 3),
-                      ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: CarouselSlider(
+                    items: images,
+                    options: CarouselOptions(
+                      height: 300,
+                      viewportFraction: 1.0,
+                      scrollDirection: Axis.horizontal,
+                      enableInfiniteScroll: images.length > 1,
+                      enlargeCenterPage: true,
+                      pageSnapping: true,
+                      autoPlay: images.length > 1,
+                      autoPlayInterval: Duration(seconds: 3),
                     ),
                   ),
                 ),
@@ -243,7 +243,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.product.title,
+                          widget.product.name,
                           style: const TextStyle(
                             fontSize: 26,
                             fontWeight: FontWeight.bold,
@@ -252,11 +252,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
                         Row(
                           children: [
-                            const Icon(Icons.star, color: Colors.orange),
-                            const SizedBox(width: 5),
                             Text(
-                              widget.product.reviews,
-                              style: const TextStyle(color: Colors.orange),
+                              widget.product.brand,
                             ),
                           ],
                         ),
@@ -295,46 +292,25 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   ),
           
                   const SizedBox(height: 20),
-                  if (widget.product.extraFields.isNotEmpty)
+                  if (widget.product.keywords.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.all(10.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Additional Info',
+                            'Keywords',
                             style: TextStyle(
                               fontSize: 15,
                               color: Colors.grey,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          ...widget.product.extraFields.entries.map(
-                            (entry) => Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 4),
-                              child: SizedBox(
-                                width: MediaQuery.of(context).size.width,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '${entry.key}: ',
-                                      style: const TextStyle(
-                                        color: Colors.grey,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                    Text(
-                                      entry.value.toString(),
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
+                          Wrap(
+                            spacing: 8,
+                            children: widget.product.keywords.map(
+                              (keyword) => Chip(label: Text(keyword)),
+                            ).toList(),
                           ),
                           const SizedBox(height: 20),
                         ],

@@ -16,14 +16,14 @@ class WishlistService {
         return false;
       }
 
-      // Check if product title exists
-      if (product.title.isEmpty) {
-        print('❌ Product title is empty');
+      // Check if product name exists
+      if (product.name.isEmpty) {
+        print('❌ Product name is empty');
         return false;
       }
 
-      // Generate document ID from title (sanitized)
-      final productId = product.title
+      // Generate document ID from name (sanitized)
+      final productId = product.name
           .replaceAll(RegExp(r'[^\w\s]+'), '')
           .replaceAll(' ', '_')
           .toLowerCase();
@@ -46,11 +46,11 @@ class WishlistService {
         };
 
         await docRef.set(wishlistItem);
-        print('✅ Added to wishlist: ${product.title}');
+        print('✅ Added to wishlist: ${product.name}');
         return true;
       }
 
-      print('⚠️ Product already in wishlist: ${product.title}');
+      print('⚠️ Product already in wishlist: ${product.name}');
       return false;
     } catch (e) {
       print('❌ Error adding to wishlist: $e');
@@ -68,8 +68,8 @@ class WishlistService {
         return false;
       }
 
-      // Generate document ID from title (sanitized)
-      final productId = product.title
+      // Generate document ID from name (sanitized)
+      final productId = product.name
           .replaceAll(RegExp(r'[^\w\s]+'), '')
           .replaceAll(' ', '_')
           .toLowerCase();
@@ -82,7 +82,7 @@ class WishlistService {
           .doc(productId);
 
       await docRef.delete();
-      print('✅ Removed from wishlist: ${product.title}');
+      print('✅ Removed from wishlist: ${product.name}');
       return true;
     } catch (e) {
       print('❌ Error removing from wishlist: $e');
@@ -127,8 +127,8 @@ class WishlistService {
         return false;
       }
 
-      // Generate document ID from title (sanitized)
-      final productId = product.title
+      // Generate document ID from name (sanitized)
+      final productId = product.name
           .replaceAll(RegExp(r'[^\w\s]+'), '')
           .replaceAll(' ', '_')
           .toLowerCase();

@@ -52,7 +52,7 @@ class _WishlistPageState extends State<WishlistPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${product.title} removed from wishlist'),
+            content: Text('${product.name} removed from wishlist'),
             backgroundColor: Colors.red,
             action: SnackBarAction(
               label: 'UNDO',
@@ -95,7 +95,7 @@ class _WishlistPageState extends State<WishlistPage> {
     // TODO: Implement move to cart functionality
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${product.title} moved to cart'),
+        content: Text('${product.name} moved to cart'),
         backgroundColor: Colors.green,
       ),
     );
@@ -372,19 +372,12 @@ class _WishlistPageState extends State<WishlistPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    product.title,
+                    product.name,
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  if (product.reviews.isNotEmpty)
-                    Padding(
-                      padding: EdgeInsets.only(top: 2),
-                      child: Text(
-                        product.reviews,
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                      ),
-                    ),
+                 
                   Spacer(),
                   Text(
                     '₹${product.price.toStringAsFixed(2)}',
