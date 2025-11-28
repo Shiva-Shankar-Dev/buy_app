@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:buy_app/colorPallete/color_pallete.dart';
 import 'package:buy_app/models/models.dart';
-import 'package:buy_app/screens/product_detail_page.dart';
+import 'package:buy_app/screens/orders/product_details.dart';
 import 'package:buy_app/services/wishlist_service.dart';
 
 class WishlistPage extends StatefulWidget {
@@ -32,9 +32,9 @@ class _WishlistPageState extends State<WishlistPage> {
         wishlistItems = items;
         isLoading = false;
       });
-      print('📱 Loaded ${items.length} wishlist items');
+      //print('📱 Loaded ${items.length} wishlist items');
     } catch (e) {
-      print('❌ Error loading wishlist: $e');
+      //print('❌ Error loading wishlist: $e');
       setState(() {
         isLoading = false;
       });
@@ -226,7 +226,7 @@ class _WishlistPageState extends State<WishlistPage> {
               crossAxisCount: 2,
               childAspectRatio: 0.7,
               crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
+              mainAxisSpacing: 1.0,
             ),
             itemCount: wishlistItems.length,
             itemBuilder: (context, index) {
@@ -248,7 +248,6 @@ class _WishlistPageState extends State<WishlistPage> {
         children: [
           // Product Image
           Expanded(
-            flex: 3,
             child: Stack(
               children: [
                 GestureDetector(
@@ -273,48 +272,49 @@ class _WishlistPageState extends State<WishlistPage> {
                         top: Radius.circular(12),
                       ),
                       child: product.images.isNotEmpty
-                          ? Image.network(
-                              product.images[0],
-                              fit: BoxFit.cover,
-                              loadingBuilder:
-                                  (context, child, loadingProgress) {
-                                    if (loadingProgress == null) return child;
-                                    return Container(
-                                      color: Colors.grey[200],
-                                      child: Center(
-                                        child: CircularProgressIndicator(
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                colorPallete.color1,
-                                              ),
+                          ? Center(
+                            child: Image.network(
+                                product.images[0],
+                                fit: BoxFit.fill,
+                                loadingBuilder:
+                                    (context, child, loadingProgress) {
+                                      if (loadingProgress == null) return child;
+                                      return Container(
+                                        color: Colors.grey[200],
+                                        child: Center(
+                                          child: CircularProgressIndicator(
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                  colorPallete.color1,
+                                                ),
+                                          ),
                                         ),
-                                      ),
-                                    );
-                                  },
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  color: Colors.grey[200],
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.image_not_supported,
-                                        color: Colors.grey[400],
-                                        size: 40,
-                                      ),
-                                      Text(
-                                        'Image not found',
-                                        style: TextStyle(
-                                          color: Colors.grey[600],
-                                          fontSize: 12,
+                                      );
+                                    },
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: Colors.grey[200],
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.image_not_supported,
+                                          color: Colors.grey[400],
+                                          size: 40,
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            )
-                          : Container(
+                                        Text(
+                                          'Image not found',
+                                          style: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                          ) : Container(
                               color: Colors.grey[200],
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -366,9 +366,8 @@ class _WishlistPageState extends State<WishlistPage> {
 
           // Product Details
           Expanded(
-            flex: 2,
             child: Padding(
-              padding: EdgeInsets.all(8),
+              padding: EdgeInsets.symmetric(vertical: 2, horizontal: 10.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -402,10 +401,6 @@ class _WishlistPageState extends State<WishlistPage> {
                       onPressed: () => moveToCart(product),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: colorPallete.color1,
-                        padding: EdgeInsets.symmetric(vertical: 8),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6),
-                        ),
                       ),
                       child: Text(
                         'Move to Cart',
@@ -417,6 +412,7 @@ class _WishlistPageState extends State<WishlistPage> {
                       ),
                     ),
                   ),
+                  SizedBox(height: 5.0)
                 ],
               ),
             ),

@@ -1,5 +1,5 @@
-import 'package:buy_app/screens/account_page.dart'; // Changed: Remove 'address/' from path
-import 'package:buy_app/screens/cart_page.dart';
+import 'package:buy_app/screens/account/account_page.dart'; // Changed: Remove 'address/' from path
+import 'package:buy_app/screens/orders/cart_page.dart';
 import 'package:buy_app/screens/home_page.dart';
 import 'package:buy_app/screens/add_page.dart'; // Add this for the Menu tab
 import 'package:buy_app/colorPallete/color_pallete.dart';
@@ -23,9 +23,9 @@ class _IndexState extends State<Index> {
 
   List<Widget> pages = [
     HomePage(),
-    AccountPage(), // This now points to the correct AccountPage with wishlist, etc.
     CartPage(),
-    AddPage(), // Changed from Placeholder to AddPage
+    AddPage(),
+    AccountPage(),// Changed from Placeholder to AddPage
   ];
 
   @override
@@ -44,11 +44,6 @@ class _IndexState extends State<Index> {
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Account',
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.shopping_bag_outlined),
             activeIcon: Icon(Icons.shopping_bag),
             label: 'Cart',
@@ -57,6 +52,11 @@ class _IndexState extends State<Index> {
             icon: Icon(Icons.apps_outlined),
             activeIcon: Icon(Icons.apps),
             label: 'Menu',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Me',
           ),
         ],
         onTap: onItemTapped,

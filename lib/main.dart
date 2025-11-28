@@ -1,16 +1,16 @@
 import 'package:buy_app/animated_splash_screen_widget.dart';
 import 'package:buy_app/colorPallete/color_pallete.dart';
 import 'package:buy_app/index.dart';
-import 'package:buy_app/screens/account_page.dart'; // FIXED: Changed from address/account_page.dart
+import 'package:buy_app/screens/account/account_page.dart'; // FIXED: Changed from address/account_page.dart
 import 'package:buy_app/screens/address/add_new_address.dart';
 import 'package:buy_app/screens/add_page.dart';
 import 'package:buy_app/screens/address/address_selection_page.dart';
-import 'package:buy_app/screens/cart_page.dart';
-import 'package:buy_app/screens/checkout_page.dart';
+import 'package:buy_app/screens/orders/cart_page.dart';
+import 'package:buy_app/screens/orders/checkout_page.dart';
 import 'package:buy_app/screens/auth/otp_page.dart';
 import 'package:buy_app/screens/payments/payment_page.dart';
-import 'package:buy_app/screens/search_results.dart';
-import 'package:buy_app/screens/search_screen.dart';
+import 'package:buy_app/screens/search/search_results.dart';
+import 'package:buy_app/screens/search/search_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'screens/auth/login_page.dart';
@@ -18,7 +18,7 @@ import 'screens/auth/signup_page.dart';
 import 'screens/auth/mobile_login_page.dart';
 import 'screens/payments/payment_card_page.dart';
 import 'screens/payments/payment_upi_page.dart';
-import 'package:buy_app/screens/order_history.dart';
+import 'package:buy_app/screens/orders/order_history.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

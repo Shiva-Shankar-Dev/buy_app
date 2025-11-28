@@ -7,7 +7,7 @@ import 'package:buy_app/models/models.dart'; // Import from models file
 
 class EmailService {
   static const String _emailServerUrl =
-      'https://mail-sender-black.vercel.app/send';
+      'http://10.0.2.2:3000/send';
 
   /// Send a basic email
   static Future<bool> sendEmail({
