@@ -38,7 +38,7 @@ class CartItem {
 }
 
 class Product {
-  final String name, brand, description, deliveryTime, pid;
+  final String name, brand, description, deliveryTime, pid, sellerId;
   final double price;
   final String category;
   final List<String> keywords;
@@ -56,6 +56,7 @@ class Product {
     required this.pid,
     required this.keywords,
     required this.stockQuantity,
+    required this.sellerId,
   });
 
   factory Product.fromFirestore(Map<String, dynamic> data) {
@@ -70,6 +71,7 @@ class Product {
       keywords: List<String>.from(data['keywords'] ?? []),
       images: List<String>.from(data['images'] ?? []),
       stockQuantity: data['stockQuantity'] ?? 0,
+      sellerId: data['sellerId'] ?? null,
     );
   }
 
@@ -85,6 +87,7 @@ class Product {
       'keywords': keywords,
       'images': images,
       'stockQuantity': stockQuantity,
+      'sellerId' : sellerId,
     };
   }
 
@@ -184,6 +187,7 @@ class Order {
                 keywords: [],
                 images: [],
                 stockQuantity: 0,
+                sellerId: '',
               ),
               quantity: 1,
             );

@@ -240,178 +240,174 @@ class _WishlistPageState extends State<WishlistPage> {
   }
 
   Widget _buildWishlistCard(Product product) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Product Image
-          Expanded(
-            child: Stack(
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            ProductDetailPage(product: product),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(12),
-                      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Product Image
+        Expanded(
+          child: Stack(
+            children: [
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          ProductDetailPage(product: product),
                     ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(12),
-                      ),
-                      child: product.images.isNotEmpty
-                          ? Center(
-                            child: Image.network(
-                                product.images[0],
-                                fit: BoxFit.fill,
-                                loadingBuilder:
-                                    (context, child, loadingProgress) {
-                                      if (loadingProgress == null) return child;
-                                      return Container(
-                                        color: Colors.grey[200],
-                                        child: Center(
-                                          child: CircularProgressIndicator(
-                                            valueColor:
-                                                AlwaysStoppedAnimation<Color>(
-                                                  ColorPallete.color1,
-                                                ),
-                                          ),
+                  );
+                },
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(12),
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(12),
+                    ),
+                    child: product.images.isNotEmpty
+                        ? Center(
+                          child: Image.network(
+                              product.images[0],
+                              fit: BoxFit.fill,
+                              loadingBuilder:
+                                  (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return Container(
+                                      color: Colors.grey[200],
+                                      child: Center(
+                                        child: CircularProgressIndicator(
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                ColorPallete.color1,
+                                              ),
                                         ),
-                                      );
-                                    },
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Container(
-                                    color: Colors.grey[200],
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.image_not_supported,
-                                          color: Colors.grey[400],
-                                          size: 40,
+                                      ),
+                                    );
+                                  },
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: Colors.grey[200],
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.image_not_supported,
+                                        color: Colors.grey[400],
+                                        size: 40,
+                                      ),
+                                      Text(
+                                        'Image not found',
+                                        style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 12,
                                         ),
-                                        Text(
-                                          'Image not found',
-                                          style: TextStyle(
-                                            color: Colors.grey[600],
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              ),
-                          ) : Container(
-                              color: Colors.grey[200],
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.image,
-                                    color: Colors.grey[400],
-                                    size: 40,
+                                      ),
+                                    ],
                                   ),
-                                  Text(
-                                    'No image',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                );
+                              },
                             ),
-                    ),
-                  ),
-                ),
-                // Remove from wishlist button
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: GestureDetector(
-                    onTap: () => removeFromWishlist(product),
-                    child: Container(
-                      padding: EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withAlpha(10),
-                            blurRadius: 4,
-                            offset: Offset(0, 2),
+                        ) : Container(
+                            color: Colors.grey[200],
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.image,
+                                  color: Colors.grey[400],
+                                  size: 40,
+                                ),
+                                Text(
+                                  'No image',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ],
+                  ),
+                ),
+              ),
+              // Remove from wishlist button
+              Positioned(
+                top: 8,
+                right: 8,
+                child: GestureDetector(
+                  onTap: () => removeFromWishlist(product),
+                  child: Container(
+                    padding: EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(10),
+                          blurRadius: 4,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Icon(Icons.favorite, color: Colors.red, size: 20),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Product Details
+        Expanded(
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 2, horizontal: 10.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  product.name,
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+
+                Spacer(),
+                Text(
+                  '₹${product.price.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: ColorPallete.color1,
+                  ),
+                ),
+                SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => moveToCart(product),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: ColorPallete.color1,
+                    ),
+                    child: Text(
+                      'Move to Cart',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
-                      child: Icon(Icons.favorite, color: Colors.red, size: 20),
                     ),
                   ),
                 ),
+                SizedBox(height: 5.0)
               ],
             ),
           ),
-
-          // Product Details
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 2, horizontal: 10.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.name,
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                 
-                  Spacer(),
-                  Text(
-                    '₹${product.price.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: ColorPallete.color1,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () => moveToCart(product),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: ColorPallete.color1,
-                      ),
-                      child: Text(
-                        'Move to Cart',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 5.0)
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

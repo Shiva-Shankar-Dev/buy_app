@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../models/models.dart';
 import 'dart:math';
 import 'package:intl/intl.dart';
+import 'stock_service.dart';
 // Order Item for storage
 class OrderItem {
   final String productTitle;
@@ -216,6 +217,22 @@ class OrderService {
         debugPrint('❌ [ORDER_CREATE] Order verification failed');
         return null;
       }
+
+      // IMPORTANT: Decrement stock for each item in the order
+      debugPrint('📊 [ORDER_CREATE] Starting stock decrement process...');
+      for (final item in cartItems) {
+        debugPrint('📊 [ORDER_CREATE] Decrementing stock for: ${item.product.name} (PID: ${item.product.pid}, Qty: ${item.quantity})');
+        final stockUpdated = await StockService.decrementStock(
+          item.product.pid,
+          item.quantity,
+        );
+        if (!stockUpdated) {
+          debugPrint('⚠️ [ORDER_CREATE] Failed to update stock for ${item.product.name}');
+        } else {
+          debugPrint('✅ [ORDER_CREATE] Stock updated successfully for ${item.product.name}');
+        }
+      }
+      debugPrint('✅ [ORDER_CREATE] Stock decrement process completed');
 
       debugPrint('🎉 [ORDER_CREATE] Order creation process completed successfully');
       return orderId;

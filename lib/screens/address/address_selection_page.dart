@@ -68,8 +68,7 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
     debugPrint('Selected address: ${selected.line1}, ${selected.city}');
     Navigator.pushNamed(
       context,
-      '/payment',
-      arguments: selected,
+      '/razorpay',
     ); // Pass back selected address
   }
 

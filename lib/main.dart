@@ -77,7 +77,8 @@ class MyApp extends StatelessWidget {
         '/payment': (context) => PaymentPage(),
         '/order_history': (context) => OrderHistoryPage(),
         '/search': (context) => SearchScreen(),
-        'results': (context) => SearchResults(query: ''),
+        '/results': (context) => SearchResults(query: ''),
+        //'/razorpay': (context) => RazorpayPage(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/otp') {

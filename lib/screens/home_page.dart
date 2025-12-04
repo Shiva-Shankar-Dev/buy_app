@@ -105,6 +105,7 @@ class _HomePage extends State<HomePage> {
         keywords: List<String>.from(doc['keywords'] ?? []),
         pid: doc['pid'] ?? '',
         stockQuantity: doc['stockQuantity'] ?? 0,
+        sellerId: doc['sellerId'] ?? null,
       );
 
       // Debug first few products
@@ -657,7 +658,7 @@ class _HomePage extends State<HomePage> {
                   sliver: SliverGrid(
                     delegate: SliverChildBuilderDelegate((context, index) {
                       final product = filteredProducts[index];
-                      return GestureDetector(
+                      return InkWell(
                         onTap: () {
                           Navigator.push(
                             context,
@@ -667,90 +668,83 @@ class _HomePage extends State<HomePage> {
                             ),
                           );
                         },
-                        child: Card(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 0.5,
-                          shadowColor: Colors.black12,
-                          child: Padding(
-                            padding: const EdgeInsets.all(2.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  height: 200,
-                                  width: double.infinity,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade200,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(10),
-                                    child: Image.network(
-                                      product.images.isNotEmpty
-                                          ? product.images.first
-                                          : '',
+                        child: Padding(
+                          padding: const EdgeInsets.all(2.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                height: 200,
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade200,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Image.network(
+                                    product.images.isNotEmpty
+                                        ? product.images.first
+                                        : '',
+                                    height: 140,
+                                    width: double.infinity,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (_, _, _) => Container(
                                       height: 140,
-                                      width: double.infinity,
-                                      fit: BoxFit.contain,
-                                      errorBuilder: (_, _, _) => Container(
-                                        height: 140,
-                                        color: Colors.grey[200],
-                                        child: Icon(
-                                          Icons.image,
-                                          size: 50,
-                                          color: Colors.grey[400],
-                                        ),
+                                      color: Colors.grey[200],
+                                      child: Icon(
+                                        Icons.image,
+                                        size: 50,
+                                        color: Colors.grey[400],
                                       ),
                                     ),
                                   ),
                                 ),
-                                SizedBox(height: 8),
-                                Padding(
-                                  padding: const EdgeInsets.all(5.0),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      SizedBox(
-                                        height: 45,
-                                        width: double.infinity,
-                                        child: Text(
-                                          product.name,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                      ),
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.star,
-                                            color: Colors.orange,
-                                            size: 14,
-                                          ),
-                                          SizedBox(width: 4),
-                                        ],
-                                      ),
-                                      Text(
-                                        '₹${product.price.toStringAsFixed(2)}',
+                              ),
+                              SizedBox(height: 8),
+                              Padding(
+                                padding: const EdgeInsets.all(5.0),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    SizedBox(
+                                      height: 45,
+                                      width: double.infinity,
+                                      child: Text(
+                                        product.name,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
                                         style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: ColorPallete.color1,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16,
                                         ),
                                       ),
-                                      SizedBox(height: 2),
-                                    ],
-                                  ),
+                                    ),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.star,
+                                          color: Colors.orange,
+                                          size: 14,
+                                        ),
+                                        SizedBox(width: 4),
+                                      ],
+                                    ),
+                                    Text(
+                                      '₹${product.price.toStringAsFixed(2)}',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: ColorPallete.color1,
+                                      ),
+                                    ),
+                                    SizedBox(height: 2),
+                                  ],
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       );
