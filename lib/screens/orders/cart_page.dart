@@ -16,58 +16,110 @@ class _CartPageState extends State<CartPage> {
   final cart = Cart.instance;
 
   Widget _buildQuantityControls(CartItem item) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Decrease button
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                if (item.quantity > 1) {
-                  cart.updateQuantity(item.product, item.quantity - 1);
-                } else {
-                  cart.remove(item.product);
-                }
-              });
-            },
-            child: Container(
-              padding: EdgeInsets.all(8),
-              child: Icon(
-                item.quantity > 1 ? Icons.remove : Icons.delete,
-                color: item.quantity > 1 ? Colors.black : Colors.red,
-                size: 18,
+    final limitInfo = cart.getQuantityLimitInfo(item.product);
+    final canIncrease = limitInfo['availableToAdd'] > 0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Decrease button
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    if (item.quantity > 1) {
+                      cart.updateQuantity(item.product, item.quantity - 1);
+                    } else {
+                      cart.remove(item.product);
+                    }
+                  });
+                },
+                child: Container(
+                  padding: EdgeInsets.all(8),
+                  child: Icon(
+                    item.quantity > 1 ? Icons.remove : Icons.delete,
+                    color: item.quantity > 1 ? Colors.black : Colors.red,
+                    size: 18,
+                  ),
+                ),
+              ),
+
+              // Quantity display
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Text(
+                  '${item.quantity}',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+
+              // Increase button
+              GestureDetector(
+                onTap: () {
+                  if (canIncrease) {
+                    setState(() {
+                      cart.updateQuantity(item.product, item.quantity + 1);
+                    });
+                  } else {
+                    // Show limit message
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Maximum ${limitInfo['maxAllowed']} items allowed for ${item.product.category} category',
+                        ),
+                        backgroundColor: Colors.orange,
+                      ),
+                    );
+                  }
+                },
+                child: Container(
+                  padding: EdgeInsets.all(8),
+                  child: Icon(
+                    Icons.add,
+                    color: canIncrease ? Colors.black : Colors.grey,
+                    size: 18,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Show limit info if approaching limit
+        if (limitInfo['availableToAdd'] <= 2 && limitInfo['availableToAdd'] > 0)
+          Padding(
+            padding: EdgeInsets.only(top: 4),
+            child: Text(
+              '${limitInfo['availableToAdd']} more available',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.orange.shade700,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
 
-          // Quantity display
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        // Show max reached message
+        if (limitInfo['availableToAdd'] == 0)
+          Padding(
+            padding: EdgeInsets.only(top: 4),
             child: Text(
-              '${item.quantity}',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              'Max limit reached',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.red.shade600,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
-
-          // Increase button
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                cart.updateQuantity(item.product, item.quantity + 1);
-              });
-            },
-            child: Container(
-              padding: EdgeInsets.all(8),
-              child: Icon(Icons.add, color: Colors.black, size: 18),
-            ),
-          ),
-        ],
-      ),
+      ],
     );
   }
 

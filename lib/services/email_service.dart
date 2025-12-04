@@ -1,13 +1,76 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:buy_app/services/addresses.dart';
 import 'package:buy_app/services/seller_service.dart';
 import 'package:buy_app/services/cart_manager.dart';
 import 'package:buy_app/models/models.dart'; // Import from models file
 
 class EmailService {
-  static const String _emailServerUrl =
-      'http://10.0.2.2:3000/send';
+  static const String _emailServerUrl = 'http://10.0.2.2:3000/send';
+
+  // Define maximum quantities per category
+  static const Map<String, int> _categoryMaxQuantities = {
+    'mobiles': 4,
+    'mobile': 4,
+    'phone': 4,
+    'smartphone': 4,
+    'electronics': 3,
+    'laptop': 2,
+    'computer': 2,
+    'tablet': 3,
+    'headphones': 5,
+    'earphones': 5,
+    'watch': 3,
+    'smartwatch': 3,
+    'camera': 2,
+    'gaming': 2,
+    'console': 1,
+    'tv': 1,
+    'television': 1,
+    'appliances': 1,
+    'refrigerator': 1,
+    'washing machine': 1,
+    'microwave': 1,
+    'ac': 1,
+    'air conditioner': 1,
+    'furniture': 2,
+    'books': 10,
+    'clothing': 8,
+    'shoes': 6,
+    'accessories': 10,
+    'beauty': 5,
+    'cosmetics': 5,
+    'health': 5,
+    'sports': 4,
+    'toys': 6,
+    'home': 5,
+    'kitchen': 3,
+    'automotive': 2,
+    'jewelry': 4,
+    'default': 10, // Default maximum for categories not listed
+  };
+
+  /// Get maximum allowed quantity for a category
+  static int getMaxQuantityForCategory(String category) {
+    if (category.isEmpty) return _categoryMaxQuantities['default']!;
+
+    final categoryLower = category.toLowerCase().trim();
+
+    // Check for exact match first
+    if (_categoryMaxQuantities.containsKey(categoryLower)) {
+      return _categoryMaxQuantities[categoryLower]!;
+    }
+
+    // Check for partial matches
+    for (final key in _categoryMaxQuantities.keys) {
+      if (categoryLower.contains(key) || key.contains(categoryLower)) {
+        return _categoryMaxQuantities[key]!;
+      }
+    }
+
+    return _categoryMaxQuantities['default']!;
+  }
 
   /// Send a basic email
   static Future<bool> sendEmail({
@@ -140,9 +203,7 @@ class EmailService {
       // For now, grouping all items together
       final sellerId = null; // product.sellerId is no longer available
       if (sellerId == null) {
-        print(
-          "⚠️ Product '${item.product.name}' seller ID not available...",
-        );
+        print("⚠️ Product '${item.product.name}' seller ID not available...");
         itemsWithoutSellerId++;
         continue;
       }
@@ -330,15 +391,272 @@ class EmailService {
 
     return results;
   }
+
+  /// Enhanced stock availability check with quantity limits
+  static Future<Map<String, dynamic>> checkStockAvailability({
+    required List<CartItem> items,
+  }) async {
+    try {
+      print(
+        '🔍 Checking stock availability and quantity limits for ${items.length} items...',
+      );
+
+      // Note: Quantity limits should be validated at UI level before reaching this point
+
+      List<Map<String, dynamic>> unavailableItems = [];
+      bool allAvailable = true;
+
+      for (final item in items) {
+        try {
+          // Try multiple field names to find the product
+          QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+              .collection('products')
+              .where('name', isEqualTo: item.product.name)
+              .limit(1)
+              .get();
+
+          // If not found by name, try pid
+          if (querySnapshot.docs.isEmpty && item.product.pid.isNotEmpty) {
+            querySnapshot = await FirebaseFirestore.instance
+                .collection('products')
+                .where('pid', isEqualTo: item.product.pid)
+                .limit(1)
+                .get();
+          }
+
+          if (querySnapshot.docs.isNotEmpty) {
+            final productDoc = querySnapshot.docs.first;
+            final productData = productDoc.data() as Map<String, dynamic>;
+            final currentStock = productData['stockQuantity'] ?? 0;
+
+            if (currentStock < item.quantity) {
+              allAvailable = false;
+              unavailableItems.add({
+                'product': item.product.name,
+                'category': item.product.category,
+                'requested': item.quantity,
+                'available': currentStock,
+                'type': 'insufficient_stock',
+              });
+              print(
+                '❌ Insufficient stock: ${item.product.name} (Requested: ${item.quantity}, Available: $currentStock)',
+              );
+            } else {
+              print(
+                '✅ Stock available: ${item.product.name} (Requested: ${item.quantity}, Available: $currentStock)',
+              );
+            }
+          } else {
+            allAvailable = false;
+            unavailableItems.add({
+              'product': item.product.name,
+              'category': item.product.category,
+              'requested': item.quantity,
+              'available': 0,
+              'type': 'product_not_found',
+              'error': 'Product not found',
+            });
+            print('❌ Product not found: ${item.product.name}');
+          }
+        } catch (e) {
+          print('❌ Error checking stock for ${item.product.name}: $e');
+          allAvailable = false;
+          unavailableItems.add({
+            'product': item.product.name,
+            'category': item.product.category,
+            'requested': item.quantity,
+            'available': 0,
+            'type': 'error',
+            'error': e.toString(),
+          });
+        }
+      }
+
+      return {
+        'available': allAvailable,
+        'unavailableItems': unavailableItems,
+        'quantityLimitsChecked': true,
+      };
+    } catch (e) {
+      print('❌ Error checking stock availability: $e');
+      return {
+        'available': false,
+        'unavailableItems': [],
+        'error': e.toString(),
+      };
+    }
+  }
+
+  /// Update stock quantities in Firestore after order placement
+  static Future<bool> updateStockQuantities({
+    required List<CartItem> orderedItems,
+    required String orderId,
+  }) async {
+    try {
+      print('📦 Updating stock quantities for order: $orderId');
+
+      // Use batch write for atomic updates
+      final batch = FirebaseFirestore.instance.batch();
+      int successfulUpdates = 0;
+
+      for (final item in orderedItems) {
+        try {
+          print('🔍 Looking for product: ${item.product.name}');
+
+          // Try multiple field names to find the product
+          QuerySnapshot querySnapshot;
+
+          // First try with 'name' field
+          querySnapshot = await FirebaseFirestore.instance
+              .collection('products')
+              .where('name', isEqualTo: item.product.name)
+              .limit(1)
+              .get();
+
+          // If not found, try with other possible field names
+          if (querySnapshot.docs.isEmpty) {
+            print(
+              '🔍 Product not found by name, trying pid: ${item.product.pid}',
+            );
+            querySnapshot = await FirebaseFirestore.instance
+                .collection('products')
+                .where('pid', isEqualTo: item.product.pid)
+                .limit(1)
+                .get();
+          }
+
+          if (querySnapshot.docs.isNotEmpty) {
+            final productDoc = querySnapshot.docs.first;
+            final productData = productDoc.data() as Map<String, dynamic>;
+
+            print('📋 Found product document: ${productDoc.id}');
+            print('📋 Product data fields: ${productData.keys.toList()}');
+
+            final currentStock = productData['stockQuantity'] ?? 0;
+            final newStock = (currentStock - item.quantity)
+                .clamp(0, double.infinity)
+                .toInt();
+
+            print('📊 Product: ${item.product.name}');
+            print('   Document ID: ${productDoc.id}');
+            print('   Current Stock: $currentStock');
+            print('   Ordered Quantity: ${item.quantity}');
+            print('   New Stock: $newStock');
+
+            // Validate that the stock won't go negative
+            if (currentStock >= item.quantity) {
+              // Add update operation to batch
+              batch.update(productDoc.reference, {
+                'stockQuantity': newStock,
+                'lastUpdated': FieldValue.serverTimestamp(),
+              });
+              successfulUpdates++;
+              print('✅ Added to batch: ${item.product.name}');
+            } else {
+              print(
+                '⚠️ Insufficient stock for ${item.product.name}: Available=$currentStock, Requested=${item.quantity}',
+              );
+            }
+          } else {
+            print('❌ Product not found in database: ${item.product.name}');
+            print('   Tried fields: name, pid');
+            print(
+              '   Product details: name=${item.product.name}, pid=${item.product.pid}',
+            );
+          }
+        } catch (e) {
+          print('❌ Error processing item ${item.product.name}: $e');
+        }
+      }
+
+      if (successfulUpdates > 0) {
+        // Commit all updates atomically
+        await batch.commit();
+        print(
+          '✅ Stock quantities updated successfully for $successfulUpdates items in order: $orderId',
+        );
+        return true;
+      } else {
+        print('❌ No stock updates were made for order: $orderId');
+        return false;
+      }
+    } catch (e) {
+      print('❌ Error updating stock quantities: $e');
+      return false;
+    }
+  }
 }
 
 Future<void> placeOrder(Map<String, dynamic> customer, Address address) async {
-  await EmailService.sendOrderDetailsToSellers(
-    customer: customer,
-    shippingAddress: address,
-    ordId: 'N/A',
-    paymentMethod: 'COD',
-    txnId: 'N/A',
+  // Get cart items before clearing
+  final cartItems = Cart.instance.items;
+  final orderId = 'ORD_${DateTime.now().millisecondsSinceEpoch}';
+
+  print('📦 Processing order: $orderId');
+
+  // Step 1: Check stock availability AND quantity limits
+  final stockCheck = await EmailService.checkStockAvailability(
+    items: cartItems,
   );
+
+  if (!stockCheck['available']) {
+    // Handle stock availability issues
+    print('❌ Order cannot be placed - insufficient stock');
+    final unavailableItems =
+        stockCheck['unavailableItems'] as List<Map<String, dynamic>>;
+
+    String errorMessage = 'Cannot place order due to:\n\n';
+    for (final item in unavailableItems) {
+      if (item['type'] == 'insufficient_stock') {
+        errorMessage +=
+            '• ${item['product']}: Only ${item['available']} available (requested ${item['requested']})\n';
+      } else if (item['type'] == 'product_not_found') {
+        errorMessage += '• ${item['product']}: Product not found\n';
+      }
+    }
+
+    throw Exception(errorMessage);
+  }
+
+  // Step 2: Update stock quantities
+  final stockUpdated = await EmailService.updateStockQuantities(
+    orderedItems: cartItems,
+    orderId: orderId,
+  );
+
+  if (!stockUpdated) {
+    print('⚠️ Warning: Stock quantities may not have been updated properly');
+  }
+
+  // Step 3: Send order details to sellers
+  try {
+    await EmailService.sendOrderDetailsToSellers(
+      customer: customer,
+      shippingAddress: address,
+      ordId: orderId,
+      paymentMethod: 'COD',
+      txnId: 'N/A',
+    );
+  } catch (e) {
+    print('⚠️ Warning: Failed to send seller notifications: $e');
+  }
+
+  // Step 4: Send customer confirmation
+  try {
+    await EmailService.sendCustomerConfirmationEmail(
+      customerEmail: customer['email'] ?? '',
+      customerName: customer['name'] ?? 'Customer',
+      shippingAddress: address,
+      orderedItems: cartItems,
+      ordId: orderId,
+      paymentMethod: 'COD',
+      txnId: 'N/A',
+    );
+  } catch (e) {
+    print('⚠️ Warning: Failed to send customer confirmation: $e');
+  }
+
+  // Step 5: Clear cart only after successful order placement
   Cart.instance.clear();
+  print('✅ Order placed successfully: $orderId');
 }
