@@ -34,7 +34,7 @@ class _IndexState extends State<Index> {
       body: pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: colorPallete.color1,
+        selectedItemColor: ColorPallete.color1,
         unselectedItemColor: Colors.grey[600],
         selectedLabelStyle: TextStyle(fontWeight: FontWeight.bold),
         items: [

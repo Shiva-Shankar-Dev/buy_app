@@ -11,7 +11,6 @@ class AddPage extends StatefulWidget {
 }
 
 class _AddPageState extends State<AddPage> {
-  @override
   Future<void> pickAndStoreExcel() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -24,12 +23,11 @@ class _AddPageState extends State<AddPage> {
 
       final box = Hive.box('filesBox');
       await box.put('excelFile', bytes); // Store file
-      print('Excel file saved to Hive.');
     } else {
-      print('No file selected.');
     }
   }
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Upload the excel file (testing)')),

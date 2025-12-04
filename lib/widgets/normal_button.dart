@@ -20,7 +20,7 @@ class NormalButton extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [colorPallete.color1, colorPallete.color2],
+          colors: [ColorPallete.color1, ColorPallete.color2],
           begin: Alignment.bottomLeft,
           end: Alignment.topRight,
         ),
@@ -30,8 +30,8 @@ class NormalButton extends StatelessWidget {
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           fixedSize: Size(length, height),
-          shadowColor: colorPallete.color4,
-          backgroundColor: colorPallete.color4,
+          shadowColor: ColorPallete.color4,
+          backgroundColor: ColorPallete.color4,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadiusGeometry.circular(10),
           ),

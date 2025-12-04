@@ -1,9 +1,10 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:buy_app/services/addresses.dart';
 import 'package:buy_app/services/auth.dart';
 import 'package:buy_app/services/sms_service.dart';
 import 'package:buy_app/services/email_service.dart';
 import 'package:buy_app/services/cart_manager.dart';
-import 'package:buy_app/widgets/normal_button.dart';
 import 'package:buy_app/colorPallete/color_pallete.dart';
 import 'package:buy_app/screens/payments/payment_cod_page.dart'; 
 import 'package:flutter/material.dart';
@@ -107,11 +108,11 @@ class _PaymentPageState extends State<PaymentPage> {
       }
 
       // 4. Clear cart after notifications
-      print('🛒 Clearing cart after notifications sent successfully');
+      debugPrint('🛒 Clearing cart after notifications sent successfully');
       cart.clear();
-      print('🛒 Cart cleared. Items count: ${cart.items.length}');
+      debugPrint('🛒 Cart cleared. Items count: ${cart.items.length}');
     } catch (e) {
-      print("❌ Error sending notifications: $e");
+      debugPrint("❌ Error sending notifications: $e");
       // Clear cart even on error to prevent duplicate orders
       cart.clear();
     }
@@ -167,7 +168,7 @@ class _PaymentPageState extends State<PaymentPage> {
       return Scaffold(
         appBar: AppBar(
           title: Text('Payment Details'),
-          backgroundColor: colorPallete.color1,
+          backgroundColor: ColorPallete.color1,
           foregroundColor: Colors.white,
         ),
         body: Center(child: CircularProgressIndicator()),
@@ -177,7 +178,7 @@ class _PaymentPageState extends State<PaymentPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Payment Details'),
-        backgroundColor: colorPallete.color1,
+        backgroundColor: ColorPallete.color1,
         foregroundColor: Colors.white,
       ),
       body: Padding(
@@ -206,7 +207,7 @@ class _PaymentPageState extends State<PaymentPage> {
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: colorPallete.color1,
+                        color: ColorPallete.color1,
                       ),
                     ),
                   ],
@@ -268,12 +269,12 @@ class _PaymentPageState extends State<PaymentPage> {
             Spacer(),
 
             // Payment Button
-            Container(
+            SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: _isProcessing ? null : _handlePayment,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: colorPallete.color1,
+                  backgroundColor: ColorPallete.color1,
                   padding: EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -358,7 +359,7 @@ class _OrderSuccessPageState extends State<OrderSuccessPage> {
               style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
             ),
             SizedBox(height: 30),
-            CircularProgressIndicator(color: colorPallete.color1),
+            CircularProgressIndicator(color: ColorPallete.color1),
             SizedBox(height: 10),
             Text(
               "Redirecting to Home...",

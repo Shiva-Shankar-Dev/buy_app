@@ -32,7 +32,7 @@ void main() async {
       ),
     );
   } catch (e) {
-    print("🔥 Firebase already initialized or failed: $e");
+    debugPrint("Firebase initialization error: $e");
   }
   runApp(MyApp());
 }
@@ -47,9 +47,9 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.light,
-        scaffoldBackgroundColor: colorPallete.color6,
+        scaffoldBackgroundColor: ColorPallete.color6,
         appBarTheme: AppBarTheme(
-          backgroundColor: colorPallete.color1,
+          backgroundColor: ColorPallete.color1,
           elevation: 0,
           titleTextStyle: TextStyle(
             fontSize: 26,

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 
 class SellerService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -6,20 +7,20 @@ class SellerService {
   // Get seller details by their Firebase user ID
   static Future<Map<String, dynamic>?> getSellerDetails(String sellerId) async {
     try {
-      print("🔍 Fetching seller details for ID: $sellerId");
+      debugPrint("🔍 Fetching seller details for ID: $sellerId");
 
       final doc = await _firestore.collection('sellers').doc(sellerId).get();
 
       if (doc.exists) {
         final data = doc.data();
-        print("✅ Seller found: ${data?['name']} (${data?['email']})");
+        debugPrint("✅ Seller found: ${data?['name']} (${data?['email']})");
         return data;
       } else {
-        print("❌ No seller found with ID: $sellerId");
+        debugPrint("❌ No seller found with ID: $sellerId");
         return null;
       }
     } catch (e) {
-      print("❌ Error fetching seller details: $e");
+      debugPrint("❌ Error fetching seller details: $e");
       return null;
     }
   }

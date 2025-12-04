@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:buy_app/colorPallete/color_pallete.dart';
 import 'package:buy_app/services/addresses.dart';
-import 'package:buy_app/services/auth.dart';
 import 'package:buy_app/screens/address/add_new_address.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -13,7 +12,6 @@ class SavedAddressesPage extends StatefulWidget {
 }
 
 class _SavedAddressesPageState extends State<SavedAddressesPage> {
-  final AuthService _authService = AuthService();
   List<Address> addresses = [];
   bool isLoading = true;
 
@@ -94,7 +92,7 @@ class _SavedAddressesPageState extends State<SavedAddressesPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Saved Addresses'),
-        backgroundColor: colorPallete.color1,
+        backgroundColor: ColorPallete.color1,
         foregroundColor: Colors.white,
       ),
       body: isLoading
@@ -123,7 +121,7 @@ class _SavedAddressesPageState extends State<SavedAddressesPage> {
                   ElevatedButton(
                     onPressed: addNewAddress,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: colorPallete.color1,
+                      backgroundColor: ColorPallete.color1,
                     ),
                     child: Text(
                       'Add New Address',
@@ -243,12 +241,12 @@ class _SavedAddressesPageState extends State<SavedAddressesPage> {
                 ),
                 Padding(
                   padding: EdgeInsets.all(16),
-                  child: Container(
+                  child: SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: addNewAddress,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: colorPallete.color1,
+                        backgroundColor: ColorPallete.color1,
                         padding: EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),

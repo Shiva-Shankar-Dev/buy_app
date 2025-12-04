@@ -26,8 +26,10 @@ class _LoginPage extends State<LoginPage> {
       password: passwordController.text,
     );
     if (result == null) {
+      if(!mounted) return;
       Navigator.pushNamed(context, '/home');
     } else {
+      if(!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(result)));
@@ -57,8 +59,8 @@ class _LoginPage extends State<LoginPage> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        colorPallete.color1,
-                        colorPallete.color2,
+                        ColorPallete.color1,
+                        ColorPallete.color2,
                       ]
                   ),
                   color: Colors.grey.shade200,
@@ -138,7 +140,7 @@ class _LoginPage extends State<LoginPage> {
                       children: [
                         TextSpan(
                           text: 'Phone Number instead?',
-                          style: TextStyle(color: colorPallete.color1, fontSize: 15),
+                          style: TextStyle(color: ColorPallete.color1, fontSize: 15),
                           recognizer: TapGestureRecognizer()..onTap = () {
                               Navigator.pushNamed(context, '/mobile');
                             },
@@ -164,7 +166,7 @@ class _LoginPage extends State<LoginPage> {
                       children: [
                         TextSpan(
                           text: 'Sign Up Now',
-                          style: TextStyle(color: colorPallete.color1, fontSize: 15),
+                          style: TextStyle(color: ColorPallete.color1, fontSize: 15),
                           recognizer: TapGestureRecognizer()..onTap = () {
                             Navigator.pushNamed(context, '/signup');
                           },

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import '../models/models.dart';
 import 'dart:math';
 import 'package:intl/intl.dart';
@@ -137,16 +138,16 @@ class OrderService {
     String status = 'Confirmed',
   }) async {
     try {
-      print('🚀 [ORDER_CREATE] Starting order creation process...');
-      print('🚀 [ORDER_CREATE] Collection: $_collection');
+      debugPrint('🚀 [ORDER_CREATE] Starting order creation process...');
+      debugPrint('🚀 [ORDER_CREATE] Collection: $_collection');
 
       // Get current user
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) {
-        print('❌ [ORDER_CREATE] No user logged in');
+        debugPrint('❌ [ORDER_CREATE] No user logged in');
         return null;
       }
-      print('✅ [ORDER_CREATE] User ID: ${currentUser.uid}');
+      debugPrint('✅ [ORDER_CREATE] User ID: ${currentUser.uid}');
 
       // Fetch customer document
       final customerDoc = await _firestore
@@ -155,29 +156,29 @@ class OrderService {
           .get();
 
       if (!customerDoc.exists) {
-        print(
+        debugPrint(
           '❌ [ORDER_CREATE] Customer document not found for user: ${currentUser.uid}',
         );
         return null;
       }
-      print('✅ [ORDER_CREATE] Customer document found');
+      debugPrint('✅ [ORDER_CREATE] Customer document found');
 
       final customerData = customerDoc.data();
       if (customerData == null) {
-        print('❌ [ORDER_CREATE] Customer data is null');
+        debugPrint('❌ [ORDER_CREATE] Customer data is null');
         return null;
       }
-      print('✅ [ORDER_CREATE] Customer data: $customerData');
+      debugPrint('✅ [ORDER_CREATE] Customer data: $customerData');
 
       // Generate order ID
       final orderId = _generateOrderId();
-      print('✅ [ORDER_CREATE] Generated Order ID: $orderId');
+      debugPrint('✅ [ORDER_CREATE] Generated Order ID: $orderId');
 
       // Convert cart items to order items
       final orderItems = cartItems
           .map((cartItem) => OrderItem.fromCartItem(cartItem))
           .toList();
-      print(
+      debugPrint(
         '✅ [ORDER_CREATE] Converted ${orderItems.length} cart items to order items',
       );
 
@@ -194,15 +195,15 @@ class OrderService {
         orderDate: DateTime.now(),
         shippingAddress: shippingAddress,
       );
-      print('✅ [ORDER_CREATE] Order object created: $order');
+      debugPrint('✅ [ORDER_CREATE] Order object created: $order');
 
       // Convert order to map
       final orderMap = order.toMap();
-      print('✅ [ORDER_CREATE] Order map: $orderMap');
+      debugPrint('✅ [ORDER_CREATE] Order map: $orderMap');
 
       // Save order to Firestore
       await _firestore.collection(_collection).doc(orderId).set(orderMap);
-      print('✅ [ORDER_CREATE] Order saved to Firestore');
+      debugPrint('✅ [ORDER_CREATE] Order saved to Firestore');
 
       // Verify order was saved
       final savedDoc = await _firestore
@@ -210,17 +211,17 @@ class OrderService {
           .doc(orderId)
           .get();
       if (savedDoc.exists) {
-        print('✅ [ORDER_CREATE] Order verification successful');
+        debugPrint('✅ [ORDER_CREATE] Order verification successful');
       } else {
-        print('❌ [ORDER_CREATE] Order verification failed');
+        debugPrint('❌ [ORDER_CREATE] Order verification failed');
         return null;
       }
 
-      print('🎉 [ORDER_CREATE] Order creation process completed successfully');
+      debugPrint('🎉 [ORDER_CREATE] Order creation process completed successfully');
       return orderId;
     } catch (e, stackTrace) {
-      print('❌ [ORDER_CREATE] Error: $e');
-      print('❌ [ORDER_CREATE] Stack trace: $stackTrace');
+      debugPrint('❌ [ORDER_CREATE] Error: $e');
+      debugPrint('❌ [ORDER_CREATE] Stack trace: $stackTrace');
       return null;
     }
   }
@@ -228,7 +229,7 @@ class OrderService {
   // Get user orders - Simple query
   static Future<List<Order>> getUserOrders(String userId) async {
     try {
-      print('🔍 [ORDER_FETCH] Collection: $_collection');
+      debugPrint('🔍 [ORDER_FETCH] Collection: $_collection');
 
       final querySnapshot = await _firestore
           .collection(_collection)
@@ -242,13 +243,13 @@ class OrderService {
           final order = Order.fromFirestore(doc);
           orders.add(order);
         } catch (e) {
-          print('❌ [ORDER_FETCH] Error parsing document: $e');
+          debugPrint('❌ [ORDER_FETCH] Error parsing document: $e');
         }
       }
 
       return orders;
     } catch (e) {
-      print('❌ [ORDER_FETCH] Error fetching orders: $e');
+      debugPrint('❌ [ORDER_FETCH] Error fetching orders: $e');
       return [];
     }
   }
@@ -263,7 +264,7 @@ class OrderService {
       }
       return null;
     } catch (e) {
-      print('❌ Error fetching order: $e');
+      debugPrint('❌ Error fetching order: $e');
       return null;
     }
   }
@@ -278,10 +279,10 @@ class OrderService {
         'status': newStatus,
       });
 
-      print('✅ Order status updated: $orderId -> $newStatus');
+      debugPrint('✅ Order status updated: $orderId -> $newStatus');
       return true;
     } catch (e) {
-      print('❌ Error updating order status: $e');
+      debugPrint('❌ Error updating order status: $e');
       return false;
     }
   }

@@ -61,7 +61,7 @@ class _OtpPageState extends State<OtpPage> {
       return;
     }
 
-    print('🔐 Verifying OTP: $otp');
+    debugPrint('🔐 Verifying OTP: $otp');
     setState(() => _isVerifying = true);
 
     try {
@@ -71,11 +71,11 @@ class _OtpPageState extends State<OtpPage> {
       );
 
       await FirebaseAuth.instance.signInWithCredential(credential);
-      print('✅ OTP verification successful!');
-      
+      debugPrint('✅ OTP verification successful!');
+      if(!mounted) return;
       Navigator.pushReplacementNamed(context, '/home');
     } on FirebaseAuthException catch (e) {
-      print('❌ OTP verification failed: ${e.code} - ${e.message}');
+      debugPrint('❌ OTP verification failed: ${e.code} - ${e.message}');
       
       String errorMessage;
       switch (e.code) {
@@ -90,7 +90,7 @@ class _OtpPageState extends State<OtpPage> {
       }
       _showError(errorMessage);
     } catch (e) {
-      print('💥 Unexpected error during verification: $e');
+      debugPrint('💥 Unexpected error during verification: $e');
       _showError('Network error. Please try again.');
     }
 
@@ -99,8 +99,8 @@ class _OtpPageState extends State<OtpPage> {
 
   void _resendOtp() async {
     if (!_canResend || _isResending) return;
-    
-    print('📱 Resending OTP to: $phone');
+
+    debugPrint('📱 Resending OTP to: $phone');
     setState(() => _isResending = true);
 
     try {
@@ -109,20 +109,21 @@ class _OtpPageState extends State<OtpPage> {
         timeout: const Duration(seconds: 60),
         forceResendingToken: resendToken,
         verificationCompleted: (PhoneAuthCredential credential) async {
-          print('🎉 Auto verification completed on resend!');
+          debugPrint('🎉 Auto verification completed on resend!');
           try {
             await FirebaseAuth.instance.signInWithCredential(credential);
+            if(!mounted) return;
             Navigator.pushReplacementNamed(context, '/home');
           } catch (e) {
-            print('❌ Auto verification failed: $e');
+            debugPrint('❌ Auto verification failed: $e');
           }
         },
         verificationFailed: (FirebaseAuthException e) {
-          print('❌ Resend verification failed: ${e.code} - ${e.message}');
+          debugPrint('❌ Resend verification failed: ${e.code} - ${e.message}');
           _showError('Failed to resend OTP: ${e.message}');
         },
         codeSent: (String newVerificationId, int? newResendToken) {
-          print('📨 OTP resent successfully!');
+          debugPrint('📨 OTP resent successfully!');
           setState(() {
             verificationId = newVerificationId;
             resendToken = newResendToken;
@@ -133,11 +134,11 @@ class _OtpPageState extends State<OtpPage> {
           _showSuccess('OTP sent successfully!');
         },
         codeAutoRetrievalTimeout: (String newVerificationId) {
-          print('⏰ Auto retrieval timeout for resend: $newVerificationId');
+          debugPrint('⏰ Auto retrieval timeout for resend: $newVerificationId');
         },
       );
     } catch (e) {
-      print('💥 Unexpected error during resend: $e');
+      debugPrint('💥 Unexpected error during resend: $e');
       _showError('Failed to resend OTP. Please try again.');
     }
 
@@ -168,7 +169,7 @@ class _OtpPageState extends State<OtpPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBar(title: Text('Verify OTP'), backgroundColor: colorPallete.color4,),
+      appBar: AppBar(title: Text('Verify OTP'), backgroundColor: ColorPallete.color4,),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Center(
@@ -190,7 +191,7 @@ class _OtpPageState extends State<OtpPage> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: colorPallete.color1, width: 3),
+                    borderSide: BorderSide(color: ColorPallete.color1, width: 3),
                   ),
                 ),
               ),
@@ -198,7 +199,7 @@ class _OtpPageState extends State<OtpPage> {
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [colorPallete.color1, colorPallete.color2],
+                    colors: [ColorPallete.color1, ColorPallete.color2],
                     begin: Alignment.bottomLeft,
                     end: Alignment.topRight,
                   ),
@@ -207,8 +208,8 @@ class _OtpPageState extends State<OtpPage> {
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     fixedSize: const Size(320, 55),
-                    shadowColor: colorPallete.color4,
-                    backgroundColor: colorPallete.color4,
+                    shadowColor: ColorPallete.color4,
+                    backgroundColor: ColorPallete.color4,
                   ),
                   onPressed: _isVerifying ? null : _verifyOtp,
                   child: _isVerifying
@@ -237,7 +238,7 @@ class _OtpPageState extends State<OtpPage> {
                             ? 'Resend OTP' 
                             : 'Resend OTP ($_resendTimer)s',
                         style: TextStyle(
-                          color: _canResend ? colorPallete.color1 : Colors.grey,
+                          color: _canResend ? ColorPallete.color1 : Colors.grey,
                           fontSize: 16,
                         ),
                       ),

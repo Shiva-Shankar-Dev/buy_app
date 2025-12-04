@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MobileLoginPage extends StatefulWidget {
-  const MobileLoginPage({Key? key}) : super(key: key);
+  const MobileLoginPage({super.key});
 
   @override
   State<MobileLoginPage> createState() => _MobileLoginPageState();
@@ -33,18 +33,18 @@ class _MobileLoginPageState extends State<MobileLoginPage> {
       return;
     }
 
-    print("📱 Validating phone: $phone");
+    debugPrint("📱 Validating phone: $phone");
     setState(() => _isSending = true);
 
     try {
       // Step 1: Check if the phone number exists in Firestore
-      print("🔍 Checking if user exists in Firestore...");
+      debugPrint("🔍 Checking if user exists in Firestore...");
       final result = await FirebaseFirestore.instance
           .collection('customers')
           .where('phone', isEqualTo: phone)
           .get();
 
-      print("📊 Firestore query result: ${result.docs.length} users found");
+      debugPrint("📊 Firestore query result: ${result.docs.length} users found");
 
       if (result.docs.isEmpty) {
         _showError(
@@ -54,23 +54,24 @@ class _MobileLoginPageState extends State<MobileLoginPage> {
         return;
       }
 
-      print("✅ User found! Sending OTP...");
+      debugPrint("✅ User found! Sending OTP...");
 
       // Step 2: Send OTP if user exists
       await FirebaseAuth.instance.verifyPhoneNumber(
         phoneNumber: phone,
         timeout: const Duration(seconds: 60),
         verificationCompleted: (PhoneAuthCredential credential) async {
-          print("🎉 Auto verification completed!");
+          debugPrint("🎉 Auto verification completed!");
           try {
             await FirebaseAuth.instance.signInWithCredential(credential);
+            if(!mounted) return;
             Navigator.pushReplacementNamed(context, '/home');
           } catch (e) {
-            print("❌ Auto verification failed: $e");
+            debugPrint("❌ Auto verification failed: $e");
           }
         },
         verificationFailed: (FirebaseAuthException e) {
-          print("❌ Verification failed: ${e.code} - ${e.message}");
+          debugPrint("❌ Verification failed: ${e.code} - ${e.message}");
           setState(() => _isSending = false);
 
           String errorMessage;
@@ -97,7 +98,7 @@ class _MobileLoginPageState extends State<MobileLoginPage> {
           _showError(errorMessage);
         },
         codeSent: (String verificationId, int? resendToken) {
-          print("📨 OTP sent successfully! Verification ID: $verificationId");
+          debugPrint("📨 OTP sent successfully! Verification ID: $verificationId");
           setState(() => _isSending = false);
           Navigator.pushNamed(
             context,
@@ -110,11 +111,11 @@ class _MobileLoginPageState extends State<MobileLoginPage> {
           );
         },
         codeAutoRetrievalTimeout: (String verificationId) {
-          print("⏰ Auto retrieval timeout for: $verificationId");
+          debugPrint("⏰ Auto retrieval timeout for: $verificationId");
         },
       );
     } catch (e) {
-      print("💥 Unexpected error: $e");
+      debugPrint("💥 Unexpected error: $e");
       setState(() => _isSending = false);
       _showError('Network error: Please check your connection');
     }
@@ -151,8 +152,8 @@ class _MobileLoginPageState extends State<MobileLoginPage> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      colorPallete.color1,
-                      colorPallete.color2,
+                      ColorPallete.color1,
+                      ColorPallete.color2,
                     ]
                   ),
                   borderRadius: BorderRadius.circular(15),
@@ -197,7 +198,7 @@ class _MobileLoginPageState extends State<MobileLoginPage> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(15),
-                    borderSide: BorderSide(color: colorPallete.color1, width: 1.5),
+                    borderSide: BorderSide(color: ColorPallete.color1, width: 1.5),
                   ),
                   hintText: 'Mobile',
                   border: OutlineInputBorder(
@@ -214,7 +215,7 @@ class _MobileLoginPageState extends State<MobileLoginPage> {
                 height: 55,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [colorPallete.color1, colorPallete.color2],
+                    colors: [ColorPallete.color1, ColorPallete.color2],
                     begin: Alignment.bottomLeft,
                     end: Alignment.topRight,
                   ),
@@ -222,8 +223,8 @@ class _MobileLoginPageState extends State<MobileLoginPage> {
                 ),
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    shadowColor: colorPallete.color4,
-                    backgroundColor: colorPallete.color4,
+                    shadowColor: ColorPallete.color4,
+                    backgroundColor: ColorPallete.color4,
                   ),
                   onPressed: _isSending ? null : _sendOtp,
                   child: _isSending ? CircularProgressIndicator() : Text(

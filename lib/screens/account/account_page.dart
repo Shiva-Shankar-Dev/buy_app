@@ -26,14 +26,14 @@ class _AccountPageState extends State<AccountPage> {
   void loadUserData() async {
     try {
       final data = await _authService.getUserDetailsAsMap();
-      print('User data loaded: $data'); // Debug print
+      debugPrint('User data loaded: $data'); // Debug print
       setState(() {
         userData =
             data ?? {'name': 'User', 'email': 'user@example.com', 'phone': ''};
         isLoading = false;
       });
     } catch (e) {
-      print('Error loading user data: $e');
+      debugPrint('Error loading user data: $e');
       setState(() {
         userData = {'name': 'User', 'email': 'user@example.com', 'phone': ''};
         isLoading = false;
@@ -62,10 +62,10 @@ class _AccountPageState extends State<AccountPage> {
           leading: Container(
             padding: EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: (iconColor ?? colorPallete.color1).withOpacity(0.1),
+              color: (iconColor ?? ColorPallete.color1).withAlpha(10),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: iconColor ?? colorPallete.color1, size: 24),
+            child: Icon(icon, color: iconColor ?? ColorPallete.color1, size: 24),
           ),
           title: Text(
             title,
@@ -81,14 +81,14 @@ class _AccountPageState extends State<AccountPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: colorPallete.color1,
+        backgroundColor: ColorPallete.color1,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
       body: isLoading
           ? Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(colorPallete.color1),
+                valueColor: AlwaysStoppedAnimation<Color>(ColorPallete.color1),
               ),
             )
           : SingleChildScrollView(
@@ -101,8 +101,8 @@ class _AccountPageState extends State<AccountPage> {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          colorPallete.color1,
-                          colorPallete.color1.withOpacity(0.8),
+                          ColorPallete.color1,
+                          ColorPallete.color1.withAlpha(80),
                         ],
                       ),
                     ),
@@ -118,7 +118,7 @@ class _AccountPageState extends State<AccountPage> {
                               style: TextStyle(
                                 fontSize: 32,
                                 fontWeight: FontWeight.bold,
-                                color: colorPallete.color1,
+                                color: ColorPallete.color1,
                               ),
                             ),
                           ),
@@ -135,7 +135,7 @@ class _AccountPageState extends State<AccountPage> {
                             userData?['email'] ?? 'No email',
                             style: TextStyle(
                               fontSize: 16,
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withAlpha(90),
                             ),
                           ),
                           if (userData?['phone'] != null &&
@@ -144,7 +144,7 @@ class _AccountPageState extends State<AccountPage> {
                               userData!['phone'].toString(),
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.white.withOpacity(0.8),
+                                color: Colors.white.withAlpha(90),
                               ),
                             ),
                         ],
@@ -270,7 +270,7 @@ class _AccountPageState extends State<AccountPage> {
                   // Sign Out Button
                   Padding(
                     padding: EdgeInsets.all(16),
-                    child: Container(
+                    child: SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {

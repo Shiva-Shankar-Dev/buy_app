@@ -10,7 +10,7 @@ class AccountPage extends StatefulWidget {
 }
 
 class _AccountPageState extends State<AccountPage> {
-  AuthService _authService = AuthService();
+  final AuthService _authService = AuthService();
   Future<DocumentSnapshot>? details;
   void loadUser() async {
     try {
@@ -20,7 +20,7 @@ class _AccountPageState extends State<AccountPage> {
           .doc(_authService.getCurrentUID())
           .get();
     } catch (e) {
-      print("$e");
+      debugPrint("$e");
     }
   }
 
@@ -31,7 +31,7 @@ class _AccountPageState extends State<AccountPage> {
       body: Center(
         child: Column(
           children: [
-            Row(children: [Text('${details}')]),
+            Row(children: [Text('$details')]),
           ],
         ),
       ),

@@ -135,7 +135,10 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
     });
 
     if (success) {
-      Navigator.pop(context, true); // Return true to indicate success
+      if(!mounted) return;
+      Navigator.pop(context, true);
+      if(!mounted) return;
+      // Return true to indicate success
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -156,7 +159,7 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.isEditing ? "Edit Address" : "Add Address"),
-        backgroundColor: colorPallete.color1,
+        backgroundColor: ColorPallete.color1,
         foregroundColor: Colors.white,
       ),
       body: Form(
@@ -193,12 +196,12 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
                 ),
               ),
               SizedBox(height: 20),
-              Container(
+              SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: isLoading ? null : saveAddress,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: colorPallete.color1,
+                    backgroundColor: ColorPallete.color1,
                     padding: EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),

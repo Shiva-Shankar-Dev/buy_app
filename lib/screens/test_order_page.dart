@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../services/order_service.dart' as OrderSvc;
+import '../services/order_service.dart' as order_scv;
 import '../models/models.dart';
 
 class TestOrderPage extends StatefulWidget {
@@ -13,7 +13,7 @@ class TestOrderPage extends StatefulWidget {
 class _TestOrderPageState extends State<TestOrderPage> {
   bool _isCreating = false;
   bool _isLoading = false;
-  List<OrderSvc.Order> _orders = [];
+  List<order_scv.Order> _orders = [];
   String? _lastOrderId;
 
   Future<void> _createTestOrder() async {
@@ -38,7 +38,7 @@ class _TestOrderPageState extends State<TestOrderPage> {
       final cartItem = CartItem(product: testProduct, quantity: 2);
 
       // Create order
-      final orderId = await OrderSvc.OrderService.createOrder(
+      final orderId = await order_scv.OrderService.createOrder(
         cartItems: [cartItem],
         totalAmount: 199.98,
         paymentMethod: 'Test Payment',
@@ -62,7 +62,7 @@ class _TestOrderPageState extends State<TestOrderPage> {
       }
     } catch (e) {
       _showMessage('❌ Error: $e', Colors.red);
-      print('Error creating test order: $e');
+      debugPrint('Error creating test order: $e');
     } finally {
       setState(() => _isCreating = false);
     }
@@ -78,7 +78,7 @@ class _TestOrderPageState extends State<TestOrderPage> {
         return;
       }
 
-      final orders = await OrderSvc.OrderService.getUserOrders(currentUser.uid);
+      final orders = await order_scv.OrderService.getUserOrders(currentUser.uid);
       setState(() => _orders = orders);
 
       _showMessage('📦 Loaded ${orders.length} orders', Colors.blue);

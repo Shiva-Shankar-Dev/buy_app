@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 
 class Address {
   final String id;
@@ -98,10 +99,10 @@ class AddressService {
           .collection('addresses')
           .add(address.toMap());
 
-      print('✅ Address saved successfully with UID');
+      debugPrint('✅ Address saved successfully with UID');
       return true;
     } catch (e) {
-      print('❌ Error saving address with UID: $e');
+      debugPrint('❌ Error saving address with UID: $e');
       return false;
     }
   }
@@ -119,7 +120,7 @@ class AddressService {
           .map((doc) => Address.fromMap(doc.data(), doc.id))
           .toList();
     } catch (e) {
-      print('❌ Error fetching addresses with UID: $e');
+      debugPrint('❌ Error fetching addresses with UID: $e');
       return [];
     }
   }
@@ -134,10 +135,10 @@ class AddressService {
           .doc(addressId)
           .delete();
 
-      print('✅ Address deleted successfully with UID');
+      debugPrint('✅ Address deleted successfully with UID');
       return true;
     } catch (e) {
-      print('❌ Error deleting address with UID: $e');
+      debugPrint('❌ Error deleting address with UID: $e');
       return false;
     }
   }
@@ -156,10 +157,10 @@ class AddressService {
           .doc(addressId)
           .update(address.toMap());
 
-      print('✅ Address updated successfully with UID');
+      debugPrint('✅ Address updated successfully with UID');
       return true;
     } catch (e) {
-      print('❌ Error updating address with UID: $e');
+      debugPrint('❌ Error updating address with UID: $e');
       return false;
     }
   }
@@ -180,10 +181,10 @@ class AddressService {
           .doc(addressHash)
           .set(address.toMap());
 
-      print('✅ Address saved successfully with email');
+      debugPrint('✅ Address saved successfully with email');
       return true;
     } catch (e) {
-      print('❌ Error saving address with email: $e');
+      debugPrint('❌ Error saving address with email: $e');
       return false;
     }
   }
@@ -201,7 +202,7 @@ class AddressService {
           .map((doc) => Address.fromMapLegacy(doc.data()))
           .toList();
     } catch (e) {
-      print('❌ Error fetching addresses with email: $e');
+      debugPrint('❌ Error fetching addresses with email: $e');
       return [];
     }
   }
@@ -220,10 +221,10 @@ class AddressService {
           .doc(addressHash)
           .delete();
 
-      print('✅ Address deleted successfully with email');
+      debugPrint('✅ Address deleted successfully with email');
       return true;
     } catch (e) {
-      print('❌ Error deleting address with email: $e');
+      debugPrint('❌ Error deleting address with email: $e');
       return false;
     }
   }
@@ -241,7 +242,7 @@ class AddressService {
       }
       return false;
     } catch (e) {
-      print('❌ Error updating address with email: $e');
+      debugPrint('❌ Error updating address with email: $e');
       return false;
     }
   }

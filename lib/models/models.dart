@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 
 class CartItem {
   final Product product;
@@ -144,7 +145,7 @@ class Order {
         ),
       );
     } catch (e) {
-      print('❌ Error parsing Order from Firestore: $e');
+      debugPrint('❌ Error parsing Order from Firestore: $e');
       // Return a default order in case of parsing error
       return Order(
         orderId: data['orderId']?.toString() ?? 'unknown',
@@ -169,7 +170,7 @@ class Order {
           try {
             return CartItem.fromMap(Map<String, dynamic>.from(item ?? {}));
           } catch (e) {
-            print('❌ Error parsing CartItem: $e');
+            debugPrint('❌ Error parsing CartItem: $e');
             // Return a default CartItem with basic Product
             return CartItem(
               product: Product(
@@ -191,7 +192,7 @@ class Order {
       }
       return [];
     } catch (e) {
-      print('❌ Error parsing items list: $e');
+      debugPrint('❌ Error parsing items list: $e');
       return [];
     }
   }
@@ -203,7 +204,7 @@ class Order {
       if (value is String) return double.tryParse(value) ?? 0.0;
       return 0.0;
     } catch (e) {
-      print('❌ Error parsing double: $e');
+      debugPrint('❌ Error parsing double: $e');
       return 0.0;
     }
   }
@@ -216,7 +217,7 @@ class Order {
       if (value is String) return DateTime.tryParse(value) ?? DateTime.now();
       return DateTime.now();
     } catch (e) {
-      print('❌ Error parsing DateTime: $e');
+      debugPrint('❌ Error parsing DateTime: $e');
       return DateTime.now();
     }
   }

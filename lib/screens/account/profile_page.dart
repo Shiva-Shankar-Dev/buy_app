@@ -31,7 +31,7 @@ class _ProfilePageState extends State<ProfilePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Profile Settings'),
-        backgroundColor: colorPallete.color1,
+        backgroundColor: ColorPallete.color1,
         foregroundColor: Colors.white,
       ),
       body: userData == null
@@ -46,13 +46,13 @@ class _ProfilePageState extends State<ProfilePage> {
                       children: [
                         CircleAvatar(
                           radius: 50,
-                          backgroundColor: colorPallete.color1.withOpacity(0.1),
+                          backgroundColor: ColorPallete.color1.withAlpha(10),
                           child: Text(
                             (userData!['name'] ?? 'U')[0].toUpperCase(),
                             style: TextStyle(
                               fontSize: 32,
                               fontWeight: FontWeight.bold,
-                              color: colorPallete.color1,
+                              color: ColorPallete.color1,
                             ),
                           ),
                         ),
@@ -74,7 +74,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             );
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: colorPallete.color1,
+                            backgroundColor: ColorPallete.color1,
                           ),
                           child: Text(
                             'Edit Profile',

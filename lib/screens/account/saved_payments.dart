@@ -9,7 +9,7 @@ class SavedPaymentsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Payment Methods'),
-        backgroundColor: colorPallete.color1,
+        backgroundColor: ColorPallete.color1,
         foregroundColor: Colors.white,
       ),
       body: Center(
@@ -28,7 +28,7 @@ class SavedPaymentsPage extends StatelessWidget {
             ElevatedButton(
               onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor: colorPallete.color1,
+                backgroundColor: ColorPallete.color1,
               ),
               child: Text('Go Back', style: TextStyle(color: Colors.white)),
             ),

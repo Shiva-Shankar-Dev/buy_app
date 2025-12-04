@@ -109,7 +109,7 @@ class _WishlistPageState extends State<WishlistPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('My Wishlist'),
-        backgroundColor: colorPallete.color1,
+        backgroundColor: ColorPallete.color1,
         foregroundColor: Colors.white,
         actions: [
           if (wishlistItems.isNotEmpty)
@@ -148,7 +148,7 @@ class _WishlistPageState extends State<WishlistPage> {
       body: isLoading
           ? Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(colorPallete.color1),
+                valueColor: AlwaysStoppedAnimation<Color>(ColorPallete.color1),
               ),
             )
           : wishlistItems.isEmpty
@@ -184,7 +184,7 @@ class _WishlistPageState extends State<WishlistPage> {
               Navigator.pop(context); // Go back to account page
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: colorPallete.color1,
+              backgroundColor: ColorPallete.color1,
               padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -285,7 +285,7 @@ class _WishlistPageState extends State<WishlistPage> {
                                           child: CircularProgressIndicator(
                                             valueColor:
                                                 AlwaysStoppedAnimation<Color>(
-                                                  colorPallete.color1,
+                                                  ColorPallete.color1,
                                                 ),
                                           ),
                                         ),
@@ -350,7 +350,7 @@ class _WishlistPageState extends State<WishlistPage> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withAlpha(10),
                             blurRadius: 4,
                             offset: Offset(0, 2),
                           ),
@@ -384,7 +384,7 @@ class _WishlistPageState extends State<WishlistPage> {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
-                      color: colorPallete.color1,
+                      color: ColorPallete.color1,
                     ),
                   ),
                   SizedBox(height: 8),
@@ -393,7 +393,7 @@ class _WishlistPageState extends State<WishlistPage> {
                     child: ElevatedButton(
                       onPressed: () => moveToCart(product),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: colorPallete.color1,
+                        backgroundColor: ColorPallete.color1,
                       ),
                       child: Text(
                         'Move to Cart',

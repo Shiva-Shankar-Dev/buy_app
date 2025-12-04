@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 Future<void> sendSMS(String phoneNumber, String message) async {
@@ -22,12 +23,12 @@ Future<void> sendSMS(String phoneNumber, String message) async {
     },
   );
 
-  print('🔁 Response code: ${response.statusCode}');
-  print('📦 Response body: ${response.body}');
+  debugPrint('🔁 Response code: ${response.statusCode}');
+  debugPrint('📦 Response body: ${response.body}');
 
   if (response.statusCode == 200 && response.body.contains('"return":true')) {
-    print('✅ SMS sent successfully!');
+    debugPrint('✅ SMS sent successfully!');
   } else {
-    print('❌ Failed to send SMS: ${response.body}');
+    debugPrint('❌ Failed to send SMS: ${response.body}');
   }
 }

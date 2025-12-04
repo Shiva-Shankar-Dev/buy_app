@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -13,12 +14,12 @@ class AuthService {
     required String mobile,
   }) async {
     try {
-      print('🔥 Creating Firebase Auth user...');
+      debugPrint('🔥 Creating Firebase Auth user...');
       UserCredential userCredential = await _auth
           .createUserWithEmailAndPassword(email: email, password: password);
 
       String uid = userCredential.user!.uid;
-      print('✅ Firebase Auth user created with UID: $uid');
+      debugPrint('✅ Firebase Auth user created with UID: $uid');
 
       final userData = {
         'name': name,
@@ -29,18 +30,18 @@ class AuthService {
         'createdAt': Timestamp.now(),
       };
 
-      print('💾 Saving user data to Firestore:');
-      print('   - Name: $name');
-      print('   - Email: $email');
-      print('   - Phone: $mobile');
-      print('   - UID: $uid');
+      debugPrint('💾 Saving user data to Firestore:');
+      debugPrint('   - Name: $name');
+      debugPrint('   - Email: $email');
+      debugPrint('   - Phone: $mobile');
+      debugPrint('   - UID: $uid');
 
       await _firestore.collection('customers').doc(uid).set(userData);
-      print('✅ User data saved to Firestore successfully!');
+      debugPrint('✅ User data saved to Firestore successfully!');
 
       return null; // success
     } catch (e) {
-      print('❌ Firebase SignUp error: $e');
+      debugPrint('❌ Firebase SignUp error: $e');
       return e.toString(); // return error message
     }
   }
@@ -85,7 +86,7 @@ class AuthService {
       );
       return null; // success
     } catch (e) {
-      print('Login error: $e');
+      debugPrint('Login error: $e');
       return e.toString(); // return error string
     }
   }

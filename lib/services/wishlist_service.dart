@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:buy_app/models/models.dart';
+import 'package:flutter/material.dart';
 
 class WishlistService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -12,13 +13,13 @@ class WishlistService {
       // Get current user
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) {
-        print('❌ No user logged in');
+        debugPrint('❌ No user logged in');
         return false;
       }
 
       // Check if product name exists
       if (product.name.isEmpty) {
-        print('❌ Product name is empty');
+        debugPrint('❌ Product name is empty');
         return false;
       }
 
@@ -46,14 +47,14 @@ class WishlistService {
         };
 
         await docRef.set(wishlistItem);
-        print('✅ Added to wishlist: ${product.name}');
+        debugPrint('✅ Added to wishlist: ${product.name}');
         return true;
       }
 
-      print('⚠️ Product already in wishlist: ${product.name}');
+      debugPrint('⚠️ Product already in wishlist: ${product.name}');
       return false;
     } catch (e) {
-      print('❌ Error adding to wishlist: $e');
+      debugPrint('❌ Error adding to wishlist: $e');
       return false;
     }
   }
@@ -64,7 +65,7 @@ class WishlistService {
       // Get current user
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) {
-        print('❌ No user logged in');
+        debugPrint('❌ No user logged in');
         return false;
       }
 
@@ -82,10 +83,10 @@ class WishlistService {
           .doc(productId);
 
       await docRef.delete();
-      print('✅ Removed from wishlist: ${product.name}');
+      debugPrint('✅ Removed from wishlist: ${product.name}');
       return true;
     } catch (e) {
-      print('❌ Error removing from wishlist: $e');
+      debugPrint('❌ Error removing from wishlist: $e');
       return false;
     }
   }
@@ -96,7 +97,7 @@ class WishlistService {
       // Get current user
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) {
-        print('❌ No user logged in');
+        debugPrint('❌ No user logged in');
         return [];
       }
 
@@ -112,7 +113,7 @@ class WishlistService {
         return Product.fromFirestore(doc.data());
       }).toList();
     } catch (e) {
-      print('❌ Error getting wishlist: $e');
+      debugPrint('❌ Error getting wishlist: $e');
       return [];
     }
   }
@@ -123,7 +124,7 @@ class WishlistService {
       // Get current user
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) {
-        print('❌ No user logged in');
+        debugPrint('❌ No user logged in');
         return false;
       }
 
@@ -143,7 +144,7 @@ class WishlistService {
       final doc = await docRef.get();
       return doc.exists;
     } catch (e) {
-      print('❌ Error checking wishlist: $e');
+      debugPrint('❌ Error checking wishlist: $e');
       return false;
     }
   }
@@ -154,7 +155,7 @@ class WishlistService {
       // Get current user
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) {
-        print('❌ No user logged in');
+        debugPrint('❌ No user logged in');
         return false;
       }
 
@@ -171,10 +172,10 @@ class WishlistService {
       }
 
       await batch.commit();
-      print('✅ Wishlist cleared');
+      debugPrint('✅ Wishlist cleared');
       return true;
     } catch (e) {
-      print('❌ Error clearing wishlist: $e');
+      debugPrint('❌ Error clearing wishlist: $e');
       return false;
     }
   }
@@ -185,7 +186,7 @@ class WishlistService {
       // Get current user
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) {
-        print('❌ No user logged in');
+        debugPrint('❌ No user logged in');
         return 0;
       }
 
@@ -198,7 +199,7 @@ class WishlistService {
 
       return querySnapshot.docs.length;
     } catch (e) {
-      print('❌ Error getting wishlist count: $e');
+      debugPrint('❌ Error getting wishlist count: $e');
       return 0;
     }
   }

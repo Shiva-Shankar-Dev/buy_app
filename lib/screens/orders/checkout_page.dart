@@ -18,7 +18,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Checkout'),
-        backgroundColor: colorPallete.color1,
+        backgroundColor: ColorPallete.color1,
         foregroundColor: Colors.white,
       ),
       body: cart.items.isEmpty
@@ -51,7 +51,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   children: [
                     _buildCartSummary(),
                     SizedBox(height: 20),
-                    Container(
+                    SizedBox(
                       width: double.infinity,
                       child: NormalButton(
                         hintText: 'Place Order',
@@ -82,7 +82,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: colorPallete.color1,
+                color: ColorPallete.color1,
               ),
             ),
             SizedBox(height: 16),
@@ -105,7 +105,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             width: 60,
                             height: 60,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
+                            errorBuilder: (_, _, _) => Container(
                               width: 60,
                               height: 60,
                               color: Colors.grey.shade200,
@@ -155,14 +155,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: colorPallete.color1,
+                            color: ColorPallete.color1,
                           ),
                         ),
                       ],
                     ),
                   ),
-                )
-                .toList(),
+                ),
 
             SizedBox(height: 16),
             Divider(thickness: 2),
@@ -192,7 +191,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: colorPallete.color1,
+                    color: ColorPallete.color1,
                   ),
                 ),
               ],

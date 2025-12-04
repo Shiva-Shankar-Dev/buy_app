@@ -37,7 +37,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
         return;
       }
 
-      print('🔍 Loading orders for user: ${currentUser.uid}');
+      debugPrint('🔍 Loading orders for user: ${currentUser.uid}');
 
       final orders = await OrderService.getUserOrders(currentUser.uid);
 
@@ -46,9 +46,9 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
         _isLoading = false;
       });
 
-      print('📦 Loaded ${orders.length} orders');
+      debugPrint('📦 Loaded ${orders.length} orders');
     } catch (e) {
-      print('❌ Error loading orders: $e');
+      debugPrint('❌ Error loading orders: $e');
       setState(() {
         _error = 'Error loading orders: $e';
         _isLoading = false;
@@ -76,7 +76,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: colorPallete.color1,
+                      color: ColorPallete.color1,
                     ),
                   ),
                 ),
@@ -161,8 +161,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                       ],
                     ),
                   ),
-                )
-                .toList(),
+                ),
 
             const SizedBox(height: 12),
             const Divider(),
@@ -181,7 +180,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
-                    color: colorPallete.color1,
+                    color: ColorPallete.color1,
                   ),
                 ),
               ],
@@ -233,7 +232,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Order History'),
-        backgroundColor: colorPallete.color1,
+        backgroundColor: ColorPallete.color1,
         foregroundColor: Colors.white,
       ),
       body: RefreshIndicator(

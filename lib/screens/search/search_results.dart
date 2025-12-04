@@ -12,7 +12,7 @@ class SearchResults extends StatefulWidget {
 
 class _SearchResultsState extends State<SearchResults> {
   Query _buildQuery() {
-    print('🔥 Building query for: ${widget.query}');
+    debugPrint('🔥 Building query for: ${widget.query}');
     return FirebaseFirestore.instance
         .collection('products')
         .where('title', isEqualTo: widget.query);
@@ -78,7 +78,7 @@ class ProductCard extends StatelessWidget {
               child: Image.network(
                 imageUrl,
                 fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => Container(
+                errorBuilder: (_, _, _) => Container(
                   color: Colors.grey[200],
                   child: const Icon(Icons.broken_image),
                 ),

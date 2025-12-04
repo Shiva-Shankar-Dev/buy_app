@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:buy_app/widgets/normal_button.dart';
 import 'package:buy_app/widgets/outline_button.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +8,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:buy_app/services/addresses.dart';
 
 class AddressSelectionPage extends StatefulWidget {
+  const AddressSelectionPage({super.key});
+
   @override
   State<AddressSelectionPage> createState() => _AddressSelectionPageState();
 }
@@ -23,11 +27,11 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
   Future<void> loadAddresses() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
-      print("❌ No user logged in");
+      debugPrint("❌ No user logged in");
       return;
     }
 
-    print("🔍 Loading addresses for user: $uid");
+    debugPrint("🔍 Loading addresses for user: $uid");
 
     final snapshot = await FirebaseFirestore.instance
         .collection('customers')
@@ -35,12 +39,12 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
         .collection('addresses')
         .get();
 
-    print("📊 Found ${snapshot.docs.length} addresses");
+    debugPrint("📊 Found ${snapshot.docs.length} addresses");
 
     final addresses = snapshot.docs.map((doc) {
-      print("📝 Document data: ${doc.data()}");
+      debugPrint("📝 Document data: ${doc.data()}");
       final address = Address.fromMap(doc.data(), doc.id);
-      print(
+      debugPrint(
         "✅ Parsed address: first='${address.first}', last='${address.last}', line1='${address.line1}', city='${address.city}', state='${address.state}'",
       );
       return address;
@@ -61,7 +65,7 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
   void selectAddress() {
     if (selectedAddressId == null) return;
     final selected = addressList.firstWhere((a) => a.id == selectedAddressId);
-    print('Selected address: ${selected.line1}, ${selected.city}');
+    debugPrint('Selected address: ${selected.line1}, ${selected.city}');
     Navigator.pushNamed(
       context,
       '/payment',

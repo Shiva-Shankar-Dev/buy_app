@@ -1,6 +1,8 @@
+import 'package:flutter/material.dart';
+
 void main() {
   // Test the search matching logic
-  print("Testing search matching logic...");
+  debugPrint("Testing search matching logic...");
 
   // Test cases
   final testCases = [
@@ -26,7 +28,7 @@ void main() {
     final expected = testCase['expected'] as bool;
     final status = result == expected ? '✅' : '❌';
 
-    print(
+    debugPrint(
       "$status '${testCase['text']}' + '${testCase['query']}' = $result (expected: $expected)",
     );
   }

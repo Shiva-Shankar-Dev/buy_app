@@ -7,7 +7,7 @@ class AnimatedSplashScreenWidget extends StatelessWidget {
   const AnimatedSplashScreenWidget({super.key});
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       height: double.infinity,
       //decoration: BoxDecoration(image: DecorationImage(image: AssetImage('./assets/background.jpg',), fit: BoxFit.cover)),
       child: AnimatedSplashScreen(
@@ -23,7 +23,7 @@ class AnimatedSplashScreenWidget extends StatelessWidget {
                   'assets/Animation _1.json',
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) {
-                    print('Lottie loading error: $error');
+                    debugPrint('Lottie loading error: $error');
                     return Icon(
                       Icons.shopping_bag,
                       size: 100,

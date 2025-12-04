@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:buy_app/screens/payments/payment_completed_page.dart';
 import 'dart:math';
@@ -90,7 +92,7 @@ class _PaymentUpiPageState extends State<PaymentUpiPage> {
           width: 2,
         ),
         borderRadius: BorderRadius.circular(12),
-        color: _selectedApp == appName ? color.withOpacity(0.1) : Colors.white,
+        color: _selectedApp == appName ? color.withAlpha(10) : Colors.white,
       ),
       child: ListTile(
         title: Text(
@@ -111,7 +113,7 @@ class _PaymentUpiPageState extends State<PaymentUpiPage> {
                 border: Border.all(color: Colors.grey.shade200),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withAlpha(5),
                     blurRadius: 2,
                     offset: const Offset(0, 1),
                   ),

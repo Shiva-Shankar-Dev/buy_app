@@ -70,7 +70,7 @@ class _PaymentCompletedPageState extends State<PaymentCompletedPage> {
         }
       }
     } catch (e) {
-      print('❌ Error processing order: $e');
+      debugPrint('❌ Error processing order: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -106,19 +106,19 @@ class _PaymentCompletedPageState extends State<PaymentCompletedPage> {
           _orderSaved = true;
           _orderId = orderId;
         });
-        print('✅ Order saved to database: $orderId');
+        debugPrint('✅ Order saved to database: $orderId');
       } else {
         throw Exception('Failed to save order to database');
       }
     } catch (e) {
-      print('❌ Error saving order: $e');
-      throw e;
+      debugPrint('❌ Error saving order: $e');
+      rethrow;
     }
   }
 
   Future<void> _sendEmailNotifications() async {
     if (!_orderSaved || _orderId == null) {
-      print('❌ Cannot send emails: Order not saved yet');
+      debugPrint('❌ Cannot send emails: Order not saved yet');
       return;
     }
 
@@ -129,7 +129,7 @@ class _PaymentCompletedPageState extends State<PaymentCompletedPage> {
     final cart = Cart.instance;
 
     try {
-      print('📧 Sending confirmation email to customer...');
+      debugPrint('📧 Sending confirmation email to customer...');
 
       final customerEmailSent =
           await EmailService.sendCustomerConfirmationEmail(
@@ -142,7 +142,7 @@ class _PaymentCompletedPageState extends State<PaymentCompletedPage> {
             txnId: widget.txnId,
           );
 
-      print('📧 Sending order details to sellers...');
+      debugPrint('📧 Sending order details to sellers...');
       final sellerEmailsSent = await EmailService.sendOrderDetailsToSellers(
         customer: customer,
         shippingAddress: address,
@@ -176,7 +176,7 @@ class _PaymentCompletedPageState extends State<PaymentCompletedPage> {
         );
       }
     } catch (e) {
-      print("❌ Error sending notifications: $e");
+      debugPrint("❌ Error sending notifications: $e");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -189,11 +189,12 @@ class _PaymentCompletedPageState extends State<PaymentCompletedPage> {
 
     // Always clear the cart and navigate
     cart.clear();
-    print('🛒 Cart cleared. Items count: ${cart.items.length}');
+    debugPrint('🛒 Cart cleared. Items count: ${cart.items.length}');
 
     // Navigate away after delay
     if (mounted) {
       await Future.delayed(const Duration(seconds: 2));
+      if (!mounted) return;
       Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
     }
   }
@@ -236,7 +237,7 @@ class _PaymentCompletedPageState extends State<PaymentCompletedPage> {
               ),
             ],
             SizedBox(height: 30),
-            CircularProgressIndicator(color: colorPallete.color1),
+            CircularProgressIndicator(color: ColorPallete.color1),
           ],
         ),
       ),

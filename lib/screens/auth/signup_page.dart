@@ -195,7 +195,7 @@ class _SignUpPage extends State<SignUpPage> {
                           children: [
                             TextSpan(
                               text: 'Login Now',
-                              style: TextStyle(color: colorPallete.color1, fontSize: 15),
+                              style: TextStyle(color: ColorPallete.color1, fontSize: 15),
                               recognizer: TapGestureRecognizer()..onTap = () {
                                 Navigator.pushNamed(context, '/login');
                               },

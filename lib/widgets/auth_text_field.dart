@@ -1,4 +1,3 @@
-import 'package:buy_app/colorPallete/color_pallete.dart';
 import 'package:flutter/material.dart';
 
 // ignore: must_be_immutable

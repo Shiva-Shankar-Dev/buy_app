@@ -17,25 +17,23 @@ class CustomOutlineButton extends StatelessWidget {
   VoidCallback onPressed;
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: OutlinedButton(
-        onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          fixedSize: Size(height, width),
-          shadowColor: colorPallete.color4,
-          backgroundColor: colorPallete.color4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadiusGeometry.circular(10),
-            side: BorderSide(width: 10),
-          ),
+    return OutlinedButton(
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        fixedSize: Size(height, width),
+        shadowColor: ColorPallete.color4,
+        backgroundColor: ColorPallete.color4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadiusGeometry.circular(10),
+          side: BorderSide(width: 10),
         ),
-        child: Text(
-          hintText,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-            color: Colors.black,
-          ),
+      ),
+      child: Text(
+        hintText,
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
+          color: Colors.black,
         ),
       ),
     );

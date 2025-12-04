@@ -32,12 +32,12 @@ class _PaymentCodPageState extends State<PaymentCodPage> {
   bool _isProcessing = false;
 
   void _completeOrder() async {
-    print('🟢 Starting order completion process...');
-    print('🟢 Customer Data: ${widget.customer}');
-    print('🟢 Address Data: ${widget.address}');
+    debugPrint('🟢 Starting order completion process...');
+    debugPrint('🟢 Customer Data: ${widget.customer}');
+    debugPrint('🟢 Address Data: ${widget.address}');
 
     if (widget.customer.isEmpty || widget.address == null) {
-      print('❌ Invalid customer or address data.');
+      debugPrint('❌ Invalid customer or address data.');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Invalid customer or address data.'),
@@ -50,7 +50,7 @@ class _PaymentCodPageState extends State<PaymentCodPage> {
     setState(() => _isProcessing = true);
 
     try {
-      print('🟢 Navigating to PaymentCompletedPage...');
+      debugPrint('🟢 Navigating to PaymentCompletedPage...');
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) => PaymentCompletedPage(
@@ -64,7 +64,7 @@ class _PaymentCodPageState extends State<PaymentCodPage> {
         ),
       );
     } catch (e) {
-      print('❌ Error navigating to PaymentCompletedPage: $e');
+      debugPrint('❌ Error navigating to PaymentCompletedPage: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to complete order: $e'),
@@ -73,7 +73,7 @@ class _PaymentCodPageState extends State<PaymentCodPage> {
       );
     } finally {
       setState(() => _isProcessing = false);
-      print('🟢 Order completion process finished.');
+      debugPrint('🟢 Order completion process finished.');
     }
   }
 

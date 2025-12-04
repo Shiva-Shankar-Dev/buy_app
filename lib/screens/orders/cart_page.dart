@@ -1,5 +1,3 @@
-import 'package:buy_app/widgets/normal_button.dart';
-import 'package:buy_app/widgets/outline_button.dart';
 import 'package:buy_app/colorPallete/color_pallete.dart';
 import 'package:flutter/material.dart';
 import 'package:buy_app/services/cart_manager.dart';
@@ -127,7 +125,7 @@ class _CartPageState extends State<CartPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: colorPallete.color1,
+        backgroundColor: ColorPallete.color1,
         title: Text(
           'Cart (${cart.totalItems} items)',
           style: TextStyle(color: Colors.white),
@@ -153,7 +151,7 @@ class _CartPageState extends State<CartPage> {
                   ElevatedButton(
                     onPressed: () => Navigator.pushNamed(context, '/home'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: colorPallete.color1,
+                      backgroundColor: ColorPallete.color1,
                     ),
                     child: Text(
                       'Continue Shopping',
@@ -190,7 +188,7 @@ class _CartPageState extends State<CartPage> {
                                   width: 80,
                                   height: 80,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => Container(
+                                  errorBuilder: (_, _, _) => Container(
                                     width: 80,
                                     height: 80,
                                     color: Colors.grey.shade200,
@@ -236,7 +234,7 @@ class _CartPageState extends State<CartPage> {
                                           style: TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
-                                            color: colorPallete.color1,
+                                            color: ColorPallete.color1,
                                           ),
                                         ),
                                       ],
@@ -282,20 +280,20 @@ class _CartPageState extends State<CartPage> {
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: colorPallete.color1,
+                              color: ColorPallete.color1,
                             ),
                           ),
                         ],
                       ),
                       SizedBox(height: 16),
-                      Container(
+                      SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: () {
                             Navigator.pushNamed(context, '/checkout');
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: colorPallete.color1,
+                            backgroundColor: ColorPallete.color1,
                             padding: EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
