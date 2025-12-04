@@ -1,4 +1,6 @@
 // dart
+import 'package:buy_app/models/models.dart';
+import 'package:buy_app/screens/orders/product_details.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -15,7 +17,7 @@ class _SearchResultsState extends State<SearchResults> {
     debugPrint('🔥 Building query for: ${widget.query}');
     return FirebaseFirestore.instance
         .collection('products')
-        .where('title', isEqualTo: widget.query);
+        .where('name', isEqualTo: widget.query);
   }
 
   @override
@@ -63,53 +65,60 @@ class ProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final data = doc.data() as Map<String, dynamic>;
-    final title = data['title'] ?? 'No title';
+    final name = data['name'] ?? 'No name';
     final price = data['price'] != null ? '\$${data['price']}' : 'N/A';
     final imagesList = data['images'] as List<dynamic>?;
     final imageUrl = (imagesList != null && imagesList.isNotEmpty) ? imagesList[0] as String? : null;
-
+    debugPrint('🔥 ProductCard built for: $name');
+    Product product = Product.fromFirestore(data);
     return Card(
       elevation: 2,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (imageUrl != null && imageUrl.isNotEmpty)
-            Expanded(
-              child: Image.network(
-                imageUrl,
-                fit: BoxFit.contain,
-                errorBuilder: (_, _, _) => Container(
-                  color: Colors.grey[200],
-                  child: const Icon(Icons.broken_image),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: (){
+          Navigator.push(context, MaterialPageRoute(builder: (context) => ProductDetailPage(product: product)));
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (imageUrl != null && imageUrl.isNotEmpty)
+              Expanded(
+                child: Image.network(
+                  imageUrl,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, _, _) => Container(
+                    color: Colors.grey[200],
+                    child: const Icon(Icons.broken_image),
+                  ),
                 ),
+              )
+            else
+              Container(
+                height: 120,
+                color: Colors.grey[200],
+                child: const Icon(Icons.image, size: 48, color: Colors.grey),
               ),
-            )
-          else
-            Container(
-              height: 120,
-              color: Colors.grey[200],
-              child: const Icon(Icons.image, size: 48, color: Colors.grey),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    price,
+                    style: const TextStyle(fontSize: 12, color: Colors.green, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
             ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  price,
-                  style: const TextStyle(fontSize: 12, color: Colors.green, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:buy_app/services/addresses.dart';
@@ -86,14 +87,14 @@ class EmailService {
       );
 
       if (response.statusCode == 200) {
-        print('✅ Email sent successfully to: $to');
+        debugPrint('✅ Email sent successfully to: $to');
         return true;
       } else {
-        print('❌ Failed to send email: ${response.body}');
+        debugPrint('❌ Failed to send email: ${response.body}');
         return false;
       }
     } catch (e) {
-      print('❌ Email exception: $e');
+      debugPrint('❌ Email exception: $e');
       return false;
     }
   }
@@ -111,7 +112,7 @@ class EmailService {
     // Calculate total amount considering quantities
     double totalAmount = orderedItems.fold(
       0.0,
-      (sum, item) => sum + (item.product.price * item.quantity),
+      (s, item) => s + (item.product.price * item.quantity),
     );
 
     String message1 = "<html><body>";
@@ -185,11 +186,11 @@ class EmailService {
     final cart = Cart.instance;
 
     if (cart.items.isEmpty) {
-      print("❌ No items in cart to send to sellers");
+      debugPrint("❌ No items in cart to send to sellers");
       return false;
     }
 
-    print(
+    debugPrint(
       "🛒 Cart items: ${cart.items.map((item) => item.product.name).toList()}",
     );
 
@@ -203,7 +204,7 @@ class EmailService {
       // For now, grouping all items together
       final sellerId = null; // product.sellerId is no longer available
       if (sellerId == null) {
-        print("⚠️ Product '${item.product.name}' seller ID not available...");
+        debugPrint("⚠️ Product '${item.product.name}' seller ID not available...");
         itemsWithoutSellerId++;
         continue;
       }
@@ -214,15 +215,15 @@ class EmailService {
     }
 
     if (itemsWithoutSellerId > 0) {
-      print("⚠️ Found $itemsWithoutSellerId items without seller IDs");
+      debugPrint("⚠️ Found $itemsWithoutSellerId items without seller IDs");
     }
 
     if (itemsBySeller.isEmpty) {
-      print("❌ No items with valid seller IDs found");
+      debugPrint("❌ No items with valid seller IDs found");
       return false;
     }
 
-    print("📊 Found ${itemsBySeller.length} sellers to notify");
+    debugPrint("📊 Found ${itemsBySeller.length} sellers to notify");
 
     bool allEmailsSent = true;
     // Send email to each seller
@@ -231,11 +232,11 @@ class EmailService {
       final items = entry.value;
 
       if (sellerId == null || sellerId.isEmpty) {
-        print("⚠️ Item without seller ID found in group, skipping...");
+        debugPrint("⚠️ Item without seller ID found in group, skipping...");
         continue;
       }
 
-      print(
+      debugPrint(
         "📧 Sending email to sellerId: $sellerId for products: ${items.map((item) => item.product.name).toList()}",
       );
 
@@ -272,7 +273,7 @@ class EmailService {
       final sellerEmail = await SellerService.getSellerEmail(sellerId);
 
       if (sellerEmail == null) {
-        print("❌ No email found for seller ID: $sellerId");
+        debugPrint("❌ No email found for seller ID: $sellerId");
         return false;
       }
 
@@ -362,14 +363,14 @@ class EmailService {
       );
 
       if (success) {
-        print("✅ Order details sent to seller: $sellerEmail");
+        debugPrint("✅ Order details sent to seller: $sellerEmail");
         return true;
       } else {
-        print("❌ Failed to send order to seller: $sellerEmail");
+        debugPrint("❌ Failed to send order to seller: $sellerEmail");
         return false;
       }
     } catch (e) {
-      print("❌ Error sending order to seller $sellerId: $e");
+      debugPrint("❌ Error sending order to seller $sellerId: $e");
       return false;
     }
   }
@@ -397,7 +398,7 @@ class EmailService {
     required List<CartItem> items,
   }) async {
     try {
-      print(
+      debugPrint(
         '🔍 Checking stock availability and quantity limits for ${items.length} items...',
       );
 
@@ -438,11 +439,11 @@ class EmailService {
                 'available': currentStock,
                 'type': 'insufficient_stock',
               });
-              print(
+              debugPrint(
                 '❌ Insufficient stock: ${item.product.name} (Requested: ${item.quantity}, Available: $currentStock)',
               );
             } else {
-              print(
+              debugPrint(
                 '✅ Stock available: ${item.product.name} (Requested: ${item.quantity}, Available: $currentStock)',
               );
             }
@@ -456,10 +457,10 @@ class EmailService {
               'type': 'product_not_found',
               'error': 'Product not found',
             });
-            print('❌ Product not found: ${item.product.name}');
+            debugPrint('❌ Product not found: ${item.product.name}');
           }
         } catch (e) {
-          print('❌ Error checking stock for ${item.product.name}: $e');
+          debugPrint('❌ Error checking stock for ${item.product.name}: $e');
           allAvailable = false;
           unavailableItems.add({
             'product': item.product.name,
@@ -478,7 +479,7 @@ class EmailService {
         'quantityLimitsChecked': true,
       };
     } catch (e) {
-      print('❌ Error checking stock availability: $e');
+      debugPrint('❌ Error checking stock availability: $e');
       return {
         'available': false,
         'unavailableItems': [],
@@ -493,7 +494,7 @@ class EmailService {
     required String orderId,
   }) async {
     try {
-      print('📦 Updating stock quantities for order: $orderId');
+      debugPrint('📦 Updating stock quantities for order: $orderId');
 
       // Use batch write for atomic updates
       final batch = FirebaseFirestore.instance.batch();
@@ -501,7 +502,7 @@ class EmailService {
 
       for (final item in orderedItems) {
         try {
-          print('🔍 Looking for product: ${item.product.name}');
+          debugPrint('🔍 Looking for product: ${item.product.name}');
 
           // Try multiple field names to find the product
           QuerySnapshot querySnapshot;
@@ -515,7 +516,7 @@ class EmailService {
 
           // If not found, try with other possible field names
           if (querySnapshot.docs.isEmpty) {
-            print(
+            debugPrint(
               '🔍 Product not found by name, trying pid: ${item.product.pid}',
             );
             querySnapshot = await FirebaseFirestore.instance
@@ -529,19 +530,19 @@ class EmailService {
             final productDoc = querySnapshot.docs.first;
             final productData = productDoc.data() as Map<String, dynamic>;
 
-            print('📋 Found product document: ${productDoc.id}');
-            print('📋 Product data fields: ${productData.keys.toList()}');
+            debugPrint('📋 Found product document: ${productDoc.id}');
+            debugPrint('📋 Product data fields: ${productData.keys.toList()}');
 
             final currentStock = productData['stockQuantity'] ?? 0;
             final newStock = (currentStock - item.quantity)
                 .clamp(0, double.infinity)
                 .toInt();
 
-            print('📊 Product: ${item.product.name}');
-            print('   Document ID: ${productDoc.id}');
-            print('   Current Stock: $currentStock');
-            print('   Ordered Quantity: ${item.quantity}');
-            print('   New Stock: $newStock');
+            debugPrint('📊 Product: ${item.product.name}');
+            debugPrint('   Document ID: ${productDoc.id}');
+            debugPrint('   Current Stock: $currentStock');
+            debugPrint('   Ordered Quantity: ${item.quantity}');
+            debugPrint('   New Stock: $newStock');
 
             // Validate that the stock won't go negative
             if (currentStock >= item.quantity) {
@@ -551,37 +552,37 @@ class EmailService {
                 'lastUpdated': FieldValue.serverTimestamp(),
               });
               successfulUpdates++;
-              print('✅ Added to batch: ${item.product.name}');
+              debugPrint('✅ Added to batch: ${item.product.name}');
             } else {
-              print(
+              debugPrint(
                 '⚠️ Insufficient stock for ${item.product.name}: Available=$currentStock, Requested=${item.quantity}',
               );
             }
           } else {
-            print('❌ Product not found in database: ${item.product.name}');
-            print('   Tried fields: name, pid');
-            print(
+            debugPrint('❌ Product not found in database: ${item.product.name}');
+            debugPrint('   Tried fields: name, pid');
+            debugPrint(
               '   Product details: name=${item.product.name}, pid=${item.product.pid}',
             );
           }
         } catch (e) {
-          print('❌ Error processing item ${item.product.name}: $e');
+          debugPrint('❌ Error processing item ${item.product.name}: $e');
         }
       }
 
       if (successfulUpdates > 0) {
         // Commit all updates atomically
         await batch.commit();
-        print(
+        debugPrint(
           '✅ Stock quantities updated successfully for $successfulUpdates items in order: $orderId',
         );
         return true;
       } else {
-        print('❌ No stock updates were made for order: $orderId');
+        debugPrint('❌ No stock updates were made for order: $orderId');
         return false;
       }
     } catch (e) {
-      print('❌ Error updating stock quantities: $e');
+      debugPrint('❌ Error updating stock quantities: $e');
       return false;
     }
   }
@@ -592,7 +593,7 @@ Future<void> placeOrder(Map<String, dynamic> customer, Address address) async {
   final cartItems = Cart.instance.items;
   final orderId = 'ORD_${DateTime.now().millisecondsSinceEpoch}';
 
-  print('📦 Processing order: $orderId');
+  debugPrint('📦 Processing order: $orderId');
 
   // Step 1: Check stock availability AND quantity limits
   final stockCheck = await EmailService.checkStockAvailability(
@@ -601,7 +602,7 @@ Future<void> placeOrder(Map<String, dynamic> customer, Address address) async {
 
   if (!stockCheck['available']) {
     // Handle stock availability issues
-    print('❌ Order cannot be placed - insufficient stock');
+    debugPrint('❌ Order cannot be placed - insufficient stock');
     final unavailableItems =
         stockCheck['unavailableItems'] as List<Map<String, dynamic>>;
 
@@ -625,7 +626,7 @@ Future<void> placeOrder(Map<String, dynamic> customer, Address address) async {
   );
 
   if (!stockUpdated) {
-    print('⚠️ Warning: Stock quantities may not have been updated properly');
+    debugPrint('⚠️ Warning: Stock quantities may not have been updated properly');
   }
 
   // Step 3: Send order details to sellers
@@ -638,7 +639,7 @@ Future<void> placeOrder(Map<String, dynamic> customer, Address address) async {
       txnId: 'N/A',
     );
   } catch (e) {
-    print('⚠️ Warning: Failed to send seller notifications: $e');
+    debugPrint('⚠️ Warning: Failed to send seller notifications: $e');
   }
 
   // Step 4: Send customer confirmation
@@ -653,10 +654,10 @@ Future<void> placeOrder(Map<String, dynamic> customer, Address address) async {
       txnId: 'N/A',
     );
   } catch (e) {
-    print('⚠️ Warning: Failed to send customer confirmation: $e');
+    debugPrint('⚠️ Warning: Failed to send customer confirmation: $e');
   }
 
   // Step 5: Clear cart only after successful order placement
   Cart.instance.clear();
-  print('✅ Order placed successfully: $orderId');
+  debugPrint('✅ Order placed successfully: $orderId');
 }

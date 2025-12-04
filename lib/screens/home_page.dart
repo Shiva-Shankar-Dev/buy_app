@@ -1,4 +1,6 @@
-import 'package:buy_app/colorPallete/color_pallete.dart';
+// ignore_for_file: use_build_context_synchronously
+
+import 'package:buy_app/ColorPallete/color_pallete.dart';
 import 'package:buy_app/screens/orders/product_details.dart';
 import 'package:buy_app/screens/category_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -86,7 +88,7 @@ class _HomePage extends State<HomePage> {
 
   void loadProductsFromFirestore() async {
     final docs = await fetchAllProducts();
-    print("📊 Loaded ${docs.length} products from Firestore");
+    debugPrint("📊 Loaded ${docs.length} products from Firestore");
 
     final loadedProducts = <Product>[];
 
@@ -107,11 +109,11 @@ class _HomePage extends State<HomePage> {
 
       // Debug first few products
       if (i < 3) {
-        print("Product loaded: ${product.name}");
-        print("  Brand: ${product.brand}");
-        print("  Category: ${product.category}");
-        print("  Keywords: ${product.keywords}");
-        print("---");
+        debugPrint("Product loaded: ${product.name}");
+        debugPrint("  Brand: ${product.brand}");
+        debugPrint("  Category: ${product.category}");
+        debugPrint("  Keywords: ${product.keywords}");
+        debugPrint("---");
       }
 
       loadedProducts.add(product);
@@ -122,7 +124,7 @@ class _HomePage extends State<HomePage> {
       filteredProducts = loadedProducts; // Initialize filtered products
     });
 
-    print("✅ Total products loaded: ${products.length}");
+    debugPrint("✅ Total products loaded: ${products.length}");
   }
 
   /// Filter products by category
@@ -150,7 +152,7 @@ class _HomePage extends State<HomePage> {
       }
     });
 
-    print(
+    debugPrint(
       "🔍 Filtered ${filteredProducts.length} products for category: $categoryName",
     );
   }
@@ -221,13 +223,13 @@ class _HomePage extends State<HomePage> {
               height: 58,
               decoration: BoxDecoration(
                 color: selectedCategory == categoryName
-                    ? color.withOpacity(0.3)
-                    : color.withOpacity(0.1),
+                    ? color.withAlpha(30)
+                    : color.withAlpha(10),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: selectedCategory == categoryName
                       ? color
-                      : color.withOpacity(0.3),
+                      : color.withAlpha(30),
                   width: selectedCategory == categoryName ? 2 : 1,
                 ),
               ),
@@ -263,7 +265,7 @@ class _HomePage extends State<HomePage> {
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
-              decoration: BoxDecoration(color: colorPallete.color1),
+              decoration: BoxDecoration(color: ColorPallete.color1),
               child: Text(
                 'Menu',
                 style: TextStyle(color: Colors.white, fontSize: 24),
@@ -320,7 +322,7 @@ class _HomePage extends State<HomePage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  CircularProgressIndicator(color: colorPallete.color1),
+                  CircularProgressIndicator(color: ColorPallete.color1),
                   SizedBox(height: 16),
                   Text(
                     'Loading Products...',
@@ -354,7 +356,7 @@ class _HomePage extends State<HomePage> {
                   pinned: true,
                   floating: true,
                   titleSpacing: 0,
-                  backgroundColor: colorPallete.color1,
+                  backgroundColor: ColorPallete.color1,
                   foregroundColor: Colors.white,
                   expandedHeight: 100,
                   title: Text(
@@ -377,23 +379,21 @@ class _HomePage extends State<HomePage> {
                         child: InkWell(
                           onTap: () => Navigator.pushNamed(context, '/search'),
                           borderRadius: BorderRadius.circular(30),
-                          child: Container(
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(
-                                vertical: 13.0,
-                                horizontal: 10.0,
-                              ),
-                              child: Row(
-                                children: [
-                                  SizedBox(width: 5),
-                                  Icon(Icons.search),
-                                  SizedBox(width: 5),
-                                  Text("Search products..."),
-                                  Spacer(),
-                                  Icon(Icons.camera_alt_outlined),
-                                  SizedBox(width: 5),
-                                ],
-                              ),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              vertical: 13.0,
+                              horizontal: 10.0,
+                            ),
+                            child: Row(
+                              children: [
+                                SizedBox(width: 5),
+                                Icon(Icons.search),
+                                SizedBox(width: 5),
+                                Text("Search products..."),
+                                Spacer(),
+                                Icon(Icons.camera_alt_outlined),
+                                SizedBox(width: 5),
+                              ],
                             ),
                           ),
                         ),
@@ -458,7 +458,7 @@ class _HomePage extends State<HomePage> {
                                   ),
 
                                 // Categories list
-                                Container(
+                                SizedBox(
                                   height: 85,
                                   child: ListView(
                                     scrollDirection: Axis.horizontal,
@@ -625,7 +625,7 @@ class _HomePage extends State<HomePage> {
                                                   valueColor:
                                                       AlwaysStoppedAnimation<
                                                         Color
-                                                      >(colorPallete.color1),
+                                                      >(ColorPallete.color1),
                                                   value: isActive
                                                       ? progress
                                                       : 1.0,
@@ -685,25 +685,22 @@ class _HomePage extends State<HomePage> {
                                     color: Colors.grey.shade200,
                                     borderRadius: BorderRadius.circular(10),
                                   ),
-                                  child: Hero(
-                                    tag: 'product',
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(10),
-                                      child: Image.network(
-                                        product.images.isNotEmpty
-                                            ? product.images.first
-                                            : '',
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: Image.network(
+                                      product.images.isNotEmpty
+                                          ? product.images.first
+                                          : '',
+                                      height: 140,
+                                      width: double.infinity,
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (_, _, _) => Container(
                                         height: 140,
-                                        width: double.infinity,
-                                        fit: BoxFit.contain,
-                                        errorBuilder: (_, _, _) => Container(
-                                          height: 140,
-                                          color: Colors.grey[200],
-                                          child: Icon(
-                                            Icons.image,
-                                            size: 50,
-                                            color: Colors.grey[400],
-                                          ),
+                                        color: Colors.grey[200],
+                                        child: Icon(
+                                          Icons.image,
+                                          size: 50,
+                                          color: Colors.grey[400],
                                         ),
                                       ),
                                     ),
@@ -745,7 +742,7 @@ class _HomePage extends State<HomePage> {
                                         style: TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold,
-                                          color: colorPallete.color1,
+                                          color: ColorPallete.color1,
                                         ),
                                       ),
                                       SizedBox(height: 2),

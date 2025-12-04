@@ -1,6 +1,6 @@
 import 'package:buy_app/services/cart_manager.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:buy_app/colorPallete/color_pallete.dart';
+import 'package:buy_app/ColorPallete/color_pallete.dart';
 import 'package:flutter/material.dart';
 import 'package:buy_app/models/models.dart';
 import 'package:buy_app/services/wishlist_service.dart';
@@ -121,7 +121,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       }
                     : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: colorPallete.color1,
+                  backgroundColor: ColorPallete.color1,
                   disabledBackgroundColor: Colors.grey.shade400,
                   padding: EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
@@ -209,7 +209,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               width: double.infinity,
               padding: EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(
-                border: Border.all(color: colorPallete.color1, width: 2),
+                border: Border.all(color: ColorPallete.color1, width: 2),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -232,7 +232,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: colorPallete.color1,
+                        color: ColorPallete.color1,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
@@ -249,7 +249,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: colorPallete.color1,
+                        color: ColorPallete.color1,
                       ),
                     ),
                   ),
@@ -279,7 +279,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       height: 40,
                       decoration: BoxDecoration(
                         color: canIncrease
-                            ? colorPallete.color1
+                            ? ColorPallete.color1
                             : Colors.grey.shade400,
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -309,18 +309,17 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     child: Icon(Icons.image, size: 64, color: Colors.grey[400]),
                   ),
                 ),
-              )
-              .toList()
-        : [
-            Container(
-              color: Colors.grey[200],
-              child: Icon(Icons.image, size: 64, color: Colors.grey[400]),
-            ),
-          ];
+              ).toList()
+                : [
+                  Container(
+                    color: Colors.grey[200],
+                    child: Icon(Icons.image, size: 64, color: Colors.grey[400]),
+                  ),
+                ];
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: colorPallete.color1,
+        backgroundColor: ColorPallete.color1,
         title: Text(
           widget.product.name,
           style: TextStyle(color: Colors.white),
