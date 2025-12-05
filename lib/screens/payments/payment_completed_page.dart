@@ -142,6 +142,18 @@ class _PaymentCompletedPageState extends State<PaymentCompletedPage> {
             txnId: widget.txnId,
           );
 
+      debugPrint('📧 Sending PDF invoice to customer...');
+
+      final invoiceEmailSent = await EmailService.sendOrderInvoiceEmail(
+        customerEmail: email,
+        customerName: name,
+        shippingAddress: address,
+        orderedItems: cart.items,
+        orderId: _orderId!,
+        paymentMethod: widget.paymentMethod,
+        txnId: widget.txnId,
+      );
+
       debugPrint('📧 Sending order details to sellers...');
       final sellerEmailsSent = await EmailService.sendOrderDetailsToSellers(
         customer: customer,
@@ -155,12 +167,16 @@ class _PaymentCompletedPageState extends State<PaymentCompletedPage> {
         String message;
         Color backgroundColor;
 
-        if (customerEmailSent && sellerEmailsSent) {
-          message = '✅ Order confirmed! Emails sent to you and sellers.';
-          backgroundColor = Colors.green;
-        } else if (customerEmailSent) {
+        if (customerEmailSent && invoiceEmailSent && sellerEmailsSent) {
           message =
-              '✅ Order confirmed! Customer email sent. ⚠️ Some seller emails failed.';
+              '✅ Order confirmed! Confirmation email, invoice PDF, and seller notifications sent.';
+          backgroundColor = Colors.green;
+        } else if (customerEmailSent && invoiceEmailSent) {
+          message =
+              '✅ Order confirmed! Customer emails and PDF invoice sent. ⚠️ Some seller emails failed.';
+          backgroundColor = Colors.orange;
+        } else if (customerEmailSent || invoiceEmailSent) {
+          message = '✅ Order confirmed! Some email notifications sent.';
           backgroundColor = Colors.orange;
         } else {
           message = '✅ Order saved but email notifications failed.';

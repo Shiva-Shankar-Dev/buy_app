@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:buy_app/services/stock_service.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -7,72 +8,11 @@ import 'package:buy_app/services/addresses.dart';
 import 'package:buy_app/services/seller_service.dart';
 import 'package:buy_app/services/cart_manager.dart';
 import 'package:buy_app/models/models.dart'; // Import from models file
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
 
 class EmailService {
   static const String _emailServerUrl = 'http://localhost:3000/send';
-
-  // Define maximum quantities per category
-  static const Map<String, int> _categoryMaxQuantities = {
-    'mobiles': 4,
-    'mobile': 4,
-    'phone': 4,
-    'smartphone': 4,
-    'electronics': 3,
-    'laptop': 2,
-    'computer': 2,
-    'tablet': 3,
-    'headphones': 5,
-    'earphones': 5,
-    'watch': 3,
-    'smartwatch': 3,
-    'camera': 2,
-    'gaming': 2,
-    'console': 1,
-    'tv': 1,
-    'television': 1,
-    'appliances': 1,
-    'refrigerator': 1,
-    'washing machine': 1,
-    'microwave': 1,
-    'ac': 1,
-    'air conditioner': 1,
-    'furniture': 2,
-    'books': 10,
-    'clothing': 8,
-    'shoes': 6,
-    'accessories': 10,
-    'beauty': 5,
-    'cosmetics': 5,
-    'health': 5,
-    'sports': 4,
-    'toys': 6,
-    'home': 5,
-    'kitchen': 3,
-    'automotive': 2,
-    'jewelry': 4,
-    'default': 10, // Default maximum for categories not listed
-  };
-
-  /// Get maximum allowed quantity for a category
-  static int getMaxQuantityForCategory(String category) {
-    if (category.isEmpty) return _categoryMaxQuantities['default']!;
-
-    final categoryLower = category.toLowerCase().trim();
-
-    // Check for exact match first
-    if (_categoryMaxQuantities.containsKey(categoryLower)) {
-      return _categoryMaxQuantities[categoryLower]!;
-    }
-
-    // Check for partial matches
-    for (final key in _categoryMaxQuantities.keys) {
-      if (categoryLower.contains(key) || key.contains(categoryLower)) {
-        return _categoryMaxQuantities[key]!;
-      }
-    }
-
-    return _categoryMaxQuantities['default']!;
-  }
 
   /// Send a basic email
   static Future<bool> sendEmail({
@@ -124,38 +64,48 @@ class EmailService {
 
     // Create HTML table for products with quantities
     message1 += "<h4>Ordered Products:</h4>";
-    message1 += "<table border='1' cellpadding='8' cellspacing='0' style='border-collapse: collapse; width: 100%; margin: 10px 0;'>";
+    message1 +=
+        "<table border='1' cellpadding='8' cellspacing='0' style='border-collapse: collapse; width: 100%; margin: 10px 0;'>";
     message1 += "<thead style='background-color: #f0f0f0;'>";
-    message1 += "<tr><th style='text-align: left; padding: 10px;'>Product Name</th><th style='text-align: center; padding: 10px;'>Quantity</th><th style='text-align: right; padding: 10px;'>Unit Price</th><th style='text-align: right; padding: 10px;'>Total</th></tr>";
+    message1 +=
+        "<tr><th style='text-align: left; padding: 10px;'>Product Name</th><th style='text-align: center; padding: 10px;'>Quantity</th><th style='text-align: right; padding: 10px;'>Unit Price</th><th style='text-align: right; padding: 10px;'>Total</th></tr>";
     message1 += "</thead><tbody>";
 
     for (final item in orderedItems) {
       final itemTotal = item.product.price * item.quantity;
       message1 += "<tr>";
-      message1 += "<td style='padding: 8px; border-bottom: 1px solid #ddd;'>${item.product.name}</td>";
-      message1 += "<td style='padding: 8px; text-align: center; border-bottom: 1px solid #ddd;'>${item.quantity}</td>";
-      message1 += "<td style='padding: 8px; text-align: right; border-bottom: 1px solid #ddd;'>₹${item.product.price.toStringAsFixed(2)}</td>";
-      message1 += "<td style='padding: 8px; text-align: right; border-bottom: 1px solid #ddd;'>₹${itemTotal.toStringAsFixed(2)}</td>";
+      message1 +=
+          "<td style='padding: 8px; border-bottom: 1px solid #ddd;'>${item.product.name}</td>";
+      message1 +=
+          "<td style='padding: 8px; text-align: center; border-bottom: 1px solid #ddd;'>${item.quantity}</td>";
+      message1 +=
+          "<td style='padding: 8px; text-align: right; border-bottom: 1px solid #ddd;'>₹${item.product.price.toStringAsFixed(2)}</td>";
+      message1 +=
+          "<td style='padding: 8px; text-align: right; border-bottom: 1px solid #ddd;'>₹${itemTotal.toStringAsFixed(2)}</td>";
       message1 += "</tr>";
     }
 
     message1 += "</tbody></table>";
-    message1 += "<p><strong>TOTAL AMOUNT: ₹${totalAmount.toStringAsFixed(2)}</strong></p>";
+    message1 +=
+        "<p><strong>TOTAL AMOUNT: ₹${totalAmount.toStringAsFixed(2)}</strong></p>";
     message1 += "<p><strong>Payment Method:</strong> $paymentMethod</p>";
     message1 += "<p><strong>Transaction ID:</strong> $txnId</p>";
 
     message1 += "<h4>SHIPPING ADDRESS:</h4>";
-    message1 += "<div style='background-color: #f9f9f9; padding: 10px; border-left: 4px solid #007bff; margin: 10px 0;'>";
+    message1 +=
+        "<div style='background-color: #f9f9f9; padding: 10px; border-left: 4px solid #007bff; margin: 10px 0;'>";
     message1 += "<p>${shippingAddress.first} ${shippingAddress.last}<br>";
     message1 += "${shippingAddress.line1}<br>";
     if (shippingAddress.line2.isNotEmpty) {
       message1 += "${shippingAddress.line2}<br>";
     }
-    message1 += "${shippingAddress.city}, ${shippingAddress.state} - ${shippingAddress.pincode}</p>";
+    message1 +=
+        "${shippingAddress.city}, ${shippingAddress.state} - ${shippingAddress.pincode}</p>";
     message1 += "</div>";
 
     message1 += "<hr style='margin: 20px 0;'>";
-    message1 += "<p>Your order will be processed soon. You will receive updates via email and SMS.</p>";
+    message1 +=
+        "<p>Your order will be processed soon. You will receive updates via email and SMS.</p>";
     message1 += "<p><strong>Thank you for shopping with us!</strong></p>";
     message1 += "</body></html>";
 
@@ -181,7 +131,9 @@ class EmailService {
       return false;
     }
 
-    debugPrint("🛒 Cart items: ${cart.items.map((item) => item.product.name).toList()}",);
+    debugPrint(
+      "🛒 Cart items: ${cart.items.map((item) => item.product.name).toList()}",
+    );
 
     // Group cart items by seller ID (if available from a separate source)
     // Note: Product no longer has sellerId field, you may need to fetch this from another service
@@ -267,59 +219,75 @@ class EmailService {
 
       String orderDetails = "<html><body>";
       orderDetails += "<h2>Dear Seller,</h2>";
-      orderDetails += "<p>🎉 You have received a new order from <strong>$customerName</strong>!</p>";
+      orderDetails +=
+          "<p>🎉 You have received a new order from <strong>$customerName</strong>!</p>";
 
       orderDetails += "<h3>📋 CUSTOMER DETAILS</h3>";
-      orderDetails += "<div style='background-color: #f0f8ff; padding: 10px; border-radius: 5px; margin: 10px 0;'>";
+      orderDetails +=
+          "<div style='background-color: #f0f8ff; padding: 10px; border-radius: 5px; margin: 10px 0;'>";
       orderDetails += "<p><strong>Name:</strong> $customerName<br>";
       orderDetails += "<strong>Email:</strong> $customerEmail<br>";
       orderDetails += "<strong>Phone:</strong> $customerPhone</p>";
       orderDetails += "</div>";
 
       orderDetails += "<h3>📦 SHIPPING ADDRESS</h3>";
-      orderDetails += "<div style='background-color: #f9f9f9; padding: 10px; border-left: 4px solid #28a745; margin: 10px 0;'>";
+      orderDetails +=
+          "<div style='background-color: #f9f9f9; padding: 10px; border-left: 4px solid #28a745; margin: 10px 0;'>";
       orderDetails += "<p>${shippingAddress.first} ${shippingAddress.last}<br>";
       orderDetails += "${shippingAddress.line1}<br>";
       if (shippingAddress.line2.isNotEmpty) {
         orderDetails += "${shippingAddress.line2}<br>";
       }
-      orderDetails += "${shippingAddress.city}, ${shippingAddress.state} - ${shippingAddress.pincode}</p>";
+      orderDetails +=
+          "${shippingAddress.city}, ${shippingAddress.state} - ${shippingAddress.pincode}</p>";
       orderDetails += "</div>";
 
       orderDetails += "<h3>🛍️ ORDERED PRODUCTS</h3>";
       orderDetails += "<p><strong>Order ID:</strong> $ordId</p>";
 
       // Create HTML table for products with quantities
-      orderDetails += "<table border='1' cellpadding='8' cellspacing='0' style='border-collapse: collapse; width: 100%; margin: 10px 0;'>";
-      orderDetails += "<thead style='background-color: #28a745; color: white;'>";
-      orderDetails += "<tr><th style='text-align: left; padding: 10px;'>Product Name</th><th style='text-align: center; padding: 10px;'>Quantity</th><th style='text-align: right; padding: 10px;'>Unit Price</th><th style='text-align: right; padding: 10px;'>Total</th></tr>";
+      orderDetails +=
+          "<table border='1' cellpadding='8' cellspacing='0' style='border-collapse: collapse; width: 100%; margin: 10px 0;'>";
+      orderDetails +=
+          "<thead style='background-color: #28a745; color: white;'>";
+      orderDetails +=
+          "<tr><th style='text-align: left; padding: 10px;'>Product Name</th><th style='text-align: center; padding: 10px;'>Quantity</th><th style='text-align: right; padding: 10px;'>Unit Price</th><th style='text-align: right; padding: 10px;'>Total</th></tr>";
       orderDetails += "</thead><tbody>";
 
       double totalAmount = 0;
       for (final item in items) {
         final itemTotal = item.product.price * item.quantity;
         orderDetails += "<tr>";
-        orderDetails += "<td style='padding: 8px; border-bottom: 1px solid #ddd;'>${item.product.name}</td>";
-        orderDetails += "<td style='padding: 8px; text-align: center; border-bottom: 1px solid #ddd;'>${item.quantity}</td>";
-        orderDetails += "<td style='padding: 8px; text-align: right; border-bottom: 1px solid #ddd;'>₹${item.product.price.toStringAsFixed(2)}</td>";
-        orderDetails += "<td style='padding: 8px; text-align: right; border-bottom: 1px solid #ddd;'>₹${itemTotal.toStringAsFixed(2)}</td>";
+        orderDetails +=
+            "<td style='padding: 8px; border-bottom: 1px solid #ddd;'>${item.product.name}</td>";
+        orderDetails +=
+            "<td style='padding: 8px; text-align: center; border-bottom: 1px solid #ddd;'>${item.quantity}</td>";
+        orderDetails +=
+            "<td style='padding: 8px; text-align: right; border-bottom: 1px solid #ddd;'>₹${item.product.price.toStringAsFixed(2)}</td>";
+        orderDetails +=
+            "<td style='padding: 8px; text-align: right; border-bottom: 1px solid #ddd;'>₹${itemTotal.toStringAsFixed(2)}</td>";
         orderDetails += "</tr>";
         totalAmount += itemTotal;
       }
 
       orderDetails += "</tbody></table>";
-      orderDetails += "<p><strong>💰 TOTAL AMOUNT: ₹${totalAmount.toStringAsFixed(2)}</strong></p>";
+      orderDetails +=
+          "<p><strong>💰 TOTAL AMOUNT: ₹${totalAmount.toStringAsFixed(2)}</strong></p>";
       orderDetails += "<p><strong>Payment Method:</strong> $paymentMethod<br>";
       orderDetails += "<strong>Transaction ID:</strong> $txnId</p>";
 
       orderDetails += "<hr style='margin: 20px 0;'>";
       orderDetails += "<h4>📞 Next Steps:</h4>";
-      orderDetails += "<p>Please process this order and contact the customer if needed.</p>";
-      orderDetails += "<div style='background-color: #fff3cd; padding: 10px; border-radius: 5px; border-left: 4px solid #ffc107;'>";
-      orderDetails += "<p><strong>📧 Customer Email:</strong> $customerEmail<br>";
+      orderDetails +=
+          "<p>Please process this order and contact the customer if needed.</p>";
+      orderDetails +=
+          "<div style='background-color: #fff3cd; padding: 10px; border-radius: 5px; border-left: 4px solid #ffc107;'>";
+      orderDetails +=
+          "<p><strong>📧 Customer Email:</strong> $customerEmail<br>";
       orderDetails += "<strong>📱 Customer Phone:</strong> $customerPhone</p>";
       orderDetails += "</div>";
-      orderDetails += "<p><strong>Thank you for using our platform! 🙏</strong></p>";
+      orderDetails +=
+          "<p><strong>Thank you for using our platform! 🙏</strong></p>";
       orderDetails += "</body></html>";
 
       // Send email to seller
@@ -342,216 +310,496 @@ class EmailService {
     }
   }
 
-  /// Send multiple emails at once (utility method)
-  static Future<List<bool>> sendMultipleEmails(
-    List<Map<String, String>> emails,
-  ) async {
-    List<bool> results = [];
-
-    for (final emailData in emails) {
-      final result = await sendEmail(
-        to: emailData['to']!,
-        subject: emailData['subject']!,
-        message: emailData['message']!,
-      );
-      results.add(result);
-    }
-
-    return results;
-  }
-
-  /// Enhanced stock availability check with quantity limits
-  static Future<Map<String, dynamic>> checkStockAvailability({
-    required List<CartItem> items,
-  }) async {
-    try {
-      debugPrint(
-        '🔍 Checking stock availability and quantity limits for ${items.length} items...',
-      );
-
-      // Note: Quantity limits should be validated at UI level before reaching this point
-
-      List<Map<String, dynamic>> unavailableItems = [];
-      bool allAvailable = true;
-
-      for (final item in items) {
-        try {
-          // Try multiple field names to find the product
-          QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-              .collection('products')
-              .where('name', isEqualTo: item.product.name)
-              .limit(1)
-              .get();
-
-          // If not found by name, try pid
-          if (querySnapshot.docs.isEmpty && item.product.pid.isNotEmpty) {
-            querySnapshot = await FirebaseFirestore.instance
-                .collection('products')
-                .where('pid', isEqualTo: item.product.pid)
-                .limit(1)
-                .get();
-          }
-
-          if (querySnapshot.docs.isNotEmpty) {
-            final productDoc = querySnapshot.docs.first;
-            final productData = productDoc.data() as Map<String, dynamic>;
-            final currentStock = productData['stockQuantity'] ?? 0;
-
-            if (currentStock < item.quantity) {
-              allAvailable = false;
-              unavailableItems.add({
-                'product': item.product.name,
-                'category': item.product.category,
-                'requested': item.quantity,
-                'available': currentStock,
-                'type': 'insufficient_stock',
-              });
-              debugPrint(
-                '❌ Insufficient stock: ${item.product.name} (Requested: ${item.quantity}, Available: $currentStock)',
-              );
-            } else {
-              debugPrint(
-                '✅ Stock available: ${item.product.name} (Requested: ${item.quantity}, Available: $currentStock)',
-              );
-            }
-          } else {
-            allAvailable = false;
-            unavailableItems.add({
-              'product': item.product.name,
-              'category': item.product.category,
-              'requested': item.quantity,
-              'available': 0,
-              'type': 'product_not_found',
-              'error': 'Product not found',
-            });
-            debugPrint('❌ Product not found: ${item.product.name}');
-          }
-        } catch (e) {
-          debugPrint('❌ Error checking stock for ${item.product.name}: $e');
-          allAvailable = false;
-          unavailableItems.add({
-            'product': item.product.name,
-            'category': item.product.category,
-            'requested': item.quantity,
-            'available': 0,
-            'type': 'error',
-            'error': e.toString(),
-          });
-        }
-      }
-
-      return {
-        'available': allAvailable,
-        'unavailableItems': unavailableItems,
-        'quantityLimitsChecked': true,
-      };
-    } catch (e) {
-      debugPrint('❌ Error checking stock availability: $e');
-      return {
-        'available': false,
-        'unavailableItems': [],
-        'error': e.toString(),
-      };
-    }
-  }
-
-  /// Update stock quantities in Firestore after order placement
-  static Future<bool> updateStockQuantities({
+  /// Automatically send PDF invoice email when order is placed
+  static Future<bool> sendOrderInvoiceEmail({
+    required String customerEmail,
+    required String customerName,
+    required Address shippingAddress,
     required List<CartItem> orderedItems,
     required String orderId,
+    required String paymentMethod,
+    required String txnId,
   }) async {
     try {
-      debugPrint('📦 Updating stock quantities for order: $orderId');
+      debugPrint('📧 Generating and sending invoice email to: $customerEmail');
 
-      // Use batch write for atomic updates
-      final batch = FirebaseFirestore.instance.batch();
-      int successfulUpdates = 0;
+      // Generate PDF invoice
+      final pdfBytes = await _generateInvoicePDF(
+        customerName: customerName,
+        customerEmail: customerEmail,
+        shippingAddress: shippingAddress,
+        orderedItems: orderedItems,
+        orderId: orderId,
+        paymentMethod: paymentMethod,
+        txnId: txnId,
+      );
 
-      for (final item in orderedItems) {
-        try {
-          debugPrint('🔍 Looking for product: ${item.product.name}');
+      // Convert to base64
+      final pdfBase64 = base64Encode(pdfBytes);
 
-          // Try multiple field names to find the product
-          QuerySnapshot querySnapshot;
+      // Send email with PDF attachment
+      final response = await http.post(
+        Uri.parse('http://localhost:3000/send/receipt'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'customerEmail': customerEmail,
+          'customerName': customerName,
+          'orderId': orderId,
+          'pdfBase64': pdfBase64,
+          'pdfFileName': 'Invoice_$orderId.pdf',
+        }),
+      );
 
-          // First try with 'name' field
-          querySnapshot = await FirebaseFirestore.instance
-              .collection('products')
-              .where('name', isEqualTo: item.product.name)
-              .limit(1)
-              .get();
-
-          // If not found, try with other possible field names
-          if (querySnapshot.docs.isEmpty) {
-            debugPrint(
-              '🔍 Product not found by name, trying pid: ${item.product.pid}',
-            );
-            querySnapshot = await FirebaseFirestore.instance
-                .collection('products')
-                .where('pid', isEqualTo: item.product.pid)
-                .limit(1)
-                .get();
-          }
-
-          if (querySnapshot.docs.isNotEmpty) {
-            final productDoc = querySnapshot.docs.first;
-            final productData = productDoc.data() as Map<String, dynamic>;
-
-            debugPrint('📋 Found product document: ${productDoc.id}');
-            debugPrint('📋 Product data fields: ${productData.keys.toList()}');
-
-            final currentStock = productData['stockQuantity'] ?? 0;
-            final newStock = (currentStock - item.quantity)
-                .clamp(0, double.infinity)
-                .toInt();
-
-            debugPrint('📊 Product: ${item.product.name}');
-            debugPrint('   Document ID: ${productDoc.id}');
-            debugPrint('   Current Stock: $currentStock');
-            debugPrint('   Ordered Quantity: ${item.quantity}');
-            debugPrint('   New Stock: $newStock');
-
-            // Validate that the stock won't go negative
-            if (currentStock >= item.quantity) {
-              // Add update operation to batch
-              batch.update(productDoc.reference, {
-                'stockQuantity': newStock,
-                'lastUpdated': FieldValue.serverTimestamp(),
-              });
-              successfulUpdates++;
-              debugPrint('✅ Added to batch: ${item.product.name}');
-            } else {
-              debugPrint(
-                '⚠️ Insufficient stock for ${item.product.name}: Available=$currentStock, Requested=${item.quantity}',
-              );
-            }
-          } else {
-            debugPrint('❌ Product not found in database: ${item.product.name}');
-            debugPrint('   Tried fields: name, pid');
-            debugPrint(
-              '   Product details: name=${item.product.name}, pid=${item.product.pid}',
-            );
-          }
-        } catch (e) {
-          debugPrint('❌ Error processing item ${item.product.name}: $e');
-        }
-      }
-
-      if (successfulUpdates > 0) {
-        // Commit all updates atomically
-        await batch.commit();
-        debugPrint(
-          '✅ Stock quantities updated successfully for $successfulUpdates items in order: $orderId',
-        );
+      if (response.statusCode == 200) {
+        debugPrint('✅ Invoice email sent successfully');
         return true;
       } else {
-        debugPrint('❌ No stock updates were made for order: $orderId');
+        debugPrint(
+          '❌ Failed to send invoice email: ${response.statusCode} ${response.body}',
+        );
         return false;
       }
     } catch (e) {
-      debugPrint('❌ Error updating stock quantities: $e');
+      debugPrint('❌ Error sending invoice email: $e');
       return false;
     }
+  }
+
+  /// Generate PDF invoice for order
+  static Future<Uint8List> _generateInvoicePDF({
+    required String customerName,
+    required String customerEmail,
+    required Address shippingAddress,
+    required List<CartItem> orderedItems,
+    required String orderId,
+    required String paymentMethod,
+    required String txnId,
+  }) async {
+    final pdf = pw.Document();
+    final now = DateTime.now();
+
+    // Calculate totals
+    final subtotal = orderedItems.fold<double>(
+      0,
+      (sum, item) => sum + (item.product.price * item.quantity),
+    );
+    final tax = 0.0; // No tax for now
+    final deliveryFee = 0.0; // Free delivery
+    final total = subtotal + tax + deliveryFee;
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
+        build: (pw.Context context) {
+          return [
+            // Invoice Header
+            pw.Container(
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    children: [
+                      pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          pw.Text(
+                            'INVOICE',
+                            style: pw.TextStyle(
+                              fontSize: 28,
+                              fontWeight: pw.FontWeight.bold,
+                              color: PdfColors.blue800,
+                            ),
+                          ),
+                          pw.SizedBox(height: 8),
+                          pw.Text(
+                            'Your Shopping App',
+                            style: pw.TextStyle(
+                              fontSize: 16,
+                              color: PdfColors.grey700,
+                            ),
+                          ),
+                        ],
+                      ),
+                      pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.end,
+                        children: [
+                          pw.Text(
+                            'Invoice #: $orderId',
+                            style: pw.TextStyle(
+                              fontSize: 14,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
+                          pw.SizedBox(height: 4),
+                          pw.Text(
+                            'Date: ${_formatInvoiceDate(now)}',
+                            style: const pw.TextStyle(fontSize: 12),
+                          ),
+                          pw.Text(
+                            'Due Date: ${_formatInvoiceDate(now.add(Duration(days: 4)))}',
+                            style: const pw.TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  pw.SizedBox(height: 30),
+
+                  // Bill To Section
+                  pw.Row(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      // Bill To
+                      pw.Expanded(
+                        child: pw.Container(
+                          padding: const pw.EdgeInsets.all(16),
+                          decoration: pw.BoxDecoration(
+                            border: pw.Border.all(color: PdfColors.grey300),
+                            borderRadius: pw.BorderRadius.circular(8),
+                          ),
+                          child: pw.Column(
+                            crossAxisAlignment: pw.CrossAxisAlignment.start,
+                            children: [
+                              pw.Text(
+                                'BILL TO',
+                                style: pw.TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: pw.FontWeight.bold,
+                                  color: PdfColors.blue800,
+                                ),
+                              ),
+                              pw.SizedBox(height: 8),
+                              pw.Text(
+                                customerName,
+                                style: pw.TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: pw.FontWeight.bold,
+                                ),
+                              ),
+                              pw.Text(
+                                customerEmail,
+                                style: const pw.TextStyle(fontSize: 12),
+                              ),
+                              pw.SizedBox(height: 8),
+                              pw.Text(
+                                '${shippingAddress.line1}',
+                                style: const pw.TextStyle(fontSize: 12),
+                              ),
+                              if (shippingAddress.line2.isNotEmpty)
+                                pw.Text(
+                                  '${shippingAddress.line2}',
+                                  style: const pw.TextStyle(fontSize: 12),
+                                ),
+                              pw.Text(
+                                '${shippingAddress.city}, ${shippingAddress.state} - ${shippingAddress.pincode}',
+                                style: const pw.TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      pw.SizedBox(width: 20),
+
+                      // Payment Info
+                      pw.Expanded(
+                        child: pw.Container(
+                          padding: const pw.EdgeInsets.all(16),
+                          decoration: pw.BoxDecoration(
+                            border: pw.Border.all(color: PdfColors.grey300),
+                            borderRadius: pw.BorderRadius.circular(8),
+                          ),
+                          child: pw.Column(
+                            crossAxisAlignment: pw.CrossAxisAlignment.start,
+                            children: [
+                              pw.Text(
+                                'PAYMENT INFO',
+                                style: pw.TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: pw.FontWeight.bold,
+                                  color: PdfColors.blue800,
+                                ),
+                              ),
+                              pw.SizedBox(height: 8),
+                              pw.Text(
+                                'Payment Method: $paymentMethod',
+                                style: const pw.TextStyle(fontSize: 12),
+                              ),
+                              if (txnId != 'N/A')
+                                pw.Text(
+                                  'Transaction ID: $txnId',
+                                  style: const pw.TextStyle(fontSize: 12),
+                                ),
+                              pw.Text(
+                                'Status: ${paymentMethod.toLowerCase().contains('cash') ? 'Pay on Delivery' : 'Paid'}',
+                                style: pw.TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: pw.FontWeight.bold,
+                                  color:
+                                      paymentMethod.toLowerCase().contains(
+                                        'cash',
+                                      )
+                                      ? PdfColors.orange
+                                      : PdfColors.green,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            pw.SizedBox(height: 30),
+
+            // Items Table
+            pw.Table(
+              border: pw.TableBorder.all(color: PdfColors.grey400),
+              columnWidths: {
+                0: const pw.FlexColumnWidth(3),
+                1: const pw.FlexColumnWidth(1),
+                2: const pw.FlexColumnWidth(1.5),
+                3: const pw.FlexColumnWidth(1.5),
+              },
+              children: [
+                // Header
+                pw.TableRow(
+                  decoration: const pw.BoxDecoration(color: PdfColors.blue50),
+                  children: [
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.all(8),
+                      child: pw.Text(
+                        'DESCRIPTION',
+                        style: pw.TextStyle(
+                          fontWeight: pw.FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.all(8),
+                      child: pw.Text(
+                        'QTY',
+                        style: pw.TextStyle(
+                          fontWeight: pw.FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                        textAlign: pw.TextAlign.center,
+                      ),
+                    ),
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.all(8),
+                      child: pw.Text(
+                        'RATE',
+                        style: pw.TextStyle(
+                          fontWeight: pw.FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                        textAlign: pw.TextAlign.right,
+                      ),
+                    ),
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.all(8),
+                      child: pw.Text(
+                        'AMOUNT',
+                        style: pw.TextStyle(
+                          fontWeight: pw.FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                        textAlign: pw.TextAlign.right,
+                      ),
+                    ),
+                  ],
+                ),
+
+                // Items
+                ...orderedItems.map((item) {
+                  final itemTotal = item.product.price * item.quantity;
+                  return pw.TableRow(
+                    children: [
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(8),
+                        child: pw.Text(
+                          item.product.name,
+                          style: const pw.TextStyle(fontSize: 11),
+                        ),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(8),
+                        child: pw.Text(
+                          '${item.quantity}',
+                          style: const pw.TextStyle(fontSize: 11),
+                          textAlign: pw.TextAlign.center,
+                        ),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(8),
+                        child: pw.Text(
+                          'Rs.${item.product.price.toStringAsFixed(2)}',
+                          style: const pw.TextStyle(fontSize: 11),
+                          textAlign: pw.TextAlign.right,
+                        ),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(8),
+                        child: pw.Text(
+                          'Rs.${itemTotal.toStringAsFixed(2)}',
+                          style: const pw.TextStyle(fontSize: 11),
+                          textAlign: pw.TextAlign.right,
+                        ),
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ],
+            ),
+
+            pw.SizedBox(height: 20),
+
+            // Totals Section
+            pw.Row(
+              children: [
+                pw.Expanded(child: pw.Container()),
+                pw.Container(
+                  width: 250,
+                  child: pw.Column(
+                    children: [
+                      _buildInvoiceTotalRow(
+                        'Subtotal:',
+                        'Rs.${subtotal.toStringAsFixed(2)}',
+                      ),
+                      _buildInvoiceTotalRow(
+                        'Tax:',
+                        'Rs.${tax.toStringAsFixed(2)}',
+                      ),
+                      _buildInvoiceTotalRow(
+                        'Delivery Fee:',
+                        deliveryFee == 0
+                            ? 'FREE'
+                            : 'Rs.${deliveryFee.toStringAsFixed(2)}',
+                      ),
+                      pw.Divider(thickness: 2),
+                      _buildInvoiceTotalRow(
+                        'TOTAL:',
+                        'Rs.${total.toStringAsFixed(2)}',
+                        isTotal: true,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            pw.SizedBox(height: 40),
+
+            // Terms and Notes
+            pw.Container(
+              padding: const pw.EdgeInsets.all(16),
+              decoration: pw.BoxDecoration(
+                color: PdfColors.grey50,
+                borderRadius: pw.BorderRadius.circular(8),
+              ),
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    'TERMS & CONDITIONS',
+                    style: pw.TextStyle(
+                      fontSize: 12,
+                      fontWeight: pw.FontWeight.bold,
+                      color: PdfColors.blue800,
+                    ),
+                  ),
+                  pw.SizedBox(height: 8),
+                  
+                  pw.Text(
+                    '1) For COD orders, payment is collected at the time of delivery.',
+                    style: const pw.TextStyle(fontSize: 10),
+                  ),
+                  pw.Text(
+                    '2) Returns are accepted within 7 days of delivery.',
+                    style: const pw.TextStyle(fontSize: 10),
+                  ),
+                  pw.SizedBox(height: 12),
+                  pw.Text(
+                    'Thank you for your business!',
+                    style: pw.TextStyle(
+                      fontSize: 14,
+                      fontWeight: pw.FontWeight.bold,
+                      color: PdfColors.blue800,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            pw.SizedBox(height: 20),
+
+            // Footer
+            pw.Center(
+              child: pw.Text(
+                'Generated on ${_formatInvoiceDate(now)} | Invoice #$orderId',
+                style: pw.TextStyle(fontSize: 8, color: PdfColors.grey500),
+              ),
+            ),
+          ];
+        },
+      ),
+    );
+
+    return pdf.save();
+  }
+
+  static pw.Widget _buildInvoiceTotalRow(
+    String label,
+    String value, {
+    bool isTotal = false,
+  }) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.symmetric(vertical: 4),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Text(
+            label,
+            style: pw.TextStyle(
+              fontSize: isTotal ? 14 : 12,
+              fontWeight: isTotal ? pw.FontWeight.bold : pw.FontWeight.normal,
+              color: isTotal ? PdfColors.blue800 : PdfColors.grey700,
+            ),
+          ),
+          pw.Text(
+            value,
+            style: pw.TextStyle(
+              fontSize: isTotal ? 14 : 12,
+              fontWeight: pw.FontWeight.bold,
+              color: isTotal ? PdfColors.blue800 : PdfColors.black,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _formatInvoiceDate(DateTime date) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 }
 
@@ -577,13 +825,20 @@ Future<void> placeOrder(Map<String, dynamic> customer, Address address) async {
     // Step 2: Create the order in Firestore
     final orderRef = await FirebaseFirestore.instance.collection('orders').add({
       'userId': customer['uid'] ?? 'guest',
-      'items': cartItems.map((item) => {
-        'productId': item.product.pid,
-        'name': item.product.name,
-        'quantity': item.quantity,
-        'price': item.product.price,
-      }).toList(),
-      'totalAmount': cartItems.fold(0.0, (sum, item) => sum + (item.product.price * item.quantity)),
+      'items': cartItems
+          .map(
+            (item) => {
+              'productId': item.product.pid,
+              'name': item.product.name,
+              'quantity': item.quantity,
+              'price': item.product.price,
+            },
+          )
+          .toList(),
+      'totalAmount': cartItems.fold(
+        0.0,
+        (sum, item) => sum + (item.product.price * item.quantity),
+      ),
       'status': 'pending',
       'createdAt': FieldValue.serverTimestamp(),
     });
@@ -601,7 +856,7 @@ Future<void> placeOrder(Map<String, dynamic> customer, Address address) async {
     }
     debugPrint('✅ Stock quantities updated');
 
-    // Step 4: Send customer confirmation
+    // Step 4: Send customer confirmation with PDF invoice
     try {
       await EmailService.sendCustomerConfirmationEmail(
         customerEmail: customer['email'] ?? '',
@@ -613,6 +868,18 @@ Future<void> placeOrder(Map<String, dynamic> customer, Address address) async {
         txnId: 'N/A',
       );
       debugPrint('✅ Customer confirmation email sent');
+
+      // Send PDF invoice automatically
+      await EmailService.sendOrderInvoiceEmail(
+        customerEmail: customer['email'] ?? '',
+        customerName: customer['name'] ?? 'Customer',
+        shippingAddress: address,
+        orderedItems: cartItems,
+        orderId: orderId,
+        paymentMethod: 'COD',
+        txnId: 'N/A',
+      );
+      debugPrint('✅ PDF invoice email sent');
     } catch (e) {
       debugPrint('⚠️ Failed to send customer email: $e');
     }
@@ -634,10 +901,8 @@ Future<void> placeOrder(Map<String, dynamic> customer, Address address) async {
     // Step 6: Clear cart after successful order
     Cart.instance.clear();
     debugPrint('✅ Order placed successfully: $orderId');
-
   } catch (e) {
     debugPrint('❌ Order placement failed: $e');
     rethrow;
   }
 }
-

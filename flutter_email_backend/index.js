@@ -236,8 +236,85 @@ app.post('/send', async (req, res) => {
   }
 });
 
-app.get('/health', (req, res) => {
+app.get('/', (req, res) => {
   res.status(200).json({ status: 'Server is running', timestamp: new Date() });
+});
+
+// New endpoint for sending order receipt with PDF attachment
+app.post('/send/receipt', async (req, res) => {
+  try {
+    const { customerEmail, customerName, orderId, pdfBase64, pdfFileName } = req.body;
+
+    console.log(`📧 Sending receipt email to: ${customerEmail} for Order: ${orderId}`);
+
+    // Convert base64 to buffer for attachment
+    const pdfBuffer = Buffer.from(pdfBase64, 'base64');
+
+    const mailOptions = {
+      from: 'c62425773@gmail.com',
+      to: customerEmail,
+      subject: pdfFileName.includes('Invoice') ? `Invoice - ${orderId}` : `Order Receipt - ${orderId}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background-color: #1976D2; color: white; padding: 20px; text-align: center;">
+            <h1>${pdfFileName.includes('Invoice') ? '📄 Invoice' : '🧾 Order Receipt'}</h1>
+          </div>
+          
+          <div style="padding: 20px; background-color: #f9f9f9;">
+            <h2>Dear ${customerName},</h2>
+            
+            <p>Thank you for your order! ${pdfFileName.includes('Invoice') ? 'Please find your invoice attached as a PDF.' : 'Please find your detailed order receipt attached as a PDF.'}</p>
+            
+            <div style="background-color: white; padding: 15px; border-radius: 5px; margin: 20px 0;">
+              <h3 style="color: #1976D2; margin-top: 0;">${pdfFileName.includes('Invoice') ? 'Invoice Information' : 'Order Information'}</h3>
+              <p><strong>${pdfFileName.includes('Invoice') ? 'Invoice' : 'Order'} ID:</strong> ${orderId}</p>
+              <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+            </div>
+            
+            <div style="background-color: #e3f2fd; padding: 15px; border-radius: 5px; margin: 20px 0;">
+              <h4 style="margin-top: 0; color: #1565C0;">📎 Attachment</h4>
+              <p>Your ${pdfFileName.includes('Invoice') ? 'invoice' : 'detailed order receipt'} is attached as a PDF file: <strong>${pdfFileName}</strong></p>
+            </div>
+            
+            ${pdfFileName.includes('Invoice') ? 
+              '<div style="background-color: #fff3e0; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #ff9800;"><p><strong>💳 Payment Information:</strong><br>This invoice serves as your official receipt. Please keep it for your records.</p></div>' 
+              : ''}
+            
+            <p>If you have any questions about your ${pdfFileName.includes('Invoice') ? 'invoice' : 'order'}, please don\'t hesitate to contact our customer support.</p>
+            
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px;">
+              <p>Thank you for choosing us!</p>
+              <p><em>This is an automated email. Please do not reply to this message.</em></p>
+            </div>
+          </div>
+        </div>
+      `,
+      attachments: [
+        {
+          filename: pdfFileName,
+          content: pdfBuffer,
+          contentType: 'application/pdf'
+        }
+      ]
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ Receipt email with PDF sent successfully to: ${customerEmail}`);
+    
+    res.status(200).json({ 
+      success: true, 
+      message: 'Receipt email with PDF sent successfully',
+      orderId: orderId
+    });
+
+  } catch (error) {
+    console.error('❌ Error sending receipt email:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to send receipt email',
+      details: error.message 
+    });
+  }
 });
 
 const PORT = process.env.PORT || 3000;

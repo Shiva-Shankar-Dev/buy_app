@@ -31,6 +31,8 @@ class OrderDetailsPage extends StatelessWidget {
             _buildOrderItems(),
             const SizedBox(height: 20),
             _buildPricingSummary(),
+            const SizedBox(height: 30),
+            _buildInvoiceInfo(),
           ],
         ),
       ),
@@ -572,5 +574,78 @@ class OrderDetailsPage extends StatelessWidget {
     ];
 
     return '${dateTime.day} ${months[dateTime.month - 1]} ${dateTime.year}, ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+  }
+
+  Widget _buildInvoiceInfo() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.receipt_long, color: ColorPallete.color1),
+                const SizedBox(width: 8),
+                Text(
+                  'Invoice Information',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: ColorPallete.color1,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue.shade200),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    color: Colors.blue.shade700,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Invoice Sent Automatically',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.blue.shade800,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'A detailed PDF invoice was automatically sent to your registered email address when this order was placed.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.blue.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildInfoRow('Invoice ID', 'INV-${order.orderId}'),
+            _buildInfoRow('Sent to Email', order.customerEmail),
+            _buildInfoRow('Invoice Date', _formatDateTime(order.orderDate)),
+          ],
+        ),
+      ),
+    );
   }
 }
