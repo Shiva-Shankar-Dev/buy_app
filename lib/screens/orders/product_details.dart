@@ -2,11 +2,10 @@ import 'package:buy_app/services/cart_manager.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:buy_app/ColorPallete/color_pallete.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:buy_app/models/models.dart';
 import 'package:buy_app/services/wishlist_service.dart';
-import 'package:buy_app/services/addresses.dart';
+import 'package:buy_app/services/selected_address_service.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final Product product;
@@ -24,15 +23,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   bool isLoadingSeller = true;
   Map<String, dynamic>? sellerData;
   bool showGoToCartButton = false;
-  Address? selectedAddress;
-  bool isLoadingAddress = true;
+  final selectedAddressService = SelectedAddressService.instance;
 
   @override
   void initState() {
     super.initState();
     checkWishlistStatus();
     loadSellerDetails();
-    loadSelectedAddress();
   }
 
   Future<void> checkWishlistStatus() async {
@@ -75,45 +72,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     }
   }
 
-  Future<void> loadSelectedAddress() async {
-    try {
-      final uid = FirebaseAuth.instance.currentUser?.uid;
-      if (uid == null) {
-        setState(() {
-          isLoadingAddress = false;
-        });
-        return;
-      }
-
-      final addressesSnapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .collection('addresses')
-          .limit(1)
-          .get();
-
-      if (addressesSnapshot.docs.isNotEmpty) {
-        final addressDoc = addressesSnapshot.docs.first;
-        setState(() {
-          selectedAddress = Address.fromMap(
-            addressDoc.data(),
-            addressDoc.id,
-          );
-          isLoadingAddress = false;
-        });
-      } else {
-        setState(() {
-          isLoadingAddress = false;
-        });
-      }
-    } catch (e) {
-      debugPrint('Error loading address: $e');
-      setState(() {
-        isLoadingAddress = false;
-      });
-    }
-  }
-
   Future<void> toggleWishlist() async {
     if (isInWishlist) {
       final removed = await WishlistService.removeFromWishlist(widget.product);
@@ -122,9 +80,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           isInWishlist = false;
         });
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Removed from wishlist')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Removed from wishlist')));
       }
     } else {
       final added = await WishlistService.addToWishlist(widget.product);
@@ -133,9 +91,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           isInWishlist = true;
         });
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Added to wishlist')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Added to wishlist')));
       }
     }
   }
@@ -168,7 +126,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       child: Container(
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey.shade300),
-          borderRadius: BorderRadius.circular(10)
+          borderRadius: BorderRadius.circular(10),
         ),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -200,7 +158,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                               ),
                             ),
                             if (sellerVerified)
-                              Icon(Icons.verified, color: Colors.blue, size: 18),
+                              Icon(
+                                Icons.verified,
+                                color: Colors.blue,
+                                size: 18,
+                              ),
                           ],
                         ),
                         SizedBox(height: 4),
@@ -258,32 +220,18 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
   Widget _buildAddressCard() {
-    if (isLoadingAddress) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Center(
-              child: CircularProgressIndicator(),
-            ),
-          ),
-        ),
-      );
-    }
+    final hasAddress = selectedAddressService.hasSelectedAddress;
 
-    if (selectedAddress == null) {
+    if (!hasAddress) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
         child: GestureDetector(
-          onTap: () {
-            Navigator.pushNamed(context, '/address_select').then((_) {
-              loadSelectedAddress();
-            });
+          onTap: () async {
+            await Navigator.pushNamed(context, '/address_select');
+            // Refresh the UI after returning
+            if (mounted) {
+              setState(() {});
+            }
           },
           child: Container(
             decoration: BoxDecoration(
@@ -309,16 +257,16 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           'Select Delivery Address',
                           style: TextStyle(
                             fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                             color: ColorPallete.color1,
                           ),
                         ),
                         SizedBox(height: 4),
                         Text(
-                          'Tap to choose your delivery address',
+                          'Choose where you want your order delivered',
                           style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey[600],
+                            fontSize: 14,
+                            color: Colors.grey.shade600,
                           ),
                         ),
                       ],
@@ -327,7 +275,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   Icon(
                     Icons.arrow_forward_ios,
                     color: ColorPallete.color1,
-                    size: 18,
+                    size: 16,
                   ),
                 ],
               ),
@@ -340,11 +288,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
       child: GestureDetector(
-        onTap: () {
-          Navigator.pushNamed(context, '/addressSelection').then((_) {
-            // Reload address when returning from selection page
-            loadSelectedAddress();
-          });
+        onTap: () async {
+          await Navigator.pushNamed(context, '/address_select');
+          // Refresh the UI after returning
+          if (mounted) {
+            setState(() {});
+          }
         },
         child: Container(
           decoration: BoxDecoration(
@@ -355,48 +304,49 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             padding: const EdgeInsets.all(16.0),
             child: Row(
               children: [
-                Icon(
-                  Icons.location_on,
-                  color: ColorPallete.color1,
-                  size: 28,
-                ),
+                Icon(Icons.location_on, color: Colors.green, size: 28),
                 SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${selectedAddress?.first} ${selectedAddress?.last}',
+                        'Delivery Address',
                         style: TextStyle(
                           fontSize: 14,
-                          fontWeight: FontWeight.bold,
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                       SizedBox(height: 4),
                       Text(
-                        '${selectedAddress?.line1}, ${selectedAddress?.line2}',
+                        selectedAddressService.getFullAddressText(),
                         style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                         ),
-                        maxLines: 1,
+                        maxLines: 3,
                         overflow: TextOverflow.ellipsis,
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        '${selectedAddress?.city}, ${selectedAddress?.state} - ${selectedAddress?.pincode}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
                       ),
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.edit,
-                  color: ColorPallete.color1,
-                  size: 20,
+                Column(
+                  children: [
+                    Text(
+                      'CHANGE',
+                      style: TextStyle(
+                        color: ColorPallete.color1,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    ),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      color: ColorPallete.color1,
+                      size: 16,
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -410,23 +360,23 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   Widget build(BuildContext context) {
     final images = widget.product.images.isNotEmpty
         ? widget.product.images
-        .map<Widget>(
-          (imgPath) => Image.network(
-        imgPath,
-        fit: BoxFit.fill,
-        errorBuilder: (context, error, stackTrace) => Container(
-          color: Colors.grey[200],
-          child: Icon(Icons.image, size: 64, color: Colors.grey[400]),
-        ),
-      ),
-    )
-        .toList()
+              .map<Widget>(
+                (imgPath) => Image.network(
+                  imgPath,
+                  fit: BoxFit.fill,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    color: Colors.grey[200],
+                    child: Icon(Icons.image, size: 64, color: Colors.grey[400]),
+                  ),
+                ),
+              )
+              .toList()
         : [
-      Container(
-        color: Colors.grey[200],
-        child: Icon(Icons.image, size: 64, color: Colors.grey[400]),
-      ),
-    ];
+            Container(
+              color: Colors.grey[200],
+              child: Icon(Icons.image, size: 64, color: Colors.grey[400]),
+            ),
+          ];
 
     return Scaffold(
       appBar: AppBar(
@@ -470,23 +420,30 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         child: Container(
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: isInWishlist ? Colors.transparent : Colors.grey.shade500,
+                            color: isInWishlist
+                                ? Colors.transparent
+                                : Colors.grey.shade500,
                           ),
                           child: IconButton(
                             icon: isCheckingWishlist
                                 ? SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
                                 : Icon(
-                              isInWishlist
-                                  ? Icons.favorite
-                                  : Icons.favorite_border,
-                              color:
-                              isInWishlist ? Colors.red : Colors.white,
-                            ),
-                            onPressed: isCheckingWishlist ? null : toggleWishlist,
+                                    isInWishlist
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    color: isInWishlist
+                                        ? Colors.red
+                                        : Colors.white,
+                                  ),
+                            onPressed: isCheckingWishlist
+                                ? null
+                                : toggleWishlist,
                           ),
                         ),
                       ),
@@ -501,7 +458,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 5.0,
+                              ),
                               child: Text(
                                 widget.product.name,
                                 style: const TextStyle(
@@ -511,7 +470,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                               ),
                             ),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 7.0),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 7.0,
+                              ),
                               child: Text(widget.product.brand),
                             ),
                             Padding(
@@ -528,7 +489,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                             ),
                             SizedBox(height: 10),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8.0,
+                              ),
                               child: Text(
                                 'Expected Delivery At: ${widget.product.deliveryTime}',
                                 style: const TextStyle(fontSize: 16),
@@ -538,7 +501,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 10.0,
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -613,10 +579,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             onTap: () {
               setState(() {
                 if (currentQuantity > 1) {
-                  cart.updateQuantity(
-                    widget.product,
-                    currentQuantity - 1,
-                  );
+                  cart.updateQuantity(widget.product, currentQuantity - 1);
                 } else {
                   cart.remove(widget.product);
                   showGoToCartButton = false;
@@ -663,10 +626,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             onTap: () {
               if (canIncrease) {
                 setState(() {
-                  cart.updateQuantity(
-                    widget.product,
-                    currentQuantity + 1,
-                  );
+                  cart.updateQuantity(widget.product, currentQuantity + 1);
                 });
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -684,9 +644,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               width: 45,
               height: 50,
               decoration: BoxDecoration(
-                color: canIncrease
-                    ? ColorPallete.color1
-                    : Colors.grey.shade400,
+                color: canIncrease ? ColorPallete.color1 : Colors.grey.shade400,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(Icons.add, color: Colors.white, size: 20),
@@ -723,28 +681,24 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       return ElevatedButton(
         onPressed: canAdd['canAdd']
             ? () {
-          setState(() {
-            cart.add(widget.product, quantity: 1);
-            showGoToCartButton = true;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                '${widget.product.name} added to cart!',
-              ),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
+                setState(() {
+                  cart.add(widget.product, quantity: 1);
+                  showGoToCartButton = true;
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('${widget.product.name} added to cart!'),
+                    backgroundColor: Colors.green,
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
             : null,
         style: ElevatedButton.styleFrom(
           backgroundColor: ColorPallete.color1,
           disabledBackgroundColor: Colors.grey.shade400,
           padding: EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         child: Text(
           canAdd['canAdd'] ? 'ADD TO CART' : 'LIMIT REACHED',
@@ -764,10 +718,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             onTap: () {
               setState(() {
                 if (currentQuantity > 1) {
-                  cart.updateQuantity(
-                    widget.product,
-                    currentQuantity - 1,
-                  );
+                  cart.updateQuantity(widget.product, currentQuantity - 1);
                   showGoToCartButton = true;
                 } else {
                   cart.remove(widget.product);
@@ -811,10 +762,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               onTap: () {
                 if (canIncrease) {
                   setState(() {
-                    cart.updateQuantity(
-                      widget.product,
-                      currentQuantity + 1,
-                    );
+                    cart.updateQuantity(widget.product, currentQuantity + 1);
                     showGoToCartButton = true;
                   });
                 } else {

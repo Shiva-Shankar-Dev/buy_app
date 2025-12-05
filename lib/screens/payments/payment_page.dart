@@ -1,12 +1,12 @@
 // ignore_for_file: deprecated_member_use
 
-import 'package:buy_app/services/addresses.dart';
 import 'package:buy_app/services/auth.dart';
 import 'package:buy_app/services/sms_service.dart';
 import 'package:buy_app/services/email_service.dart';
 import 'package:buy_app/services/cart_manager.dart';
+import 'package:buy_app/services/selected_address_service.dart';
 import 'package:buy_app/colorPallete/color_pallete.dart';
-import 'package:buy_app/screens/payments/payment_cod_page.dart'; 
+import 'package:buy_app/screens/payments/payment_cod_page.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:intl/intl.dart';
@@ -31,8 +31,8 @@ class PaymentPage extends StatefulWidget {
 
 class _PaymentPageState extends State<PaymentPage> {
   final AuthService _authService = AuthService();
+  final selectedAddressService = SelectedAddressService.instance;
   Map<String, dynamic>? customer;
-  Address? address;
   String? _selectedPaymentMode = 'COD';
   bool _isProcessing = false;
 
@@ -81,7 +81,7 @@ class _PaymentPageState extends State<PaymentPage> {
       await EmailService.sendCustomerConfirmationEmail(
         customerEmail: email,
         customerName: name,
-        shippingAddress: address!,
+        shippingAddress: selectedAddressService.selectedAddress!,
         orderedItems: cart.items, // Changed from orderedProducts
         ordId: ordId,
         paymentMethod: paymentMethod,
@@ -91,7 +91,7 @@ class _PaymentPageState extends State<PaymentPage> {
       // 2. Send order details to sellers
       await EmailService.sendOrderDetailsToSellers(
         customer: customer!,
-        shippingAddress: address!,
+        shippingAddress: selectedAddressService.selectedAddress!,
         ordId: ordId,
         paymentMethod: paymentMethod,
         txnId: txnId,
@@ -99,11 +99,12 @@ class _PaymentPageState extends State<PaymentPage> {
 
       // 3. Send SMS to customer
       if (phone.isNotEmpty) {
+        final address = selectedAddressService.selectedAddress!;
         await sendSMS(
           phone,
           "$name,\nYour Order has been placed!\n\nShipping Address:\n"
-          "${address!.line1}, ${address!.line2},\n"
-          "${address!.city}, ${address!.state} - ${address!.pincode}",
+          "${address.line1}, ${address.line2},\n"
+          "${address.city}, ${address.state} - ${address.pincode}",
         );
       }
 
@@ -127,22 +128,30 @@ class _PaymentPageState extends State<PaymentPage> {
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (_) =>
-              PaymentCodPage(customer: customer!, address: address!),
+          builder: (_) => PaymentCodPage(
+            customer: customer!,
+            address: selectedAddressService.selectedAddress!,
+          ),
         ),
       );
     } else if (_selectedPaymentMode == 'UPI') {
       setState(() => _isProcessing = false);
       Navigator.of(context).pushNamed(
         '/payment_upi',
-        arguments: {'customer': customer, 'address': address},
+        arguments: {
+          'customer': customer,
+          'address': selectedAddressService.selectedAddress,
+        },
       );
       return;
     } else if (_selectedPaymentMode == 'Card') {
       setState(() => _isProcessing = false);
       Navigator.of(context).pushNamed(
         '/payment_card',
-        arguments: {'customer': customer, 'address': address},
+        arguments: {
+          'customer': customer,
+          'address': selectedAddressService.selectedAddress,
+        },
       );
       return;
     } else {
@@ -162,9 +171,7 @@ class _PaymentPageState extends State<PaymentPage> {
 
   @override
   Widget build(BuildContext context) {
-    address ??= ModalRoute.of(context)?.settings.arguments as Address?;
-
-    if (customer == null || address == null) {
+    if (customer == null || !selectedAddressService.hasSelectedAddress) {
       return Scaffold(
         appBar: AppBar(
           title: Text('Payment Details'),

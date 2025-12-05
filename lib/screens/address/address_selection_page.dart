@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:buy_app/services/addresses.dart';
+import 'package:buy_app/services/selected_address_service.dart';
 
 class AddressSelectionPage extends StatefulWidget {
   const AddressSelectionPage({super.key});
@@ -17,6 +18,7 @@ class AddressSelectionPage extends StatefulWidget {
 class _AddressSelectionPageState extends State<AddressSelectionPage> {
   List<Address> addressList = [];
   String? selectedAddressId;
+  final selectedAddressService = SelectedAddressService.instance;
 
   @override
   void initState() {
@@ -52,7 +54,29 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
 
     setState(() {
       addressList = addresses;
-      if (addresses.isNotEmpty) {
+
+      // Check if there's a currently selected address
+      if (selectedAddressService.hasSelectedAddress) {
+        final currentAddress = selectedAddressService.selectedAddress!;
+        final existingAddress = addresses.firstWhere(
+          (addr) => addr.id == currentAddress.id,
+          orElse: () => addresses.isNotEmpty
+              ? addresses.first
+              : Address(
+                  id: '',
+                  first: '',
+                  last: '',
+                  line1: '',
+                  line2: '',
+                  city: '',
+                  state: '',
+                  pincode: '',
+                ),
+        );
+        selectedAddressId = existingAddress.id.isNotEmpty
+            ? existingAddress.id
+            : null;
+      } else if (addresses.isNotEmpty) {
         selectedAddressId = addresses.first.id;
       }
     });
@@ -65,11 +89,14 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
   void selectAddress() {
     if (selectedAddressId == null) return;
     final selected = addressList.firstWhere((a) => a.id == selectedAddressId);
+
+    // Save the selected address to the service
+    selectedAddressService.setSelectedAddress(selected);
+
     debugPrint('Selected address: ${selected.line1}, ${selected.city}');
-    Navigator.pushNamed(
-      context,
-      '/razorpay',
-    ); // Pass back selected address
+
+    // Navigate back to the previous page
+    Navigator.pop(context);
   }
 
   @override
@@ -79,70 +106,95 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              itemCount: addressList.length,
-              itemBuilder: (context, index) {
-                final address = addressList[index];
-                return Card(
-                  child: RadioListTile(
-                    value: address.id,
-                    groupValue: selectedAddressId,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedAddressId = value as String;
-                      });
-                    },
-                    title: Text(
-                      "${address.first.isEmpty ? 'No' : address.first} ${address.last.isEmpty ? 'Name' : address.last}",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    subtitle: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            address.line1.isEmpty
-                                ? "No address line 1"
-                                : address.line1,
-                            style: TextStyle(fontSize: 14),
+            child: addressList.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.location_off, size: 64, color: Colors.grey),
+                        SizedBox(height: 16),
+                        Text(
+                          'No addresses found',
+                          style: TextStyle(fontSize: 18, color: Colors.grey),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'Please add an address to continue',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade600,
                           ),
-                          if (address.line2.isNotEmpty)
-                            Text(address.line2, style: TextStyle(fontSize: 14)),
-                          SizedBox(height: 4),
-                          Text(
-                            "${address.city.isEmpty ? 'No City' : address.city}, ${address.state.isEmpty ? 'No State' : address.state} - ${address.pincode.isEmpty ? 'No PIN' : address.pincode}",
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: addressList.length,
+                    itemBuilder: (context, index) {
+                      final address = addressList[index];
+                      return Card(
+                        child: RadioListTile(
+                          value: address.id,
+                          groupValue: selectedAddressId,
+                          onChanged: (value) {
+                            setState(() {
+                              selectedAddressId = value as String;
+                            });
+                          },
+                          title: Text(
+                            "${address.first.isEmpty ? 'No' : address.first} ${address.last.isEmpty ? 'Name' : address.last}",
                             style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
                             ),
                           ),
-                          SizedBox(height: 8),
-                          // Debug info - remove this later
-                          Container(
-                            padding: EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[100],
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              "DEBUG: first='${address.first}', last='${address.last}', state='${address.state}'",
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.grey[600],
-                              ),
+                          subtitle: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  address.line1.isEmpty
+                                      ? "No address line 1"
+                                      : address.line1,
+                                  style: TextStyle(fontSize: 14),
+                                ),
+                                if (address.line2.isNotEmpty)
+                                  Text(
+                                    address.line2,
+                                    style: TextStyle(fontSize: 14),
+                                  ),
+                                SizedBox(height: 4),
+                                Text(
+                                  "${address.city.isEmpty ? 'No City' : address.city}, ${address.state.isEmpty ? 'No State' : address.state} - ${address.pincode.isEmpty ? 'No PIN' : address.pincode}",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                SizedBox(height: 8),
+                                // Debug info - remove this later
+                                Container(
+                                  padding: EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    "DEBUG: first='${address.first}', last='${address.last}', state='${address.state}'",
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
-                    ),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
           //TextButton(onPressed: addAddress, child: Text('Add new Address')),
           Column(
@@ -152,8 +204,13 @@ class _AddressSelectionPageState extends State<AddressSelectionPage> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: NormalButton(
-                      hintText: 'Use this Address',
-                      onPressed: selectAddress,
+                      hintText: addressList.isEmpty
+                          ? 'No Address Available'
+                          : 'Select This Address',
+                      onPressed:
+                          addressList.isEmpty || selectedAddressId == null
+                          ? () {} // Empty function instead of null
+                          : selectAddress,
                       height: 55,
                     ),
                   ),

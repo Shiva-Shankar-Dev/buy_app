@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/order_service.dart';
 import '../../colorPallete/color_pallete.dart';
+import 'order_details_page.dart';
 
 class OrderHistoryPage extends StatefulWidget {
   const OrderHistoryPage({super.key});
@@ -61,131 +62,161 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Order Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    'Order #${order.orderId}',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: ColorPallete.color1,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(order.status),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Text(
-                    order.status,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => OrderDetailsPage(order: order),
             ),
-            const SizedBox(height: 12),
-
-            // Order Details
-            Row(
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
-                    const SizedBox(width: 8),
-                    Text(
-                      _formatDate(order.orderDate),
-                      style: const TextStyle(color: Colors.grey, fontSize: 14),
+          );
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Order Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Order #${order.orderId}',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: ColorPallete.color1,
+                      ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Spacer(),
-                Row(
-                  children: [
-                    const Icon(Icons.payment, size: 16, color: Colors.grey),
-                    const SizedBox(width: 8),
-                    Text(
-                      order.paymentMethod,
-                      style: const TextStyle(color: Colors.grey, fontSize: 14),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            SizedBox(height: 12),
-
-            // Items List
-            Text(
-              'Items:',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-            ),
-            SizedBox(height: 8),
-
-            ...order.items
-                .map(
-                  (item) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 2),
-                    child: Row(
-                      children: [
-                        const Text('• ', style: TextStyle(color: Colors.grey)),
-                        Expanded(
-                          child: Text(
-                            '${item.productTitle} (x${item.quantity})',
-                            style: const TextStyle(fontSize: 13),
-                          ),
+                  ),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
                         ),
-                        Text(
-                          '₹${item.productPrice.toStringAsFixed(2)}',
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(order.status),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Text(
+                          order.status,
                           style: const TextStyle(
-                            fontSize: 13,
+                            color: Colors.white,
+                            fontSize: 12,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                      ],
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16,
+                        color: Colors.grey.shade600,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              // Order Details
+              Row(
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.calendar_today,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _formatDate(order.orderDate),
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Spacer(),
+                  Row(
+                    children: [
+                      const Icon(Icons.payment, size: 16, color: Colors.grey),
+                      const SizedBox(width: 8),
+                      Text(
+                        order.paymentMethod,
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              SizedBox(height: 12),
+
+              // Items List
+              Text(
+                'Items:',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+              ),
+              SizedBox(height: 8),
+
+              ...order.items.map(
+                (item) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Row(
+                    children: [
+                      const Text('• ', style: TextStyle(color: Colors.grey)),
+                      Expanded(
+                        child: Text(
+                          '${item.productTitle} (x${item.quantity})',
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ),
+                      Text(
+                        '₹${item.productPrice.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+              const Divider(),
+              const SizedBox(height: 8),
+
+              // Total Amount
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Total Amount:',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  Text(
+                    '₹${order.totalAmount.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: ColorPallete.color1,
                     ),
                   ),
-                ),
-
-            const SizedBox(height: 12),
-            const Divider(),
-            const SizedBox(height: 8),
-
-            // Total Amount
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Total Amount:',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                Text(
-                  '₹${order.totalAmount.toStringAsFixed(2)}',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: ColorPallete.color1,
-                  ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -237,63 +268,66 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
       ),
       body: RefreshIndicator(
         onRefresh: _loadOrders,
-        child: _isLoading ? Center(
-            child: CircularProgressIndicator()
-        ) : _error != null ?
-        Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Colors.red,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                _error!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 16, color: Colors.red),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _loadOrders,
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
-        ) : _orders.isEmpty ? const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.shopping_bag_outlined,
-                size: 64,
-                color: Colors.grey,
-              ),
-              SizedBox(height: 16),
-              Text(
-                'No orders found',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey,
+        child: _isLoading
+            ? Center(child: CircularProgressIndicator())
+            : _error != null
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: Colors.red,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      _error!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 16, color: Colors.red),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _loadOrders,
+                      child: const Text('Retry'),
+                    ),
+                  ],
                 ),
+              )
+            : _orders.isEmpty
+            ? const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.shopping_bag_outlined,
+                      size: 64,
+                      color: Colors.grey,
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'No orders found',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Your order history will appear here',
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              )
+            : ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                itemCount: _orders.length,
+                itemBuilder: (context, index) {
+                  return _buildOrderCard(_orders[index]);
+                },
               ),
-              SizedBox(height: 8),
-              Text(
-                'Your order history will appear here',
-                style: TextStyle(fontSize: 14, color: Colors.grey),
-              ),
-            ],
-          ),
-        ) : ListView.builder(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          itemCount: _orders.length,
-          itemBuilder: (context, index) {
-            return _buildOrderCard(_orders[index]);
-          },
-        ),
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:buy_app/colorPallete/color_pallete.dart';
 import 'package:flutter/material.dart';
 import 'package:buy_app/services/cart_manager.dart';
 import 'package:buy_app/models/models.dart'; // Add this import for CartItem
+import 'package:buy_app/services/selected_address_service.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -12,6 +13,122 @@ class CartPage extends StatefulWidget {
 
 class _CartPageState extends State<CartPage> {
   final cart = Cart.instance;
+  final selectedAddressService = SelectedAddressService.instance;
+
+  Widget _buildAddressCard() {
+    final hasAddress = selectedAddressService.hasSelectedAddress;
+
+    return Container(
+      margin: EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.location_on,
+                color: hasAddress ? Colors.green : ColorPallete.color1,
+                size: 24,
+              ),
+              SizedBox(width: 8),
+              Text(
+                'Delivery Address',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+              Spacer(),
+              if (hasAddress)
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pushNamed(context, '/address_select').then((_) {
+                      setState(() {}); // Refresh the UI after selection
+                    });
+                  },
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: ColorPallete.color1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'CHANGE',
+                      style: TextStyle(
+                        color: ColorPallete.color1,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          SizedBox(height: 12),
+          if (hasAddress) ...[
+            Text(
+              selectedAddressService.getFullAddressText(),
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade700,
+                height: 1.4,
+              ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ] else ...[
+            GestureDetector(
+              onTap: () {
+                Navigator.pushNamed(context, '/address_select').then((_) {
+                  setState(() {}); // Refresh the UI after selection
+                });
+              },
+              child: Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: ColorPallete.color1, width: 2),
+                  borderRadius: BorderRadius.circular(8),
+                  color: ColorPallete.color1.withOpacity(0.05),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Tap to select delivery address',
+                        style: TextStyle(
+                          color: ColorPallete.color1,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      color: ColorPallete.color1,
+                      size: 16,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 
   Widget _buildQuantityControls(CartItem item) {
     final limitInfo = cart.getQuantityLimitInfo(item.product);
@@ -164,6 +281,9 @@ class _CartPageState extends State<CartPage> {
           : SingleChildScrollView(
               child: Column(
                 children: [
+                  // Address Selection Card
+                  _buildAddressCard(),
+
                   // Cart Items List
                   Card(
                     child: ListView.builder(
@@ -210,7 +330,8 @@ class _CartPageState extends State<CartPage> {
                                 // Product Details
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         item.product.name,
@@ -362,7 +483,32 @@ class _CartPageState extends State<CartPage> {
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed: () {
-                              Navigator.pushNamed(context, '/checkout');
+                              if (selectedAddressService.hasSelectedAddress) {
+                                Navigator.pushNamed(context, '/checkout');
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Please select a delivery address first',
+                                    ),
+                                    backgroundColor: Colors.orange,
+                                    action: SnackBarAction(
+                                      label: 'SELECT',
+                                      textColor: Colors.white,
+                                      onPressed: () {
+                                        Navigator.pushNamed(
+                                          context,
+                                          '/address_select',
+                                        ).then((_) {
+                                          setState(
+                                            () {},
+                                          ); // Refresh the UI after selection
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                );
+                              }
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: ColorPallete.color1,
@@ -372,7 +518,9 @@ class _CartPageState extends State<CartPage> {
                               ),
                             ),
                             child: Text(
-                              'PROCEED TO CHECKOUT',
+                              selectedAddressService.hasSelectedAddress
+                                  ? 'PROCEED TO CHECKOUT'
+                                  : 'SELECT DELIVERY ADDRESS',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
