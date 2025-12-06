@@ -12,7 +12,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 class EmailService {
-  static const String _emailServerUrl = 'http://localhost:3000/send';
+  static const String _emailServerUrl = 'http://10.0.2.2:3000/send';
 
   /// Send a basic email
   static Future<bool> sendEmail({
@@ -51,8 +51,7 @@ class EmailService {
     required String txnId,
   }) async {
     // Calculate total amount considering quantities
-    double totalAmount = orderedItems.fold(
-      0.0,
+    double totalAmount = orderedItems.fold(0.0,
       (s, item) => s + (item.product.price * item.quantity),
     );
 
@@ -64,48 +63,38 @@ class EmailService {
 
     // Create HTML table for products with quantities
     message1 += "<h4>Ordered Products:</h4>";
-    message1 +=
-        "<table border='1' cellpadding='8' cellspacing='0' style='border-collapse: collapse; width: 100%; margin: 10px 0;'>";
+    message1 += "<table border='1' cellpadding='8' cellspacing='0' style='border-collapse: collapse; width: 100%; margin: 10px 0;'>";
     message1 += "<thead style='background-color: #f0f0f0;'>";
-    message1 +=
-        "<tr><th style='text-align: left; padding: 10px;'>Product Name</th><th style='text-align: center; padding: 10px;'>Quantity</th><th style='text-align: right; padding: 10px;'>Unit Price</th><th style='text-align: right; padding: 10px;'>Total</th></tr>";
+    message1 += "<tr><th style='text-align: left; padding: 10px;'>Product Name</th><th style='text-align: center; padding: 10px;'>Quantity</th><th style='text-align: right; padding: 10px;'>Unit Price</th><th style='text-align: right; padding: 10px;'>Total</th></tr>";
     message1 += "</thead><tbody>";
 
     for (final item in orderedItems) {
       final itemTotal = item.product.price * item.quantity;
       message1 += "<tr>";
-      message1 +=
-          "<td style='padding: 8px; border-bottom: 1px solid #ddd;'>${item.product.name}</td>";
-      message1 +=
-          "<td style='padding: 8px; text-align: center; border-bottom: 1px solid #ddd;'>${item.quantity}</td>";
-      message1 +=
-          "<td style='padding: 8px; text-align: right; border-bottom: 1px solid #ddd;'>₹${item.product.price.toStringAsFixed(2)}</td>";
-      message1 +=
-          "<td style='padding: 8px; text-align: right; border-bottom: 1px solid #ddd;'>₹${itemTotal.toStringAsFixed(2)}</td>";
+      message1 += "<td style='padding: 8px; border-bottom: 1px solid #ddd;'>${item.product.name}</td>";
+      message1 += "<td style='padding: 8px; text-align: center; border-bottom: 1px solid #ddd;'>${item.quantity}</td>";
+      message1 += "<td style='padding: 8px; text-align: right; border-bottom: 1px solid #ddd;'>₹${item.product.price.toStringAsFixed(2)}</td>";
+      message1 += "<td style='padding: 8px; text-align: right; border-bottom: 1px solid #ddd;'>₹${itemTotal.toStringAsFixed(2)}</td>";
       message1 += "</tr>";
     }
 
     message1 += "</tbody></table>";
-    message1 +=
-        "<p><strong>TOTAL AMOUNT: ₹${totalAmount.toStringAsFixed(2)}</strong></p>";
+    message1 += "<p><strong>TOTAL AMOUNT: ₹${totalAmount.toStringAsFixed(2)}</strong></p>";
     message1 += "<p><strong>Payment Method:</strong> $paymentMethod</p>";
     message1 += "<p><strong>Transaction ID:</strong> $txnId</p>";
 
     message1 += "<h4>SHIPPING ADDRESS:</h4>";
-    message1 +=
-        "<div style='background-color: #f9f9f9; padding: 10px; border-left: 4px solid #007bff; margin: 10px 0;'>";
+    message1 += "<div style='background-color: #f9f9f9; padding: 10px; border-left: 4px solid #007bff; margin: 10px 0;'>";
     message1 += "<p>${shippingAddress.first} ${shippingAddress.last}<br>";
     message1 += "${shippingAddress.line1}<br>";
     if (shippingAddress.line2.isNotEmpty) {
       message1 += "${shippingAddress.line2}<br>";
     }
-    message1 +=
-        "${shippingAddress.city}, ${shippingAddress.state} - ${shippingAddress.pincode}</p>";
+    message1 += "${shippingAddress.city}, ${shippingAddress.state} - ${shippingAddress.pincode}</p>";
     message1 += "</div>";
 
     message1 += "<hr style='margin: 20px 0;'>";
-    message1 +=
-        "<p>Your order will be processed soon. You will receive updates via email and SMS.</p>";
+    message1 += "<p>Your order will be processed soon. You will receive updates via email and SMS.</p>";
     message1 += "<p><strong>Thank you for shopping with us!</strong></p>";
     message1 += "</body></html>";
 
@@ -339,7 +328,7 @@ class EmailService {
 
       // Send email with PDF attachment
       final response = await http.post(
-        Uri.parse('http://localhost:3000/send/receipt'),
+        Uri.parse('http://10.0.2.2:3000/send/receipt'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'customerEmail': customerEmail,

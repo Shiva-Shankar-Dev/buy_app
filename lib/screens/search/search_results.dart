@@ -13,12 +13,17 @@ class SearchResults extends StatefulWidget {
 }
 
 class _SearchResultsState extends State<SearchResults> {
+  late final lowerQuery = widget.query.toLowerCase();
   Query _buildQuery() {
     debugPrint('🔥 Building query for: ${widget.query}');
+
+    // First filter by keywords array (server-side)
     return FirebaseFirestore.instance
         .collection('products')
-        .where('name', isEqualTo: widget.query);
+        .where('keywords', arrayContains: lowerQuery)
+        .limit(20);
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +43,13 @@ class _SearchResultsState extends State<SearchResults> {
           if (docs.isEmpty) {
             return const Center(child: Text('No products found'));
           }
+
+          final filteredDocs = docs.where((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            final name = (data['name'] ?? '').toString().toLowerCase();
+
+            return name == lowerQuery || (data['keywords'] as List<dynamic>? ?? []).contains(lowerQuery);
+          }).toList();
 
           return GridView.builder(
             padding: const EdgeInsets.all(8),

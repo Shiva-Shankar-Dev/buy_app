@@ -103,7 +103,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 Icon(
                   Icons.location_on,
                   color: hasAddress ? Colors.green : ColorPallete.color1,
-                  size: 24,
+                  size: 22,
                 ),
                 SizedBox(width: 8),
                 Text(
@@ -146,7 +146,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
             SizedBox(height: 12),
             if (hasAddress) ...[
               Container(
-                padding: EdgeInsets.all(12),
+                width: MediaQuery.of(context).size.width - 10,
+                padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.green.shade50,
                   border: Border.all(color: Colors.green.shade200),
