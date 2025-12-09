@@ -29,23 +29,43 @@ class _ProductDetailPageState extends State<ProductDetailPage>
   late AnimationController _heartController;
   late Animation<double> _fadeAnimation;
 
+  // Variant selection state
+  String? selectedVariantId;
+  Map<String, String> selectedAttributes = {};
+  double currentPrice = 0.0;
+  int currentStock = 0;
+  List<String> currentImages = [];
+
   @override
   void initState() {
     super.initState();
-    _pageController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-    _heartController = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _pageController, curve: Curves.easeOut),
-    );
-    _pageController.forward();
-    checkWishlistStatus();
-    loadSellerDetails();
+
+    print('=== PRODUCT LOADING DEBUG ===');
+    print('Product received: ${widget.product}');
+    print('Product name: ${widget.product.name}');
+    print('Product hasVariants: ${widget.product.hasVariants}');
+    print('=============================');
+
+    try {
+      _pageController = AnimationController(
+        duration: const Duration(milliseconds: 800),
+        vsync: this,
+      );
+      _heartController = AnimationController(
+        duration: const Duration(milliseconds: 600),
+        vsync: this,
+      );
+      _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(parent: _pageController, curve: Curves.easeOut),
+      );
+      _pageController.forward();
+      checkWishlistStatus();
+      loadSellerDetails();
+      _initializeVariantState();
+    } catch (e, stackTrace) {
+      print('Error in initState: $e');
+      print('StackTrace: $stackTrace');
+    }
   }
 
   @override
@@ -60,6 +80,255 @@ class _ProductDetailPageState extends State<ProductDetailPage>
     setState(() {
       isInWishlist = inWishlist;
       isCheckingWishlist = false;
+    });
+  }
+
+  bool _shouldShowVariants() {
+    print('=== _shouldShowVariants DEBUG ===');
+    print('hasVariants: ${widget.product.hasVariants}');
+    print('variants.isEmpty: ${widget.product.variants.isEmpty}');
+    print('variants.length: ${widget.product.variants.length}');
+    print('availableAttributes: ${widget.product.availableAttributes}');
+
+    // Check if product is marked as having variants
+    if (!widget.product.hasVariants) {
+      print('Product hasVariants is false, not showing variants');
+      return false;
+    }
+
+    // Enhanced variant detection - if product has variants, try to show them
+    if (widget.product.variants.isEmpty) {
+      print('No variants found in variants list');
+      return false;
+    }
+
+    // If hasVariants is true and we have variants, show them
+    if (widget.product.hasVariants && widget.product.variants.isNotEmpty) {
+      print('Product has variants flag set to true and variants exist');
+
+      // If availableAttributes is provided, use it
+      if (widget.product.availableAttributes.isNotEmpty) {
+        print(
+          'Using provided availableAttributes: ${widget.product.availableAttributes}',
+        );
+        return true;
+      }
+
+      // If availableAttributes is empty, try to detect from variant data
+      final detectedAttributes = _getDetectedAttributes();
+      print('Detected attributes: $detectedAttributes');
+      if (detectedAttributes.isNotEmpty) {
+        print('Found detectable attributes, showing variants');
+        return true;
+      } else {
+        print('No detectable attributes found');
+        return false;
+      }
+    }
+
+    print('Default case - not showing variants');
+    print('================================');
+    return false;
+  }
+
+  List<String> _getDetectedAttributes() {
+    // Automatically detect available attributes from variant data
+    final attributeNames = <String>{};
+
+    print('=== _getDetectedAttributes DEBUG ===');
+    print('Checking ${widget.product.variants.length} variants for attributes');
+
+    if (widget.product.variants.isEmpty) {
+      print('No variants to check');
+      return [];
+    }
+
+    for (int i = 0; i < widget.product.variants.length; i++) {
+      final variant = widget.product.variants[i];
+      print('Variant $i: ${variant.variantId}');
+      print('Variant $i attributes: ${variant.attributes}');
+      print('Variant $i attributes keys: ${variant.attributes.keys.toList()}');
+      print(
+        'Variant $i attributes values: ${variant.attributes.values.toList()}',
+      );
+
+      if (variant.attributes.isNotEmpty) {
+        attributeNames.addAll(variant.attributes.keys);
+        print('Added attribute keys: ${variant.attributes.keys.toList()}');
+      } else {
+        print('Variant $i has no attributes');
+      }
+    }
+
+    final result = attributeNames.toList()..sort();
+    print('All collected attribute names: $attributeNames');
+    print('Final detected attributes (sorted): $result');
+    print('Detected attributes count: ${result.length}');
+    print('===================================');
+    return result;
+  }
+
+  List<String> get _effectiveAvailableAttributes {
+    // Use provided attributes or detect them automatically
+    if (widget.product.availableAttributes.isNotEmpty) {
+      return widget.product.availableAttributes;
+    }
+    return _getDetectedAttributes();
+  }
+
+  // Helper method to get corrected color from variant ID if needed
+  String _getCorrectedColor(ProductVariant variant) {
+    final variantId = variant.variantId;
+    if (variantId.endsWith('_W')) {
+      return 'White';
+    } else if (variantId.endsWith('_B')) {
+      return 'Black';
+    } else if (variantId.contains('_W_')) {
+      return 'White';
+    } else if (variantId.contains('_B_')) {
+      return 'Black';
+    }
+    // Fallback to the attribute value
+    return variant.attributes['Colour'] ??
+        variant.attributes['Color'] ??
+        'Unknown';
+  }
+
+  // Get unique attribute values with correction for color inconsistencies
+  List<String> _getCorrectedAttributeValues(String attributeName) {
+    final values = <String>{};
+
+    print('=== _getCorrectedAttributeValues DEBUG ===');
+    print('Getting values for attribute: $attributeName');
+
+    for (int i = 0; i < widget.product.variants.length; i++) {
+      final variant = widget.product.variants[i];
+      print('Checking variant $i: ${variant.variantId}');
+
+      if (attributeName.toLowerCase() == 'colour' ||
+          attributeName.toLowerCase() == 'color') {
+        final correctedColor = _getCorrectedColor(variant);
+        print('Corrected color for variant $i: $correctedColor');
+        values.add(correctedColor);
+      } else {
+        final value = variant.attributes[attributeName];
+        print('Raw value for $attributeName in variant $i: $value');
+        if (value != null) {
+          values.add(value);
+          print('Added value: $value');
+        }
+      }
+    }
+
+    final result = values.toList()..sort();
+    print('Final values for $attributeName: $result');
+    print('=========================================');
+    return result;
+  }
+
+  void _initializeVariantState() {
+    // Debug prints to check variant data structure
+    print('=== VARIANT INITIALIZATION DEBUG ===');
+    print('Product name: ${widget.product.name}');
+    print('Product PID: ${widget.product.pid}');
+    print('Product price: ${widget.product.price}');
+    print('Product basePrice: ${widget.product.basePrice}');
+    print('Has variants: ${widget.product.hasVariants}');
+    print('Variants count: ${widget.product.variants.length}');
+    print('Available attributes: ${widget.product.availableAttributes}');
+    print('Detected attributes: ${_getDetectedAttributes()}');
+
+    if (widget.product.variants.isNotEmpty) {
+      for (int i = 0; i < widget.product.variants.length; i++) {
+        final variant = widget.product.variants[i];
+        print(
+          'Variant $i: ID=${variant.variantId}, Attributes=${variant.attributes}, Price=${variant.price}, BasePrice=${variant.basePrice}, Image=${variant.image}, Stock=${variant.stockQuantity}',
+        );
+      }
+    } else {
+      print('NO VARIANTS FOUND - variants list is empty');
+    }
+    print('Should show variants: ${_shouldShowVariants()}');
+    print('====================================');
+
+    if (_shouldShowVariants()) {
+      try {
+        // Select the first variant by default
+        final firstVariant = widget.product.variants.first;
+        print('Initializing with first variant: ${firstVariant.variantId}');
+
+        selectedVariantId = firstVariant.variantId;
+        selectedAttributes = Map.from(firstVariant.attributes);
+
+        // Correct the color attribute if needed
+        if (selectedAttributes.containsKey('Colour') ||
+            selectedAttributes.containsKey('Color')) {
+          final colorKey = selectedAttributes.containsKey('Colour')
+              ? 'Colour'
+              : 'Color';
+          selectedAttributes[colorKey] = _getCorrectedColor(firstVariant);
+        }
+
+        currentPrice = firstVariant.price ?? widget.product.price;
+        currentStock = firstVariant.stockQuantity;
+        currentImages = firstVariant.getEffectiveImages(widget.product.images);
+
+        print(
+          'Initialized variant state - Price: $currentPrice, Stock: $currentStock, Images: ${currentImages.length}',
+        );
+      } catch (e) {
+        print('Error initializing variant state: $e');
+        // Fallback to product defaults
+        selectedVariantId = null;
+        selectedAttributes = {};
+        currentPrice = widget.product.price;
+        currentStock = widget.product.stockQuantity;
+        currentImages = widget.product.images;
+      }
+    } else {
+      // No variants, use base product values
+      selectedVariantId = null;
+      selectedAttributes = {};
+      currentPrice = widget.product.price;
+      currentStock = widget.product.stockQuantity;
+      currentImages = widget.product.images;
+    }
+  }
+
+  void _updateVariantSelection(String attributeName, String value) {
+    setState(() {
+      selectedAttributes[attributeName] = value;
+
+      // Find the matching variant based on selected attributes with color correction
+      final matchingVariant = widget.product.variants.firstWhere((variant) {
+        for (final entry in selectedAttributes.entries) {
+          final entryKey = entry.key;
+          final entryValue = entry.value;
+
+          if (entryKey.toLowerCase() == 'colour' ||
+              entryKey.toLowerCase() == 'color') {
+            // Use corrected color for matching
+            if (_getCorrectedColor(variant) != entryValue) {
+              return false;
+            }
+          } else {
+            // Normal attribute matching
+            if (variant.attributes[entryKey] != entryValue) {
+              return false;
+            }
+          }
+        }
+        return true;
+      }, orElse: () => widget.product.variants.first);
+
+      selectedVariantId = matchingVariant.variantId;
+      currentPrice = matchingVariant.price ?? widget.product.price;
+      currentStock = matchingVariant.stockQuantity;
+      currentImages = matchingVariant.getEffectiveImages(widget.product.images);
+
+      print(
+        'Variant selected: ${matchingVariant.variantId}, Price: $currentPrice, Stock: $currentStock',
+      );
     });
   }
 
@@ -136,13 +405,16 @@ class _ProductDetailPageState extends State<ProductDetailPage>
         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(14),
-      child: Container(
-        padding: const EdgeInsets.all(16.0),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.grey[100] ?? Colors.grey, Colors.grey[50] ?? Colors.grey],
-          ),
-        ),
+          child: Container(
+            padding: const EdgeInsets.all(16.0),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.grey[100] ?? Colors.grey,
+                  Colors.grey[50] ?? Colors.grey,
+                ],
+              ),
+            ),
             child: Center(
               child: CircularProgressIndicator(
                 color: ColorPallete.color1,
@@ -172,10 +444,7 @@ class _ProductDetailPageState extends State<ProductDetailPage>
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Colors.white,
-              Colors.grey[50] ?? Colors.white,
-            ],
+            colors: [Colors.white, Colors.grey[50] ?? Colors.white],
           ),
           border: Border.all(color: Colors.grey[200] ?? Colors.grey, width: 1),
           boxShadow: [
@@ -199,7 +468,10 @@ class _ProductDetailPageState extends State<ProductDetailPage>
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: LinearGradient(
-                        colors: [ColorPallete.color1, ColorPallete.color1.withAlpha(200)],
+                        colors: [
+                          ColorPallete.color1,
+                          ColorPallete.color1.withAlpha(200),
+                        ],
                       ),
                       boxShadow: [
                         BoxShadow(
@@ -294,7 +566,11 @@ class _ProductDetailPageState extends State<ProductDetailPage>
               const SizedBox(height: 14),
               Row(
                 children: [
-                  Icon(Icons.email_outlined, size: 18, color: ColorPallete.color1),
+                  Icon(
+                    Icons.email_outlined,
+                    size: 18,
+                    color: ColorPallete.color1,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
@@ -325,7 +601,11 @@ class _ProductDetailPageState extends State<ProductDetailPage>
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Icon(Icons.phone_outlined, size: 18, color: ColorPallete.color1),
+                  Icon(
+                    Icons.phone_outlined,
+                    size: 18,
+                    color: ColorPallete.color1,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
@@ -355,6 +635,222 @@ class _ProductDetailPageState extends State<ProductDetailPage>
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildVariantErrorMessage() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.amber[50],
+          border: Border.all(color: Colors.amber[300]!),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
+          children: [
+            Icon(Icons.warning, color: Colors.amber[700], size: 32),
+            const SizedBox(height: 8),
+            Text(
+              'Variant Configuration Issue',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.amber[900],
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'This product has ${widget.product.variants.length} variants but no valid attributes could be detected. Please check the variant data structure.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.amber[800]),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVariantSelection() {
+    final effectiveAttributes = _effectiveAvailableAttributes;
+
+    print('=== _buildVariantSelection DEBUG ===');
+    print('hasVariants: ${widget.product.hasVariants}');
+    print('availableAttributes: ${widget.product.availableAttributes}');
+    print('effectiveAttributes: $effectiveAttributes');
+    print('variants count: ${widget.product.variants.length}');
+
+    // If hasVariants is true but no attributes detected, still try to show something
+    if (widget.product.hasVariants && effectiveAttributes.isEmpty) {
+      print(
+        'hasVariants=true but no attributes detected, trying auto-detection again',
+      );
+      final detectedAttrs = _getDetectedAttributes();
+      print('Re-detected attributes: $detectedAttrs');
+      if (detectedAttrs.isNotEmpty) {
+        print('Using re-detected attributes instead');
+        // Use the detected attributes directly
+        return _buildVariantSelectionWithAttributes(detectedAttrs);
+      }
+    }
+    print('===================================');
+
+    if (effectiveAttributes.isEmpty) {
+      print('No effective attributes found, showing error message');
+      return _buildVariantErrorMessage();
+    }
+
+    return _buildVariantSelectionWithAttributes(effectiveAttributes);
+  }
+
+  Widget _buildVariantSelectionWithAttributes(List<String> attributes) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Select Variant',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: Colors.grey[900],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Show info if attributes were auto-detected
+          if (widget.product.availableAttributes.isEmpty &&
+              attributes.isNotEmpty) ...[
+            Container(
+              padding: const EdgeInsets.all(8),
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: Colors.blue[200]!),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, size: 16, color: Colors.blue[700]),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Attributes auto-detected from variants',
+                      style: TextStyle(fontSize: 12, color: Colors.blue[700]),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          // Build attribute selectors
+          ...attributes.map((attributeName) {
+            final values = _getCorrectedAttributeValues(attributeName);
+            print('Building selector for $attributeName with values: $values');
+
+            if (values.isEmpty) {
+              print('Skipping $attributeName - no values found');
+              return const SizedBox.shrink(); // Skip empty attributes
+            }
+
+            final selectedValue =
+                selectedAttributes[attributeName] ??
+                (attributeName.toLowerCase() == 'colour' ||
+                        attributeName.toLowerCase() == 'color'
+                    ? _getCorrectedColor(widget.product.variants.first)
+                    : values.first);
+
+            print('Selected value for $attributeName: $selectedValue');
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  attributeName.toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[800],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: values.map((value) {
+                    final isSelected = selectedValue == value;
+                    return GestureDetector(
+                      onTap: () =>
+                          _updateVariantSelection(attributeName, value),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? ColorPallete.color1
+                              : Colors.grey[200],
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: isSelected
+                                ? ColorPallete.color1
+                                : Colors.grey[400]!,
+                          ),
+                        ),
+                        child: Text(
+                          value,
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : Colors.grey[800],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 16),
+              ],
+            );
+          }).toList(),
+
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: currentStock > 0 ? Colors.green[50] : Colors.red[50],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: currentStock > 0 ? Colors.green[200]! : Colors.red[200]!,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  currentStock > 0 ? Icons.check_circle : Icons.error,
+                  color: currentStock > 0 ? Colors.green[700] : Colors.red[700],
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    currentStock > 0
+                        ? 'In Stock: $currentStock'
+                        : 'Out of Stock',
+                    style: TextStyle(
+                      color: currentStock > 0
+                          ? Colors.green[800]
+                          : Colors.red[800],
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -448,18 +944,18 @@ class _ProductDetailPageState extends State<ProductDetailPage>
             setState(() {});
           }
         },
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.grey[200] ?? Colors.grey, width: 1),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.white,
-                  Colors.green[50] ?? Colors.white,
-                ],
-              ),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: Colors.grey[200] ?? Colors.grey,
+              width: 1,
+            ),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Colors.white, Colors.green[50] ?? Colors.white],
+            ),
             boxShadow: [
               BoxShadow(
                 color: Colors.green.withAlpha(15),
@@ -479,7 +975,11 @@ class _ProductDetailPageState extends State<ProductDetailPage>
                     color: Colors.green[50],
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(Icons.location_on, color: Colors.green[700], size: 26),
+                  child: Icon(
+                    Icons.location_on,
+                    color: Colors.green[700],
+                    size: 26,
+                  ),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -537,16 +1037,31 @@ class _ProductDetailPageState extends State<ProductDetailPage>
 
   @override
   Widget build(BuildContext context) {
-    final images = widget.product.images.isNotEmpty
-        ? widget.product.images
+    print('=== BUILD METHOD DEBUG ===');
+    print('Current images: $currentImages');
+    print('Current price: $currentPrice');
+    print('Current stock: $currentStock');
+    print('Selected variant ID: $selectedVariantId');
+    print('Selected attributes: $selectedAttributes');
+    print('========================');
+
+    final images = currentImages.isNotEmpty
+        ? currentImages
               .map<Widget>(
                 (imgPath) => Image.network(
                   imgPath,
                   fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    color: Colors.grey[200],
-                    child: Icon(Icons.image, size: 64, color: Colors.grey[400]),
-                  ),
+                  errorBuilder: (context, error, stackTrace) {
+                    print('Error loading image: $imgPath, Error: $error');
+                    return Container(
+                      color: Colors.grey[200],
+                      child: Icon(
+                        Icons.image,
+                        size: 64,
+                        color: Colors.grey[400],
+                      ),
+                    );
+                  },
                 ),
               )
               .toList()
@@ -576,9 +1091,7 @@ class _ProductDetailPageState extends State<ProductDetailPage>
             padding: const EdgeInsets.only(right: 16.0),
             child: Center(
               child: ScaleTransition(
-                scale: _heartController.drive(
-                  Tween(begin: 1.0, end: 1.15),
-                ),
+                scale: _heartController.drive(Tween(begin: 1.0, end: 1.15)),
                 child: GestureDetector(
                   onTap: isCheckingWishlist ? null : toggleWishlist,
                   child: isCheckingWishlist
@@ -731,7 +1244,7 @@ class _ProductDetailPageState extends State<ProductDetailPage>
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      '₹${widget.product.price.toStringAsFixed(0)}',
+                                      '₹${currentPrice.toStringAsFixed(0)}',
                                       style: const TextStyle(
                                         fontSize: 28,
                                         fontWeight: FontWeight.w900,
@@ -741,7 +1254,7 @@ class _ProductDetailPageState extends State<ProductDetailPage>
                                     Row(
                                       children: [
                                         Text(
-                                          '₹${(widget.product.price * 1.25).toStringAsFixed(0)}',
+                                          '₹${(currentPrice * 1.25).toStringAsFixed(0)}',
                                           style: TextStyle(
                                             fontSize: 14,
                                             color: Colors.grey[500],
@@ -757,8 +1270,9 @@ class _ProductDetailPageState extends State<ProductDetailPage>
                                           ),
                                           decoration: BoxDecoration(
                                             color: Colors.red[100],
-                                            borderRadius:
-                                                BorderRadius.circular(4),
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
                                           ),
                                           child: Text(
                                             '-20%',
@@ -849,6 +1363,13 @@ class _ProductDetailPageState extends State<ProductDetailPage>
                       ),
                     ),
 
+                    // Variant Selection Section - Enhanced
+                    if (widget.product.hasVariants &&
+                        widget.product.variants.isNotEmpty) ...[
+                      Divider(thickness: 6, color: Colors.grey[100]),
+                      _buildVariantSelection(),
+                    ],
+
                     Divider(thickness: 6, color: Colors.grey[100]),
 
                     // Description Section
@@ -928,9 +1449,19 @@ class _ProductDetailPageState extends State<ProductDetailPage>
   }
 
   Widget _buildFixedActionButton() {
-    final currentQuantity = cart.getQuantity(widget.product);
-    final limitInfo = cart.getQuantityLimitInfo(widget.product);
-    final canAdd = cart.canAddQuantity(widget.product, 1);
+    final currentQuantity = cart.getQuantity(
+      widget.product,
+      variantId: selectedVariantId,
+    );
+    final limitInfo = cart.getQuantityLimitInfo(
+      widget.product,
+      variantId: selectedVariantId,
+    );
+    final canAdd = cart.canAddQuantity(
+      widget.product,
+      1,
+      variantId: selectedVariantId,
+    );
 
     if (showGoToCartButton) {
       final canIncrease = limitInfo['availableToAdd'] > 0;
@@ -942,9 +1473,13 @@ class _ProductDetailPageState extends State<ProductDetailPage>
             onTap: () {
               setState(() {
                 if (currentQuantity > 1) {
-                  cart.updateQuantity(widget.product, currentQuantity - 1);
+                  cart.updateQuantity(
+                    widget.product,
+                    currentQuantity - 1,
+                    variantId: selectedVariantId,
+                  );
                 } else {
-                  cart.remove(widget.product);
+                  cart.remove(widget.product, variantId: selectedVariantId);
                   showGoToCartButton = false;
                 }
               });
@@ -954,7 +1489,10 @@ class _ProductDetailPageState extends State<ProductDetailPage>
               height: 50,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [ColorPallete.color1, ColorPallete.color1.withAlpha(220)],
+                  colors: [
+                    ColorPallete.color1,
+                    ColorPallete.color1.withAlpha(220),
+                  ],
                 ),
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
@@ -998,7 +1536,11 @@ class _ProductDetailPageState extends State<ProductDetailPage>
             onTap: () {
               if (canIncrease) {
                 setState(() {
-                  cart.updateQuantity(widget.product, currentQuantity + 1);
+                  cart.updateQuantity(
+                    widget.product,
+                    currentQuantity + 1,
+                    variantId: selectedVariantId,
+                  );
                 });
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -1018,8 +1560,14 @@ class _ProductDetailPageState extends State<ProductDetailPage>
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: canIncrease
-                      ? [ColorPallete.color1, ColorPallete.color1.withAlpha(220)]
-                      : [Colors.grey[400] ?? Colors.grey, Colors.grey[300] ?? Colors.grey],
+                      ? [
+                          ColorPallete.color1,
+                          ColorPallete.color1.withAlpha(220),
+                        ]
+                      : [
+                          Colors.grey[400] ?? Colors.grey,
+                          Colors.grey[300] ?? Colors.grey,
+                        ],
                 ),
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: canIncrease
@@ -1040,7 +1588,10 @@ class _ProductDetailPageState extends State<ProductDetailPage>
             child: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [ColorPallete.color1, ColorPallete.color1.withAlpha(220)],
+                  colors: [
+                    ColorPallete.color1,
+                    ColorPallete.color1.withAlpha(220),
+                  ],
                 ),
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
@@ -1082,10 +1633,16 @@ class _ProductDetailPageState extends State<ProductDetailPage>
         decoration: BoxDecoration(
           gradient: canAdd['canAdd']
               ? LinearGradient(
-                  colors: [ColorPallete.color1, ColorPallete.color1.withAlpha(220)],
+                  colors: [
+                    ColorPallete.color1,
+                    ColorPallete.color1.withAlpha(220),
+                  ],
                 )
               : LinearGradient(
-                  colors: [Colors.grey[400] ?? Colors.grey, Colors.grey[300] ?? Colors.grey],
+                  colors: [
+                    Colors.grey[400] ?? Colors.grey,
+                    Colors.grey[300] ?? Colors.grey,
+                  ],
                 ),
           borderRadius: BorderRadius.circular(12),
           boxShadow: canAdd['canAdd']
@@ -1101,10 +1658,15 @@ class _ProductDetailPageState extends State<ProductDetailPage>
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: canAdd['canAdd']
+            onTap: canAdd['canAdd'] && currentStock > 0
                 ? () {
                     setState(() {
-                      cart.add(widget.product, quantity: 1);
+                      cart.add(
+                        widget.product,
+                        quantity: 1,
+                        variantId: selectedVariantId,
+                        variantAttributes: selectedAttributes,
+                      );
                       showGoToCartButton = true;
                     });
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -1121,7 +1683,11 @@ class _ProductDetailPageState extends State<ProductDetailPage>
               padding: const EdgeInsets.symmetric(vertical: 16),
               child: Center(
                 child: Text(
-                  canAdd['canAdd'] ? 'ADD TO CART' : 'LIMIT REACHED',
+                  currentStock <= 0
+                      ? 'OUT OF STOCK'
+                      : canAdd['canAdd']
+                      ? 'ADD TO CART'
+                      : 'LIMIT REACHED',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -1143,10 +1709,14 @@ class _ProductDetailPageState extends State<ProductDetailPage>
             onTap: () {
               setState(() {
                 if (currentQuantity > 1) {
-                  cart.updateQuantity(widget.product, currentQuantity - 1);
+                  cart.updateQuantity(
+                    widget.product,
+                    currentQuantity - 1,
+                    variantId: selectedVariantId,
+                  );
                   showGoToCartButton = true;
                 } else {
-                  cart.remove(widget.product);
+                  cart.remove(widget.product, variantId: selectedVariantId);
                   showGoToCartButton = false;
                 }
               });
@@ -1156,7 +1726,10 @@ class _ProductDetailPageState extends State<ProductDetailPage>
               height: 50,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [ColorPallete.color1, ColorPallete.color1.withAlpha(220)],
+                  colors: [
+                    ColorPallete.color1,
+                    ColorPallete.color1.withAlpha(220),
+                  ],
                 ),
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
@@ -1197,7 +1770,11 @@ class _ProductDetailPageState extends State<ProductDetailPage>
               onTap: () {
                 if (canIncrease) {
                   setState(() {
-                    cart.updateQuantity(widget.product, currentQuantity + 1);
+                    cart.updateQuantity(
+                      widget.product,
+                      currentQuantity + 1,
+                      variantId: selectedVariantId,
+                    );
                     showGoToCartButton = true;
                   });
                 } else {
@@ -1217,8 +1794,14 @@ class _ProductDetailPageState extends State<ProductDetailPage>
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: canIncrease
-                        ? [ColorPallete.color1, ColorPallete.color1.withAlpha(220)]
-                        : [Colors.grey[400] ?? Colors.grey, Colors.grey[300] ?? Colors.grey],
+                        ? [
+                            ColorPallete.color1,
+                            ColorPallete.color1.withAlpha(220),
+                          ]
+                        : [
+                            Colors.grey[400] ?? Colors.grey,
+                            Colors.grey[300] ?? Colors.grey,
+                          ],
                   ),
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: canIncrease

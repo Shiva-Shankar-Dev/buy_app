@@ -75,21 +75,37 @@ class Cart {
 
   double get totalAmount => _items.fold(
     0.0,
-    (sum, item) => sum + (item.product.price * item.quantity),
+    (sum, item) => sum + (item.effectivePrice * item.quantity),
   );
 
-  void add(Product product, {int quantity = 1}) {
+  void add(
+    Product product, {
+    int quantity = 1,
+    String? variantId,
+    Map<String, String>? variantAttributes,
+  }) {
     final existingIndex = _items.indexWhere(
-      (item) => item.product.name == product.name,
+      (item) =>
+          item.product.pid == product.pid &&
+          item.selectedVariantId == variantId,
     );
 
     if (existingIndex >= 0) {
       _items[existingIndex] = CartItem(
         product: _items[existingIndex].product,
         quantity: _items[existingIndex].quantity + quantity,
+        selectedVariantId: _items[existingIndex].selectedVariantId,
+        selectedAttributes: _items[existingIndex].selectedAttributes,
       );
     } else {
-      _items.add(CartItem(product: product, quantity: quantity));
+      _items.add(
+        CartItem(
+          product: product,
+          quantity: quantity,
+          selectedVariantId: variantId,
+          selectedAttributes: variantAttributes,
+        ),
+      );
     }
   }
 
@@ -112,9 +128,11 @@ class Cart {
     }
   }
 
-  void updateQuantity(Product product, int quantity) {
+  void updateQuantity(Product product, int quantity, {String? variantId}) {
     final existingIndex = _items.indexWhere(
-      (item) => item.product.name == product.name,
+      (item) =>
+          item.product.pid == product.pid &&
+          item.selectedVariantId == variantId,
     );
 
     if (existingIndex >= 0) {
@@ -124,6 +142,8 @@ class Cart {
         _items[existingIndex] = CartItem(
           product: _items[existingIndex].product,
           quantity: quantity,
+          selectedVariantId: _items[existingIndex].selectedVariantId,
+          selectedAttributes: _items[existingIndex].selectedAttributes,
         );
       }
     }
@@ -132,15 +152,20 @@ class Cart {
   /// Update item quantity with validation
   Map<String, dynamic> updateItemQuantityWithValidation(
     Product product,
-    int newQuantity,
-  ) {
-    final validation = canSetQuantity(product, newQuantity);
+    int newQuantity, {
+    String? variantId,
+  }) {
+    final validation = canSetQuantity(
+      product,
+      newQuantity,
+      variantId: variantId,
+    );
 
     if (validation['canSet']) {
       if (newQuantity <= 0) {
-        remove(product);
+        remove(product, variantId: variantId);
       } else {
-        updateQuantity(product, newQuantity);
+        updateQuantity(product, newQuantity, variantId: variantId);
       }
       return {'success': true, 'message': validation['message']};
     } else {
@@ -158,9 +183,13 @@ class Cart {
   }
 
   /// Check if adding a quantity would exceed limits
-  Map<String, dynamic> canAddQuantity(Product product, int quantity) {
+  Map<String, dynamic> canAddQuantity(
+    Product product,
+    int quantity, {
+    String? variantId,
+  }) {
     final maxAllowed = getMaxQuantityForCategory(product.category);
-    final currentQuantity = getQuantity(product);
+    final currentQuantity = getQuantity(product, variantId: variantId);
     final newTotal = currentQuantity + quantity;
 
     if (quantity > maxAllowed) {
@@ -192,7 +221,11 @@ class Cart {
   }
 
   /// Check if setting a new quantity is valid
-  Map<String, dynamic> canSetQuantity(Product product, int newQuantity) {
+  Map<String, dynamic> canSetQuantity(
+    Product product,
+    int newQuantity, {
+    String? variantId,
+  }) {
     if (newQuantity <= 0) {
       return {'canSet': true, 'message': 'Will remove item from cart'};
     }
@@ -214,9 +247,12 @@ class Cart {
   }
 
   /// Get validation info for display in UI
-  Map<String, dynamic> getQuantityLimitInfo(Product product) {
+  Map<String, dynamic> getQuantityLimitInfo(
+    Product product, {
+    String? variantId,
+  }) {
     final maxAllowed = getMaxQuantityForCategory(product.category);
-    final currentInCart = getQuantity(product);
+    final currentInCart = getQuantity(product, variantId: variantId);
     final availableToAdd = maxAllowed - currentInCart;
 
     return {
@@ -229,23 +265,44 @@ class Cart {
     };
   }
 
-  void remove(Product product) {
-    _items.removeWhere((item) => item.product.name == product.name);
+  void remove(Product product, {String? variantId}) {
+    _items.removeWhere(
+      (item) =>
+          item.product.pid == product.pid &&
+          item.selectedVariantId == variantId,
+    );
   }
 
   void clear() {
     _items.clear();
   }
 
-  int getQuantity(Product product) {
+  int getQuantity(Product product, {String? variantId}) {
     final item = _items.firstWhere(
-      (item) => item.product.name == product.name,
-      orElse: () => CartItem(product: product, quantity: 0),
+      (item) =>
+          item.product.pid == product.pid &&
+          item.selectedVariantId == variantId,
+      orElse: () =>
+          CartItem(product: product, quantity: 0, selectedVariantId: variantId),
     );
     return item.quantity;
   }
 
-  bool isInCart(Product product) {
-    return _items.any((item) => item.product.name == product.name);
+  bool isInCart(Product product, {String? variantId}) {
+    return _items.any(
+      (item) =>
+          item.product.pid == product.pid &&
+          item.selectedVariantId == variantId,
+    );
+  }
+
+  /// Check if any variant of a product is in cart
+  bool isProductInCart(Product product) {
+    return _items.any((item) => item.product.pid == product.pid);
+  }
+
+  /// Get all cart items for a specific product (all variants)
+  List<CartItem> getItemsForProduct(Product product) {
+    return _items.where((item) => item.product.pid == product.pid).toList();
   }
 }

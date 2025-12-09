@@ -13,6 +13,10 @@ class OrderItem {
   final int quantity;
   final String? productImage;
   final String sellerId;
+  final String productId; // Add product ID for stock management
+  final String? variantId; // Variant ID if product has variants
+  final Map<String, String>?
+  variantAttributes; // Variant attributes for display
 
   OrderItem({
     required this.productTitle,
@@ -20,18 +24,25 @@ class OrderItem {
     required this.quantity,
     this.productImage,
     required this.sellerId,
+    required this.productId,
+    this.variantId,
+    this.variantAttributes,
   });
 
   // Convert from CartItem
   factory OrderItem.fromCartItem(CartItem cartItem) {
+    // Use effective price and images which account for variants
+    final effectiveImages = cartItem.effectiveImages;
+
     return OrderItem(
       productTitle: cartItem.product.name,
-      productPrice: cartItem.product.price,
+      productPrice: cartItem.effectivePrice,
       quantity: cartItem.quantity,
-      productImage: cartItem.product.images.isNotEmpty
-          ? cartItem.product.images[0]
-          : null,
+      productImage: effectiveImages.isNotEmpty ? effectiveImages[0] : null,
       sellerId: cartItem.product.sellerId,
+      productId: cartItem.product.pid,
+      variantId: cartItem.selectedVariantId,
+      variantAttributes: cartItem.selectedAttributes,
     );
   }
 
@@ -43,6 +54,9 @@ class OrderItem {
       'quantity': quantity,
       'productImage': productImage,
       'sellerId': sellerId,
+      'productId': productId,
+      if (variantId != null) 'variantId': variantId,
+      if (variantAttributes != null) 'variantAttributes': variantAttributes,
     };
   }
 
@@ -53,6 +67,11 @@ class OrderItem {
       quantity: map['quantity'] ?? 1,
       productImage: map['productImage'],
       sellerId: map['sellerId'] ?? '',
+      productId: map['productId'] ?? '',
+      variantId: map['variantId'],
+      variantAttributes: map['variantAttributes'] != null
+          ? Map<String, String>.from(map['variantAttributes'])
+          : null,
     );
   }
 }
@@ -240,20 +259,25 @@ class OrderService {
       // IMPORTANT: Decrement stock for each item in the order
       debugPrint('📊 [ORDER_CREATE] Starting stock decrement process...');
       for (final item in cartItems) {
+        final variantInfo = item.selectedVariantId != null
+            ? ' (Variant: ${item.variantDisplayText})'
+            : '';
         debugPrint(
-          '📊 [ORDER_CREATE] Decrementing stock for: ${item.product.name} (PID: ${item.product.pid}, Qty: ${item.quantity})',
+          '📊 [ORDER_CREATE] Decrementing stock for: ${item.product.name}$variantInfo (PID: ${item.product.pid}, Qty: ${item.quantity})',
         );
         final stockUpdated = await StockService.decrementStock(
           item.product.pid,
           item.quantity,
+          variantId: item
+              .selectedVariantId, // Pass variant ID for variant-specific stock management
         );
         if (!stockUpdated) {
           debugPrint(
-            '⚠️ [ORDER_CREATE] Failed to update stock for ${item.product.name}',
+            '⚠️ [ORDER_CREATE] Failed to update stock for ${item.product.name}$variantInfo',
           );
         } else {
           debugPrint(
-            '✅ [ORDER_CREATE] Stock updated successfully for ${item.product.name}',
+            '✅ [ORDER_CREATE] Stock updated successfully for ${item.product.name}$variantInfo',
           );
         }
       }

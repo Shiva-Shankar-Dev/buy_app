@@ -51,7 +51,7 @@ class EmailService {
     // Calculate total amount considering quantities
     double totalAmount = orderedItems.fold(
       0.0,
-      (s, item) => s + (item.product.price * item.quantity),
+      (s, item) => s + (item.effectivePrice * item.quantity),
     );
 
     String message1 = "<html><body>";
@@ -70,14 +70,28 @@ class EmailService {
     message1 += "</thead><tbody>";
 
     for (final item in orderedItems) {
-      final itemTotal = item.product.price * item.quantity;
+      final itemTotal = item.effectivePrice * item.quantity;
       message1 += "<tr>";
-      message1 +=
-          "<td style='padding: 8px; border-bottom: 1px solid #ddd;'>${item.product.name}</td>";
+      message1 += "<td style='padding: 8px; border-bottom: 1px solid #ddd;'>";
+      message1 += "<strong>${item.product.name}</strong>";
+
+      // Add variant details if available
+      if (item.selectedVariantId != null &&
+          item.selectedAttributes != null &&
+          item.selectedAttributes!.isNotEmpty) {
+        message1 += "<br><small style='color: #666;'>";
+        message1 += "<strong>Variant:</strong> ";
+        message1 += item.selectedAttributes!.entries
+            .map((e) => "${e.key}: ${e.value}")
+            .join(", ");
+        message1 += "</small>";
+      }
+
+      message1 += "</td>";
       message1 +=
           "<td style='padding: 8px; text-align: center; border-bottom: 1px solid #ddd;'>${item.quantity}</td>";
       message1 +=
-          "<td style='padding: 8px; text-align: right; border-bottom: 1px solid #ddd;'>₹${item.product.price.toStringAsFixed(2)}</td>";
+          "<td style='padding: 8px; text-align: right; border-bottom: 1px solid #ddd;'>₹${item.effectivePrice.toStringAsFixed(2)}</td>";
       message1 +=
           "<td style='padding: 8px; text-align: right; border-bottom: 1px solid #ddd;'>₹${itemTotal.toStringAsFixed(2)}</td>";
       message1 += "</tr>";
@@ -254,14 +268,29 @@ class EmailService {
 
       double totalAmount = 0;
       for (final item in items) {
-        final itemTotal = item.product.price * item.quantity;
+        final itemTotal = item.effectivePrice * item.quantity;
         orderDetails += "<tr>";
         orderDetails +=
-            "<td style='padding: 8px; border-bottom: 1px solid #ddd;'>${item.product.name}</td>";
+            "<td style='padding: 8px; border-bottom: 1px solid #ddd;'>";
+        orderDetails += "<strong>${item.product.name}</strong>";
+
+        // Add variant details if available
+        if (item.selectedVariantId != null &&
+            item.selectedAttributes != null &&
+            item.selectedAttributes!.isNotEmpty) {
+          orderDetails += "<br><small style='color: #666;'>";
+          orderDetails += "<strong>Variant:</strong> ";
+          orderDetails += item.selectedAttributes!.entries
+              .map((e) => "${e.key}: ${e.value}")
+              .join(", ");
+          orderDetails += "</small>";
+        }
+
+        orderDetails += "</td>";
         orderDetails +=
             "<td style='padding: 8px; text-align: center; border-bottom: 1px solid #ddd;'>${item.quantity}</td>";
         orderDetails +=
-            "<td style='padding: 8px; text-align: right; border-bottom: 1px solid #ddd;'>₹${item.product.price.toStringAsFixed(2)}</td>";
+            "<td style='padding: 8px; text-align: right; border-bottom: 1px solid #ddd;'>₹${item.effectivePrice.toStringAsFixed(2)}</td>";
         orderDetails +=
             "<td style='padding: 8px; text-align: right; border-bottom: 1px solid #ddd;'>₹${itemTotal.toStringAsFixed(2)}</td>";
         orderDetails += "</tr>";
@@ -393,6 +422,10 @@ Future<void> placeOrder(Map<String, dynamic> customer, Address address) async {
               'name': item.product.name,
               'quantity': item.quantity,
               'price': item.product.price,
+              'selectedVariantId': item.selectedVariantId,
+              'selectedAttributes': item.selectedAttributes,
+              'brand': item.product.brand,
+              'category': item.product.category,
             },
           )
           .toList(),

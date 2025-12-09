@@ -109,37 +109,31 @@ class _HomePage extends State<HomePage> with TickerProviderStateMixin {
     final loadedProducts = <Product>[];
 
     for (int i = 0; i < docs.length; i++) {
-      final doc = docs[i];
-      final product = Product(
-        name: doc['name'] ?? 'Untitled',
-        brand: doc['brand'] ?? '',
-        description: doc['description'] ?? '',
-        price: (doc['price'] ?? 0).toDouble(),
-        deliveryTime: doc['Delivery Time'] ?? 'N/A',
-        category: doc['category'] ?? '',
-        images: List<String>.from(doc['images'] ?? []),
-        keywords: List<String>.from(doc['keywords'] ?? []),
-        pid: doc['pid'] ?? '',
-        stockQuantity: doc['stockQuantity'] ?? 0,
-        sellerId: doc['sellerId'] ?? null,
-      );
+      try {
+        final doc = docs[i];
+        // Use Product.fromFirestore to properly parse all fields including variants
+        final product = Product.fromFirestore(doc);
+        loadedProducts.add(product);
 
-      // Create animation controller for each product
-      _productAnimations[i] = AnimationController(
-        duration: Duration(milliseconds: 600 + (i * 50)),
-        vsync: this,
-      );
-      _productAnimations[i]?.forward();
+        // Create animation controller for each product
+        _productAnimations[i] = AnimationController(
+          duration: Duration(milliseconds: 600 + (i * 50)),
+          vsync: this,
+        );
+        _productAnimations[i]?.forward();
 
-      if (i < 3) {
-        debugPrint("Product loaded: ${product.name}");
-        debugPrint("  Brand: ${product.brand}");
-        debugPrint("  Category: ${product.category}");
-        debugPrint("  Keywords: ${product.keywords}");
-        debugPrint("---");
+        if (i < 3) {
+          debugPrint("Product loaded: ${product.name}");
+          debugPrint("  Brand: ${product.brand}");
+          debugPrint("  Category: ${product.category}");
+          debugPrint("  Has Variants: ${product.hasVariants}");
+          debugPrint("  Variants Count: ${product.variants.length}");
+          debugPrint("  Available Attributes: ${product.availableAttributes}");
+          debugPrint("---");
+        }
+      } catch (e) {
+        debugPrint("❌ Error loading product $i: $e");
       }
-
-      loadedProducts.add(product);
     }
 
     setState(() {

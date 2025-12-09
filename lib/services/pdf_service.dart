@@ -42,7 +42,7 @@ class PdfService {
     // Calculate totals
     final subtotal = orderedItems.fold<double>(
       0,
-      (sum, item) => sum + (item.product.price) * (item.quantity),
+      (sum, item) => sum + (item.effectivePrice) * (item.quantity),
     );
     final tax = 0.0; // No tax for now
     final deliveryFee = 0.0; // Free delivery
@@ -502,7 +502,7 @@ class PdfService {
                   ...orderedItems.asMap().entries.map((entry) {
                     final index = entry.key;
                     final item = entry.value;
-                    final itemTotal = (item.product.price) * (item.quantity);
+                    final itemTotal = (item.effectivePrice) * (item.quantity);
                     final isEvenRow = index % 2 == 0;
 
                     return pw.TableRow(
@@ -549,6 +549,49 @@ class PdfService {
                                     color: PdfColors.grey700,
                                   ),
                                 ),
+                              // Add variant details if selected
+                              if (item.selectedVariantId != null &&
+                                  item.selectedAttributes != null &&
+                                  item.selectedAttributes!.isNotEmpty)
+                                pw.Container(
+                                  margin: const pw.EdgeInsets.only(top: 6),
+                                  padding: const pw.EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: pw.BoxDecoration(
+                                    color: PdfColors.orange50,
+                                    borderRadius: pw.BorderRadius.circular(3),
+                                    border: pw.Border.all(
+                                      color: PdfColors.orange300,
+                                    ),
+                                  ),
+                                  child: pw.Column(
+                                    crossAxisAlignment:
+                                        pw.CrossAxisAlignment.start,
+                                    children: [
+                                      pw.Text(
+                                        'Variant Details:',
+                                        style: pw.TextStyle(
+                                          fontSize: 9,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.orange900,
+                                        ),
+                                      ),
+                                      ...item.selectedAttributes!.entries.map((
+                                        entry,
+                                      ) {
+                                        return pw.Text(
+                                          '${entry.key}: ${entry.value}',
+                                          style: pw.TextStyle(
+                                            fontSize: 9,
+                                            color: PdfColors.orange900,
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ],
+                                  ),
+                                ),
                             ],
                           ),
                         ),
@@ -576,7 +619,7 @@ class PdfService {
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(12),
                           child: pw.Text(
-                            'Rs. ${item.product.price.toStringAsFixed(2)}',
+                            'Rs. ${item.effectivePrice.toStringAsFixed(2)}',
                             style: const pw.TextStyle(fontSize: 11),
                             textAlign: pw.TextAlign.right,
                           ),

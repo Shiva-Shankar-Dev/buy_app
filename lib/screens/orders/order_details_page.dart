@@ -809,6 +809,47 @@ class OrderDetailsPage extends StatelessWidget {
                   style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 4),
+                // Display variant details if available
+                if (item.variantId != null &&
+                    item.variantAttributes != null &&
+                    item.variantAttributes!.isNotEmpty)
+                  Container(
+                    margin: const EdgeInsets.only(top: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: ColorPallete.color1.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: ColorPallete.color1.withOpacity(0.3),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Variant Details:',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: ColorPallete.color1,
+                          ),
+                        ),
+                        ...item.variantAttributes!.entries.map((entry) {
+                          return Text(
+                            '${entry.key}: ${entry.value}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: ColorPallete.color1,
+                            ),
+                          );
+                        }).toList(),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 4),
                 Text(
                   '₹${item.productPrice.toStringAsFixed(2)} each',
                   style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
