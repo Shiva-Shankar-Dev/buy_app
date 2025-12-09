@@ -11,49 +11,115 @@ class OrderDetailsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Order Details'),
+        title: const Text(
+          'Order Details',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+        ),
         backgroundColor: ColorPallete.color1,
         foregroundColor: Colors.white,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                ColorPallete.color1,
+                ColorPallete.color1.withOpacity(0.8),
+              ],
+            ),
+          ),
+        ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildOrderHeader(),
-            const SizedBox(height: 20),
-            _buildOrderStatus(),
-            const SizedBox(height: 20),
-            _buildDeliveryInfo(),
-            const SizedBox(height: 20),
-            _buildPaymentInfo(),
-            const SizedBox(height: 20),
-            _buildOrderItems(),
-            const SizedBox(height: 20),
-            _buildPricingSummary(),
-            const SizedBox(height: 30),
-            _buildInvoiceInfo(),
-          ],
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [ColorPallete.color1.withOpacity(0.05), Colors.white],
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildOrderHeader(),
+              const SizedBox(height: 20),
+              _buildOrderStatus(),
+              const SizedBox(height: 20),
+              _buildDeliveryInfo(),
+              const SizedBox(height: 20),
+              _buildPaymentInfo(),
+              const SizedBox(height: 20),
+              _buildOrderItems(),
+              const SizedBox(height: 20),
+              _buildPricingSummary(),
+              const SizedBox(height: 30),
+              _buildInvoiceInfo(),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildOrderHeader() {
+    // Calculate current status based on timeline logic
+    final now = DateTime.now();
+    final daysSinceOrder = now.difference(order.orderDate).inDays;
+    final expectedDeliveryDate = order.orderDate.add(const Duration(days: 4));
+    final isDeliveryDatePassed =
+        now.isAfter(expectedDeliveryDate) ||
+        now.difference(expectedDeliveryDate).inDays >= 0;
+
+    String currentStatus;
+    if (isDeliveryDatePassed || daysSinceOrder >= 4) {
+      currentStatus = 'Delivered';
+    } else if (daysSinceOrder >= 2) {
+      currentStatus = 'Shipped';
+    } else if (daysSinceOrder >= 1) {
+      currentStatus = 'Packed';
+    } else {
+      currentStatus = 'Confirmed';
+    }
+
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      elevation: 8,
+      shadowColor: ColorPallete.color1.withOpacity(0.3),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.white, ColorPallete.color1.withOpacity(0.02)],
+          ),
+        ),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.receipt_long, color: ColorPallete.color1),
-                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: ColorPallete.color1.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.receipt_long,
+                    color: ColorPallete.color1,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Text(
                   'Order Information',
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: ColorPallete.color1,
                   ),
@@ -77,19 +143,32 @@ class OrderDetailsPage extends StatelessWidget {
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
+                    horizontal: 16,
+                    vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: _getStatusColor(order.status),
-                    borderRadius: BorderRadius.circular(20),
+                    gradient: LinearGradient(
+                      colors: [
+                        _getStatusColor(currentStatus),
+                        _getStatusColor(currentStatus).withOpacity(0.8),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(25),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _getStatusColor(currentStatus).withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Text(
-                    order.status.toUpperCase(),
+                    currentStatus.toUpperCase(),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ),
@@ -103,19 +182,41 @@ class OrderDetailsPage extends StatelessWidget {
 
   Widget _buildOrderStatus() {
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      elevation: 6,
+      shadowColor: Colors.grey.withOpacity(0.2),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.white, Colors.grey.shade50],
+          ),
+        ),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.local_shipping, color: ColorPallete.color1),
-                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: ColorPallete.color1.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.local_shipping,
+                    color: ColorPallete.color1,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Text(
                   'Order Status Timeline',
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: ColorPallete.color1,
                   ),
@@ -131,7 +232,29 @@ class OrderDetailsPage extends StatelessWidget {
   }
 
   Widget _buildStatusTimeline() {
-    final statuses = ['Confirmed', 'Packed', 'Shipped', 'Delivered'];
+    final statuses = [
+      {
+        'name': 'Order Confirmed',
+        'icon': Icons.check_circle_outline,
+        'description': 'Your order has been placed',
+      },
+      {
+        'name': 'Order Packed',
+        'icon': Icons.inventory_2_outlined,
+        'description': 'Items are being packed',
+      },
+      {
+        'name': 'Order Shipped',
+        'icon': Icons.local_shipping_outlined,
+        'description': 'Package is on the way',
+      },
+      {
+        'name': 'Order Delivered',
+        'icon': Icons.home_outlined,
+        'description': 'Package delivered successfully',
+      },
+    ];
+
     // Determine current status based on days since order date
     final now = DateTime.now();
     final daysSinceOrder = now.difference(order.orderDate).inDays;
@@ -147,57 +270,246 @@ class OrderDetailsPage extends StatelessWidget {
       currentStatusIndex = 0; // Confirmed same day
     }
 
+    // Check if delivery date has passed - if so, mark as delivered
+    final expectedDeliveryDate = order.orderDate.add(const Duration(days: 4));
+    final isDeliveryDatePassed =
+        now.isAfter(expectedDeliveryDate) ||
+        now.difference(expectedDeliveryDate).inDays >= 0;
+
+    if (isDeliveryDatePassed) {
+      currentStatusIndex = 3; // Force delivered status if delivery date passed
+    }
+
     return Column(
       children: statuses.asMap().entries.map((entry) {
         final index = entry.key;
         final status = entry.value;
         final isCompleted = index <= currentStatusIndex;
-        final isCurrent = index == currentStatusIndex;
+        final isCurrent = index == currentStatusIndex && currentStatusIndex < 3;
+        final isLast = index == statuses.length - 1;
+        final isDelivered = currentStatusIndex >= 3 && index == 3;
 
-        return Row(
+        return Column(
           children: [
-            Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isCompleted
-                    ? (isCurrent ? Colors.orange : Colors.green)
-                    : Colors.grey.shade300,
-                border: Border.all(
-                  color: isCompleted
-                      ? (isCurrent ? Colors.orange : Colors.green)
-                      : Colors.grey.shade400,
-                  width: 2,
-                ),
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Timeline indicator column
+                  Column(
+                    children: [
+                      // Circle with icon
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: isCompleted
+                              ? LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: (isCurrent && !isDelivered)
+                                      ? [
+                                          Colors.orange.shade400,
+                                          Colors.orange.shade600,
+                                        ]
+                                      : [
+                                          Colors.green.shade400,
+                                          Colors.green.shade600,
+                                        ],
+                                )
+                              : LinearGradient(
+                                  colors: [
+                                    Colors.grey.shade300,
+                                    Colors.grey.shade400,
+                                  ],
+                                ),
+                          border: Border.all(
+                            color: isCompleted
+                                ? ((isCurrent && !isDelivered)
+                                      ? Colors.orange.shade200
+                                      : Colors.green.shade200)
+                                : Colors.grey.shade300,
+                            width: 3,
+                          ),
+                          boxShadow: isCompleted
+                              ? [
+                                  BoxShadow(
+                                    color:
+                                        ((isCurrent && !isDelivered)
+                                                ? Colors.orange
+                                                : Colors.green)
+                                            .withOpacity(0.3),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: Icon(
+                          status['icon'] as IconData,
+                          size: 24,
+                          color: isCompleted
+                              ? Colors.white
+                              : Colors.grey.shade600,
+                        ),
+                      ),
+                      // Connecting line (except for last item)
+                      if (!isLast)
+                        Container(
+                          width: 3,
+                          height: 30,
+                          margin: const EdgeInsets.symmetric(vertical: 6),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: isCompleted
+                                  ? [
+                                      isCurrent
+                                          ? Colors.orange.shade300
+                                          : Colors.green.shade300,
+                                      index + 1 <= currentStatusIndex
+                                          ? Colors.green.shade300
+                                          : Colors.grey.shade300,
+                                    ]
+                                  : [
+                                      Colors.grey.shade300,
+                                      Colors.grey.shade300,
+                                    ],
+                            ),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(width: 16),
+                  // Content column
+                  Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.only(top: 6),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: isCompleted
+                              ? (isCurrent && !isDelivered)
+                                    ? [Colors.orange.shade50, Colors.white]
+                                    : [Colors.green.shade50, Colors.white]
+                              : [Colors.grey.shade50, Colors.white],
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: isCompleted
+                              ? (isCurrent && !isDelivered)
+                                    ? Colors.orange.shade200
+                                    : Colors.green.shade200
+                              : Colors.grey.shade200,
+                          width: 1.5,
+                        ),
+                        boxShadow: isCompleted
+                            ? [
+                                BoxShadow(
+                                  color:
+                                      ((isCurrent && !isDelivered)
+                                              ? Colors.orange
+                                              : Colors.green)
+                                          .withOpacity(0.1),
+                                  blurRadius: 5,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  status['name'] as String,
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: isCompleted
+                                        ? (isCurrent && !isDelivered)
+                                              ? Colors.orange.shade700
+                                              : Colors.green.shade700
+                                        : Colors.grey.shade600,
+                                  ),
+                                ),
+                              ),
+                              if (isCompleted)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: (isCurrent && !isDelivered)
+                                        ? Colors.orange
+                                        : Colors.green,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    (isCurrent && !isDelivered)
+                                        ? 'CURRENT'
+                                        : 'DONE',
+                                    style: const TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            status['description'] as String,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: isCompleted
+                                  ? Colors.grey.shade700
+                                  : Colors.grey.shade500,
+                            ),
+                          ),
+                          if (isCompleted) ...[
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.schedule,
+                                  size: 13,
+                                  color: Colors.grey.shade600,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _formatDateTime(
+                                    order.orderDate.add(
+                                      Duration(days: [0, 1, 2, 4][index]),
+                                    ),
+                                  ),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey.shade600,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              child: isCompleted
-                  ? Icon(
-                      isCurrent ? Icons.access_time : Icons.check,
-                      size: 12,
-                      color: Colors.white,
-                    )
-                  : null,
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                status,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: isCompleted ? FontWeight.w600 : FontWeight.normal,
-                  color: isCompleted ? Colors.black87 : Colors.grey.shade600,
-                ),
-              ),
-            ),
-            if (isCompleted && index < statuses.length - 1)
-              Text(
-                // Show expected dates: Confirmed(0), Packed(+1), Shipped(+2), Delivered(+4)
-                _formatDateTime(
-                  order.orderDate.add(Duration(days: [0, 1, 2, 4][index])),
-                ),
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-              ),
+            if (!isLast) const SizedBox(height: 6),
           ],
         );
       }).toList(),
@@ -206,32 +518,65 @@ class OrderDetailsPage extends StatelessWidget {
 
   Widget _buildDeliveryInfo() {
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      elevation: 6,
+      shadowColor: Colors.blue.withOpacity(0.2),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.white, Colors.blue.shade50.withOpacity(0.3)],
+          ),
+        ),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.location_on, color: ColorPallete.color1),
-                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.location_on,
+                    color: Colors.blue.shade700,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Text(
                   'Delivery Information',
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: ColorPallete.color1,
+                    color: Colors.blue.shade700,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.shade200),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Colors.blue.shade50, Colors.white],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue.shade200, width: 1.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withOpacity(0.1),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -281,21 +626,43 @@ class OrderDetailsPage extends StatelessWidget {
     final isDelivered = daysSinceOrder >= 4;
 
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      elevation: 6,
+      shadowColor: Colors.green.withOpacity(0.2),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.white, Colors.green.shade50.withOpacity(0.3)],
+          ),
+        ),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.payment, color: ColorPallete.color1),
-                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.payment,
+                    color: Colors.green.shade700,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Text(
                   'Payment Information',
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: ColorPallete.color1,
+                    color: Colors.green.shade700,
                   ),
                 ),
               ],
@@ -331,21 +698,43 @@ class OrderDetailsPage extends StatelessWidget {
 
   Widget _buildOrderItems() {
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      elevation: 6,
+      shadowColor: Colors.orange.withOpacity(0.2),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.white, Colors.orange.shade50.withOpacity(0.3)],
+          ),
+        ),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.shopping_bag, color: ColorPallete.color1),
-                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.shopping_bag,
+                    color: Colors.orange.shade700,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Text(
                   'Order Items',
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: ColorPallete.color1,
+                    color: Colors.orange.shade700,
                   ),
                 ),
               ],
@@ -360,22 +749,45 @@ class OrderDetailsPage extends StatelessWidget {
 
   Widget _buildItemCard(OrderItem item) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade200),
-        borderRadius: BorderRadius.circular(8),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
           Container(
-            width: 60,
-            height: 60,
+            width: 70,
+            height: 70,
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(8),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  ColorPallete.color1.withOpacity(0.1),
+                  ColorPallete.color1.withOpacity(0.05),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: ColorPallete.color1.withOpacity(0.2),
+                width: 1,
+              ),
             ),
-            child: const Icon(Icons.shopping_bag_outlined, color: Colors.grey),
+            child: Icon(
+              Icons.shopping_bag_outlined,
+              color: ColorPallete.color1,
+              size: 28,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -429,19 +841,41 @@ class OrderDetailsPage extends StatelessWidget {
     );
 
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      elevation: 8,
+      shadowColor: ColorPallete.color1.withOpacity(0.3),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.white, ColorPallete.color1.withOpacity(0.05)],
+          ),
+        ),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.receipt, color: ColorPallete.color1),
-                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: ColorPallete.color1.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.receipt,
+                    color: ColorPallete.color1,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Text(
                   'Price Details',
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: ColorPallete.color1,
                   ),
@@ -461,20 +895,44 @@ class OrderDetailsPage extends StatelessWidget {
             if (order.paymentMethod != 'COD') ...[
               const SizedBox(height: 8),
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.green.shade50,
-                  borderRadius: BorderRadius.circular(6),
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.green.shade50,
+                      Colors.green.shade100.withOpacity(0.5),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.green.shade300, width: 1),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.green.withOpacity(0.2),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.check_circle, color: Colors.green, size: 16),
-                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.green,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.check,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
                     Text(
                       'Payment Completed',
                       style: TextStyle(
                         color: Colors.green.shade700,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
                     ),
@@ -578,32 +1036,65 @@ class OrderDetailsPage extends StatelessWidget {
 
   Widget _buildInvoiceInfo() {
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      elevation: 6,
+      shadowColor: Colors.purple.withOpacity(0.2),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.white, Colors.purple.shade50.withOpacity(0.3)],
+          ),
+        ),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.receipt_long, color: ColorPallete.color1),
-                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.purple.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.receipt_long,
+                    color: Colors.purple.shade700,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Text(
                   'Invoice Information',
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: ColorPallete.color1,
+                    color: Colors.purple.shade700,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue.shade200),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Colors.purple.shade50, Colors.white],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.purple.shade200, width: 1.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.purple.withOpacity(0.1),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Row(
                 children: [

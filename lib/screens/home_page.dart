@@ -82,9 +82,10 @@ class _HomePage extends State<HomePage> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeIn),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeIn));
     _fadeController.forward();
 
     loadProductsFromFirestore();
@@ -261,7 +262,7 @@ class _HomePage extends State<HomePage> with TickerProviderStateMixin {
                           color: color.withAlpha(40),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
-                        )
+                        ),
                       ]
                     : [],
               ),
@@ -366,56 +367,55 @@ class _HomePage extends State<HomePage> with TickerProviderStateMixin {
               ),
             )
           : isSearching && filteredProducts.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
-                      SizedBox(height: 16),
-                      Text(
-                        'No products found',
-                        style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Try different keywords',
-                        style:
-                            TextStyle(fontSize: 14, color: Colors.grey[500]),
-                      ),
-                    ],
+          ? Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
+                  SizedBox(height: 16),
+                  Text(
+                    'No products found',
+                    style: TextStyle(fontSize: 18, color: Colors.grey[600]),
                   ),
-                )
-              : CustomScrollView(
-                  physics: const BouncingScrollPhysics(
-                    parent: AlwaysScrollableScrollPhysics(),
+                  SizedBox(height: 8),
+                  Text(
+                    'Try different keywords',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                   ),
-                  slivers: [
-                    // Modern App Bar
-                    SliverAppBar(
-                      pinned: true,
-                      floating: true,
-                      elevation: 0,
-                      titleSpacing: 0,
-                      backgroundColor: ColorPallete.color1,
-                      foregroundColor: Colors.white,
-                      expandedHeight: 110,
-                      flexibleSpace: FlexibleSpaceBar(
-                        background: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                ColorPallete.color1,
-                                ColorPallete.color1.withAlpha(230),
-                              ],
-                            ),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              /*Text(
+                ],
+              ),
+            )
+          : CustomScrollView(
+              physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics(),
+              ),
+              slivers: [
+                // Modern App Bar
+                SliverAppBar(
+                  pinned: true,
+                  floating: true,
+                  elevation: 0,
+                  titleSpacing: 0,
+                  backgroundColor: ColorPallete.color1,
+                  foregroundColor: Colors.white,
+                  expandedHeight: 110,
+                  flexibleSpace: FlexibleSpaceBar(
+                    background: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            ColorPallete.color1,
+                            ColorPallete.color1.withAlpha(230),
+                          ],
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          /*Text(
                                 "Buy App",
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
@@ -424,55 +424,57 @@ class _HomePage extends State<HomePage> with TickerProviderStateMixin {
                                   letterSpacing: 0.5,
                                 ),
                               ),*/
-                            ],
-                          ),
-                        ),
+                        ],
                       ),
-                      bottom: PreferredSize(
-                        preferredSize: Size.fromHeight(65),
-                        child: Padding(
-                          padding: EdgeInsets.fromLTRB(12, 0, 12, 12),
-                          child: Hero(
-                            tag: 'search_bar',
-                            child: Material(
-                              elevation: 4,
-                              borderRadius: BorderRadius.circular(28),
-                              shadowColor: Colors.black26,
-                              child: InkWell(
-                                onTap: () =>
-                                    Navigator.pushNamed(context, '/search'),
+                    ),
+                  ),
+                  bottom: PreferredSize(
+                    preferredSize: Size.fromHeight(65),
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(12, 0, 12, 12),
+                      child: Hero(
+                        tag: 'search_bar',
+                        child: Material(
+                          elevation: 4,
+                          borderRadius: BorderRadius.circular(28),
+                          shadowColor: Colors.black26,
+                          child: InkWell(
+                            onTap: () =>
+                                Navigator.pushNamed(context, '/search'),
+                            borderRadius: BorderRadius.circular(28),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
                                 borderRadius: BorderRadius.circular(28),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(28),
-                                  ),
-                                  child: Padding(
-                                    padding: EdgeInsets.symmetric(
-                                      vertical: 12.0,
-                                      horizontal: 16.0,
+                              ),
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                  vertical: 12.0,
+                                  horizontal: 16.0,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.search,
+                                      color: Colors.grey[600],
+                                      size: 22,
                                     ),
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.search,
-                                            color: Colors.grey[600],
-                                            size: 22),
-                                        SizedBox(width: 8),
-                                        Expanded(
-                                          child: Text(
-                                            "Search products...",
-                                            style: TextStyle(
-                                              color: Colors.grey[500],
-                                              fontSize: 15,
-                                            ),
-                                          ),
+                                    SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        "Search products...",
+                                        style: TextStyle(
+                                          color: Colors.grey[500],
+                                          fontSize: 15,
                                         ),
-                                        Icon(Icons.camera_alt_outlined,
-                                            color: Colors.grey[600],
-                                            size: 20),
-                                      ],
+                                      ),
                                     ),
-                                  ),
+                                    Icon(
+                                      Icons.camera_alt_outlined,
+                                      color: Colors.grey[600],
+                                      size: 20,
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
@@ -480,263 +482,418 @@ class _HomePage extends State<HomePage> with TickerProviderStateMixin {
                         ),
                       ),
                     ),
+                  ),
+                ),
 
-                    // Categories Section
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.fromLTRB(0, 16, 0, 8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (selectedCategory != null)
-                              Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                                child: AnimatedOpacity(
-                                  opacity: selectedCategory != null ? 1.0 : 0.0,
-                                  duration: Duration(milliseconds: 300),
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.filter_list,
-                                          size: 18,
-                                          color: ColorPallete.color1),
-                                      SizedBox(width: 6),
-                                      Expanded(
-                                        child: Text(
-                                          '${filteredProducts.length} products',
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            color: Colors.grey[600],
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ),
-                                      GestureDetector(
-                                        onTap: clearCategoryFilter,
-                                        child: Container(
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 10,
-                                            vertical: 5,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.grey[100],
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                            border: Border.all(
-                                              color: Colors.grey[300]!,
-                                              width: 0.5,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            'Clear',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: ColorPallete.color1,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            SizedBox(
-                              height: 100,
-                              child: ListView(
-                                scrollDirection: Axis.horizontal,
-                                padding: EdgeInsets.symmetric(horizontal: 8),
-                                physics: BouncingScrollPhysics(),
+                // Categories Section
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(0, 16, 0, 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (selectedCategory != null)
+                          Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            child: AnimatedOpacity(
+                              opacity: selectedCategory != null ? 1.0 : 0.0,
+                              duration: Duration(milliseconds: 300),
+                              child: Row(
                                 children: [
-                                  _buildCategoryCard(
-                                    'All',
-                                    Icons.grid_view,
-                                    Colors.grey,
+                                  Icon(
+                                    Icons.filter_list,
+                                    size: 18,
+                                    color: ColorPallete.color1,
                                   ),
-                                  _buildCategoryCard(
-                                    'Mobile',
-                                    Icons.smartphone,
-                                    Colors.blue,
+                                  SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      '${filteredProducts.length} products',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.grey[600],
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
                                   ),
-                                  _buildCategoryCard(
-                                    'Electronics',
-                                    Icons.electrical_services,
-                                    Colors.orange,
-                                  ),
-                                  _buildCategoryCard(
-                                    'Appliances',
-                                    Icons.home,
-                                    Colors.green,
-                                  ),
-                                  _buildCategoryCard(
-                                    'Fashion',
-                                    Icons.shopping_bag,
-                                    Colors.purple,
-                                  ),
-                                  _buildCategoryCard(
-                                    'Books',
-                                    Icons.book,
-                                    Colors.brown,
-                                  ),
-                                  _buildCategoryCard(
-                                    'Sports',
-                                    Icons.sports_football,
-                                    Colors.red,
-                                  ),
-                                  _buildCategoryCard(
-                                    'Beauty',
-                                    Icons.face_retouching_natural,
-                                    Colors.pink,
-                                  ),
-                                  _buildCategoryCard(
-                                    'Groceries',
-                                    Icons.local_grocery_store,
-                                    Colors.teal,
+                                  GestureDetector(
+                                    onTap: clearCategoryFilter,
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 5,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[100],
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: Colors.grey[300]!,
+                                          width: 0.5,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        'Clear',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: ColorPallete.color1,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ],
+                              ),
+                            ),
+                          ),
+                        SizedBox(
+                          height: 100,
+                          child: ListView(
+                            scrollDirection: Axis.horizontal,
+                            padding: EdgeInsets.symmetric(horizontal: 8),
+                            physics: BouncingScrollPhysics(),
+                            children: [
+                              _buildCategoryCard(
+                                'All',
+                                Icons.grid_view,
+                                Colors.grey,
+                              ),
+                              _buildCategoryCard(
+                                'Mobile',
+                                Icons.smartphone,
+                                Colors.blue,
+                              ),
+                              _buildCategoryCard(
+                                'Electronics',
+                                Icons.electrical_services,
+                                Colors.orange,
+                              ),
+                              _buildCategoryCard(
+                                'Appliances',
+                                Icons.home,
+                                Colors.green,
+                              ),
+                              _buildCategoryCard(
+                                'Fashion',
+                                Icons.shopping_bag,
+                                Colors.purple,
+                              ),
+                              _buildCategoryCard(
+                                'Books',
+                                Icons.book,
+                                Colors.brown,
+                              ),
+                              _buildCategoryCard(
+                                'Sports',
+                                Icons.sports_football,
+                                Colors.red,
+                              ),
+                              _buildCategoryCard(
+                                'Beauty',
+                                Icons.face_retouching_natural,
+                                Colors.pink,
+                              ),
+                              _buildCategoryCard(
+                                'Groceries',
+                                Icons.local_grocery_store,
+                                Colors.teal,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Banner with improved animation
+                SliverToBoxAdapter(
+                  child: Container(
+                    margin: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: SizedBox(
+                        height: 200,
+                        child: Stack(
+                          children: [
+                            PageView(
+                              controller: _pageController,
+                              scrollDirection: Axis.horizontal,
+                              children: List.generate(3, (index) {
+                                return AnimatedBuilder(
+                                  animation: _pageController,
+                                  builder: (context, child) {
+                                    double value = 1.0;
+                                    if (_pageController
+                                        .position
+                                        .haveDimensions) {
+                                      value = _pageController.page! - index;
+                                      value = (1 - (value.abs() * 0.3)).clamp(
+                                        0.0,
+                                        1.0,
+                                      );
+                                    }
+                                    return Transform.scale(
+                                      scale: value,
+                                      child: child,
+                                    );
+                                  },
+                                  child: Image.asset(
+                                    "assets/banner.jpg",
+                                    fit: BoxFit.cover,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            Container(
+                                              color: Colors.grey[300],
+                                              child: Center(
+                                                child: Icon(
+                                                  Icons.image,
+                                                  size: 64,
+                                                  color: Colors.grey[600],
+                                                ),
+                                              ),
+                                            ),
+                                  ),
+                                );
+                              }),
+                            ),
+                            Positioned(
+                              bottom: 16,
+                              right: 16,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: List.generate(3, (index) {
+                                  return AnimatedBuilder(
+                                    animation: _pageController,
+                                    builder: (context, child) {
+                                      final page = _pageController.page ?? 0.0;
+                                      final isActive = (page.round() == index);
+                                      final progress = (page - page.toInt())
+                                          .abs();
+
+                                      return Padding(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 4,
+                                        ),
+                                        child: AnimatedContainer(
+                                          duration: Duration(milliseconds: 300),
+                                          width: isActive ? 24 : 8,
+                                          height: 8,
+                                          decoration: BoxDecoration(
+                                            color: isActive
+                                                ? ColorPallete.color1
+                                                : Colors.grey[400],
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
+                                            boxShadow: isActive
+                                                ? [
+                                                    BoxShadow(
+                                                      color: ColorPallete.color1
+                                                          .withAlpha(100),
+                                                      blurRadius: 6,
+                                                      offset: Offset(0, 2),
+                                                    ),
+                                                  ]
+                                                : [],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                }),
                               ),
                             ),
                           ],
                         ),
                       ),
                     ),
+                  ),
+                ),
 
-                    // Banner with improved animation
-                    SliverToBoxAdapter(
-                      child: Container(
-                        margin: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: SizedBox(
-                            height: 200,
-                            child: Stack(
-                              children: [
-                                PageView(
-                                  controller: _pageController,
-                                  scrollDirection: Axis.horizontal,
-                                  children: List.generate(3, (index) {
-                                    return AnimatedBuilder(
-                                      animation: _pageController,
-                                      builder: (context, child) {
-                                        double value = 1.0;
-                                        if (_pageController.position
-                                            .haveDimensions) {
-                                          value = _pageController.page! - index;
-                                          value = (1 - (value.abs() * 0.3))
-                                              .clamp(0.0, 1.0);
-                                        }
-                                        return Transform.scale(
-                                          scale: value,
-                                          child: child,
-                                        );
-                                      },
-                                      child: Image.asset(
-                                        "assets/banner.jpg",
-                                        fit: BoxFit.cover,
-                                        errorBuilder:
-                                            (context, error, stackTrace) =>
-                                                Container(
-                                          color: Colors.grey[300],
-                                          child: Center(
-                                            child: Icon(
-                                              Icons.image,
-                                              size: 64,
-                                              color: Colors.grey[600],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  }),
-                                ),
-                                Positioned(
-                                  bottom: 16,
-                                  right: 16,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: List.generate(3, (index) {
-                                      return AnimatedBuilder(
-                                        animation: _pageController,
-                                        builder: (context, child) {
-                                          final page = _pageController.page ?? 0.0;
-                                          final isActive = (page.round() == index);
-                                          final progress =
-                                              (page - page.toInt()).abs();
-
-                                          return Padding(
-                                            padding: EdgeInsets.symmetric(
-                                              horizontal: 4,
-                                            ),
-                                            child: AnimatedContainer(
-                                              duration: Duration(
-                                                milliseconds: 300,
-                                              ),
-                                              width: isActive ? 24 : 8,
-                                              height: 8,
-                                              decoration: BoxDecoration(
-                                                color: isActive
-                                                    ? ColorPallete.color1
-                                                    : Colors.grey[400],
-                                                borderRadius:
-                                                    BorderRadius.circular(4),
-                                                boxShadow: isActive
-                                                    ? [
-                                                        BoxShadow(
-                                                          color: ColorPallete
-                                                              .color1
-                                                              .withAlpha(100),
-                                                          blurRadius: 6,
-                                                          offset: Offset(0, 2),
-                                                        )
-                                                      ]
-                                                    : [],
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      );
-                                    }),
-                                  ),
-                                ),
-                              ],
+                // Brand Logos Section
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Text(
+                            'Brands Available',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey[800],
                             ),
                           ),
                         ),
-                      ),
-                    ),
-
-                    // Products Grid with staggered animations
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(8, 8, 8, 16),
-                      sliver: SliverGrid(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final product = filteredProducts[index];
-                            final controller = _productAnimations[index];
-
-                            return ScaleTransition(
-                              scale: controller?.drive(Tween(begin: 0.8, end: 1.0),) ?? AlwaysStoppedAnimation(1.0),
-                              child: FadeTransition(
-                                opacity: controller?.drive(Tween(begin: 0.0, end: 1.0),) ?? AlwaysStoppedAnimation(1.0),
-                                child: _buildProductCard(product),
+                        SizedBox(height: 12),
+                        SizedBox(
+                          height: 82,
+                          child: ListView(
+                            scrollDirection: Axis.horizontal,
+                            padding: EdgeInsets.symmetric(horizontal: 16),
+                            physics: BouncingScrollPhysics(),
+                            children: [
+                              _buildBrandLogo(
+                                'Apple',
+                                'BrandLogos/Mobile/apple.png',
                               ),
-                            );
-                          },
-                          childCount: filteredProducts.length,
+                              _buildBrandLogo(
+                                'Samsung',
+                                'BrandLogos/Mobile/samsung.png',
+                              ),
+                              _buildBrandLogo(
+                                'Xiaomi',
+                                'BrandLogos/Mobile/xiaomi.png',
+                              ),
+                              _buildBrandLogo(
+                                'Realme',
+                                'BrandLogos/Mobile/realme.png',
+                              ),
+                              _buildBrandLogo(
+                                'iQOO',
+                                'BrandLogos/Mobile/iqoo.png',
+                              ),
+                              _buildBrandLogo(
+                                'Motorola',
+                                'BrandLogos/Mobile/motorola.png',
+                              ),
+                              _buildBrandLogo(
+                                'boAt',
+                                'BrandLogos/Electronics/boat.png',
+                              ),
+                              _buildBrandLogo(
+                                'Sony',
+                                'BrandLogos/Electronics/sony.png',
+                              ),
+                            ],
+                          ),
                         ),
-                        gridDelegate:
-                            SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 8,
-                          mainAxisSpacing: 8,
-                          childAspectRatio: 0.58,
-                        ),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
+
+                // Products Grid with staggered animations
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 16),
+                  sliver: SliverGrid(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final product = filteredProducts[index];
+                      final controller = _productAnimations[index];
+
+                      return ScaleTransition(
+                        scale:
+                            controller?.drive(Tween(begin: 0.8, end: 1.0)) ??
+                            AlwaysStoppedAnimation(1.0),
+                        child: FadeTransition(
+                          opacity:
+                              controller?.drive(Tween(begin: 0.0, end: 1.0)) ??
+                              AlwaysStoppedAnimation(1.0),
+                          child: _buildProductCard(product),
+                        ),
+                      );
+                    }, childCount: filteredProducts.length),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 8,
+                      mainAxisSpacing: 8,
+                      childAspectRatio: 0.58,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildBrandLogo(String brandName, String assetPath) {
+    return Container(
+      margin: EdgeInsets.only(right: 16),
+      child: GestureDetector(
+        onTap: () {
+          // Filter products by brand
+          setState(() {
+            isSearching = true;
+            filteredProducts = products.where((product) {
+              final productBrand = product.brand.toLowerCase();
+              final searchBrand = brandName.toLowerCase();
+
+              // Handle Xiaomi-Redmi relationship
+              if (searchBrand == 'xiaomi') {
+                return productBrand.contains('xiaomi') ||
+                    productBrand.contains('redmi');
+              }
+
+              // Handle other brand relationships
+              return productBrand.contains(searchBrand) ||
+                  searchBrand.contains(productBrand);
+            }).toList();
+          });
+
+          // Show snackbar with filter info
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Showing ${filteredProducts.length} products from $brandName',
+              ),
+              duration: Duration(seconds: 2),
+              backgroundColor: ColorPallete.color1,
+            ),
+          );
+        },
+        child: Column(
+          children: [
+            Container(
+              width: 60,
+              height: 60,
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.1),
+                    spreadRadius: 1,
+                    blurRadius: 6,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+                border: Border.all(
+                  color: Colors.grey.withOpacity(0.1),
+                  width: 1,
+                ),
+              ),
+              child: Image.asset(
+                assetPath,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => Icon(
+                  Icons.image_not_supported,
+                  color: Colors.grey[400],
+                  size: 24,
+                ),
+              ),
+            ),
+            SizedBox(height: 6),
+            Text(
+              brandName,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[700],
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -787,7 +944,7 @@ class _HomePage extends State<HomePage> with TickerProviderStateMixin {
                             child: CircularProgressIndicator(
                               value: loadingProgress.expectedTotalBytes != null
                                   ? loadingProgress.cumulativeBytesLoaded /
-                                      loadingProgress.expectedTotalBytes!
+                                        loadingProgress.expectedTotalBytes!
                                   : null,
                               strokeWidth: 2,
                               valueColor: AlwaysStoppedAnimation(

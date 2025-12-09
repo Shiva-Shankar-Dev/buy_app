@@ -5,18 +5,21 @@ import '../models/models.dart';
 import 'dart:math';
 import 'package:intl/intl.dart';
 import 'stock_service.dart';
+
 // Order Item for storage
 class OrderItem {
   final String productTitle;
   final double productPrice;
   final int quantity;
   final String? productImage;
+  final String sellerId;
 
   OrderItem({
     required this.productTitle,
     required this.productPrice,
     required this.quantity,
     this.productImage,
+    required this.sellerId,
   });
 
   // Convert from CartItem
@@ -28,6 +31,7 @@ class OrderItem {
       productImage: cartItem.product.images.isNotEmpty
           ? cartItem.product.images[0]
           : null,
+      sellerId: cartItem.product.sellerId,
     );
   }
 
@@ -38,6 +42,7 @@ class OrderItem {
       'productPrice': productPrice,
       'quantity': quantity,
       'productImage': productImage,
+      'sellerId': sellerId,
     };
   }
 
@@ -47,6 +52,7 @@ class OrderItem {
       productPrice: (map['productPrice'] ?? 0).toDouble(),
       quantity: map['quantity'] ?? 1,
       productImage: map['productImage'],
+      sellerId: map['sellerId'] ?? '',
     );
   }
 }
@@ -63,6 +69,7 @@ class Order {
   final String status;
   final DateTime orderDate;
   final Map<String, dynamic> shippingAddress;
+  final List<String> sellerIds;
 
   Order({
     required this.orderId,
@@ -75,6 +82,7 @@ class Order {
     this.status = 'Confirmed',
     required this.orderDate,
     required this.shippingAddress,
+    required this.sellerIds,
   });
 
   // Convert to Map for Firestore
@@ -90,6 +98,7 @@ class Order {
       'status': status,
       'orderDate': Timestamp.fromDate(orderDate),
       'shippingAddress': shippingAddress,
+      'sellerIds': sellerIds,
       'createdAt': Timestamp.now(),
     };
   }
@@ -110,6 +119,7 @@ class Order {
       status: data['status'] ?? 'Confirmed',
       orderDate: (data['orderDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
       shippingAddress: Map<String, dynamic>.from(data['shippingAddress'] ?? {}),
+      sellerIds: List<String>.from(data['sellerIds'] ?? []),
     );
   }
 }
@@ -183,6 +193,14 @@ class OrderService {
         '✅ [ORDER_CREATE] Converted ${orderItems.length} cart items to order items',
       );
 
+      // Collect unique seller IDs from cart items
+      final sellerIds = cartItems
+          .map((item) => item.product.sellerId)
+          .where((sellerId) => sellerId.isNotEmpty)
+          .toSet()
+          .toList();
+      debugPrint('✅ [ORDER_CREATE] Collected seller IDs: $sellerIds');
+
       // Create order object
       final order = Order(
         orderId: orderId,
@@ -195,6 +213,7 @@ class OrderService {
         status: status,
         orderDate: DateTime.now(),
         shippingAddress: shippingAddress,
+        sellerIds: sellerIds,
       );
       debugPrint('✅ [ORDER_CREATE] Order object created: $order');
 
@@ -221,20 +240,28 @@ class OrderService {
       // IMPORTANT: Decrement stock for each item in the order
       debugPrint('📊 [ORDER_CREATE] Starting stock decrement process...');
       for (final item in cartItems) {
-        debugPrint('📊 [ORDER_CREATE] Decrementing stock for: ${item.product.name} (PID: ${item.product.pid}, Qty: ${item.quantity})');
+        debugPrint(
+          '📊 [ORDER_CREATE] Decrementing stock for: ${item.product.name} (PID: ${item.product.pid}, Qty: ${item.quantity})',
+        );
         final stockUpdated = await StockService.decrementStock(
           item.product.pid,
           item.quantity,
         );
         if (!stockUpdated) {
-          debugPrint('⚠️ [ORDER_CREATE] Failed to update stock for ${item.product.name}');
+          debugPrint(
+            '⚠️ [ORDER_CREATE] Failed to update stock for ${item.product.name}',
+          );
         } else {
-          debugPrint('✅ [ORDER_CREATE] Stock updated successfully for ${item.product.name}');
+          debugPrint(
+            '✅ [ORDER_CREATE] Stock updated successfully for ${item.product.name}',
+          );
         }
       }
       debugPrint('✅ [ORDER_CREATE] Stock decrement process completed');
 
-      debugPrint('🎉 [ORDER_CREATE] Order creation process completed successfully');
+      debugPrint(
+        '🎉 [ORDER_CREATE] Order creation process completed successfully',
+      );
       return orderId;
     } catch (e, stackTrace) {
       debugPrint('❌ [ORDER_CREATE] Error: $e');

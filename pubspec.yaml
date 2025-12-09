@@ -85,6 +85,8 @@ flutter:
   assets:
     - assets/
     - assets/logos/
+    - assets/BrandLogos/Mobile/
+    - assets/BrandLogos/Electronics/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
