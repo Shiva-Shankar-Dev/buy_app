@@ -66,7 +66,6 @@ class _ProfilePageState extends State<ProfilePage> {
                         SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: () {
-                            // TODO: Implement edit profile
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('Edit profile coming soon!'),

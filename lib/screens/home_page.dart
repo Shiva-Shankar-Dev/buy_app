@@ -728,35 +728,35 @@ class _HomePage extends State<HomePage> with TickerProviderStateMixin {
                             children: [
                               _buildBrandLogo(
                                 'Apple',
-                                'BrandLogos/Mobile/apple.png',
+                                'assets/BrandLogos/Mobile/apple.png',
                               ),
                               _buildBrandLogo(
                                 'Samsung',
-                                'BrandLogos/Mobile/samsung.png',
+                                'assets/BrandLogos/Mobile/samsung.png',
                               ),
                               _buildBrandLogo(
                                 'Xiaomi',
-                                'BrandLogos/Mobile/xiaomi.png',
+                                'assets/BrandLogos/Mobile/xiaomi.png',
                               ),
                               _buildBrandLogo(
                                 'Realme',
-                                'BrandLogos/Mobile/realme.png',
+                                'assets/BrandLogos/Mobile/realme.png',
                               ),
                               _buildBrandLogo(
                                 'iQOO',
-                                'BrandLogos/Mobile/iqoo.png',
+                                'assets/BrandLogos/Mobile/iqoo.png',
                               ),
                               _buildBrandLogo(
                                 'Motorola',
-                                'BrandLogos/Mobile/motorola.png',
+                                'assets/BrandLogos/Mobile/motorola.png',
                               ),
                               _buildBrandLogo(
                                 'boAt',
-                                'BrandLogos/Electronics/boat.png',
+                                'assets/BrandLogos/Electronics/boat.png',
                               ),
                               _buildBrandLogo(
                                 'Sony',
-                                'BrandLogos/Electronics/sony.png',
+                                'assets/BrandLogos/Electronics/sony.png',
                               ),
                             ],
                           ),

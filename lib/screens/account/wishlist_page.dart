@@ -92,7 +92,6 @@ class _WishlistPageState extends State<WishlistPage> {
   }
 
   void moveToCart(Product product) {
-    // TODO: Implement move to cart functionality
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('${product.name} moved to cart'),
@@ -252,8 +251,7 @@ class _WishlistPageState extends State<WishlistPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          ProductDetailPage(product: product),
+                      builder: (context) => ProductDetailPage(product: product),
                     ),
                   );
                 },
@@ -270,7 +268,7 @@ class _WishlistPageState extends State<WishlistPage> {
                     ),
                     child: product.images.isNotEmpty
                         ? Center(
-                          child: Image.network(
+                            child: Image.network(
                               product.images[0],
                               fit: BoxFit.fill,
                               loadingBuilder:
@@ -311,7 +309,8 @@ class _WishlistPageState extends State<WishlistPage> {
                                 );
                               },
                             ),
-                        ) : Container(
+                          )
+                        : Container(
                             color: Colors.grey[200],
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -402,7 +401,7 @@ class _WishlistPageState extends State<WishlistPage> {
                     ),
                   ),
                 ),
-                SizedBox(height: 5.0)
+                SizedBox(height: 5.0),
               ],
             ),
           ),

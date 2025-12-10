@@ -1594,6 +1594,7 @@ class _ProductDetailPageState extends State<ProductDetailPage>
           const SizedBox(width: 8),
           Expanded(
             child: Container(
+              height: 50,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -1617,7 +1618,7 @@ class _ProductDetailPageState extends State<ProductDetailPage>
                     Navigator.of(context).pushNamed('/cart');
                   },
                   borderRadius: BorderRadius.circular(10),
-                  child: const Center(
+                  child: Center(
                     child: Text(
                       'GO TO CART',
                       style: TextStyle(
