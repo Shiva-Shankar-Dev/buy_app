@@ -25,8 +25,7 @@ class _HomePage extends State<HomePage> with TickerProviderStateMixin {
   String? selectedCategory;
   late PageController _pageController;
   late AnimationController _fadeController;
-  late Animation<double> _fadeAnimation;
-  Map<int, AnimationController> _productAnimations = {};
+  final Map<int, AnimationController> _productAnimations = {};
 
   @override
   void dispose() {
@@ -82,10 +81,6 @@ class _HomePage extends State<HomePage> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeIn));
     _fadeController.forward();
 
     loadProductsFromFirestore();
@@ -664,8 +659,6 @@ class _HomePage extends State<HomePage> with TickerProviderStateMixin {
                                     builder: (context, child) {
                                       final page = _pageController.page ?? 0.0;
                                       final isActive = (page.round() == index);
-                                      final progress = (page - page.toInt())
-                                          .abs();
 
                                       return Padding(
                                         padding: EdgeInsets.symmetric(
@@ -852,16 +845,13 @@ class _HomePage extends State<HomePage> with TickerProviderStateMixin {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
+                    color: Colors.grey.withAlpha(25),
                     spreadRadius: 1,
                     blurRadius: 6,
                     offset: Offset(0, 2),
                   ),
                 ],
-                border: Border.all(
-                  color: Colors.grey.withOpacity(0.1),
-                  width: 1,
-                ),
+                border: Border.all(color: Colors.grey.withAlpha(25), width: 1),
               ),
               child: Image.asset(
                 assetPath,
@@ -947,7 +937,7 @@ class _HomePage extends State<HomePage> with TickerProviderStateMixin {
                             ),
                           );
                         },
-                        errorBuilder: (_, __, ___) => Icon(
+                        errorBuilder: (_, _, _) => Icon(
                           Icons.image,
                           size: 50,
                           color: Colors.grey[300],

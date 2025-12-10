@@ -431,7 +431,7 @@ Future<void> placeOrder(Map<String, dynamic> customer, Address address) async {
           .toList(),
       'totalAmount': cartItems.fold(
         0.0,
-        (sum, item) => sum + (item.product.price * item.quantity),
+        (total, item) => total + (item.product.price * item.quantity),
       ),
       'status': 'pending',
       'createdAt': FieldValue.serverTimestamp(),

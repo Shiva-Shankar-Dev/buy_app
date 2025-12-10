@@ -23,10 +23,7 @@ class OrderDetailsPage extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                ColorPallete.color1,
-                ColorPallete.color1.withOpacity(0.8),
-              ],
+              colors: [ColorPallete.color1, ColorPallete.color1.withAlpha(204)],
             ),
           ),
         ),
@@ -36,7 +33,7 @@ class OrderDetailsPage extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [ColorPallete.color1.withOpacity(0.05), Colors.white],
+            colors: [ColorPallete.color1.withAlpha(13), Colors.white],
           ),
         ),
         child: SingleChildScrollView(
@@ -86,7 +83,7 @@ class OrderDetailsPage extends StatelessWidget {
 
     return Card(
       elevation: 8,
-      shadowColor: ColorPallete.color1.withOpacity(0.3),
+      shadowColor: ColorPallete.color1.withAlpha(77),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         decoration: BoxDecoration(
@@ -94,7 +91,7 @@ class OrderDetailsPage extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Colors.white, ColorPallete.color1.withOpacity(0.02)],
+            colors: [Colors.white, ColorPallete.color1.withAlpha(5)],
           ),
         ),
         padding: const EdgeInsets.all(20),
@@ -106,7 +103,7 @@ class OrderDetailsPage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: ColorPallete.color1.withOpacity(0.1),
+                    color: ColorPallete.color1.withAlpha(25),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -150,13 +147,13 @@ class OrderDetailsPage extends StatelessWidget {
                     gradient: LinearGradient(
                       colors: [
                         _getStatusColor(currentStatus),
-                        _getStatusColor(currentStatus).withOpacity(0.8),
+                        _getStatusColor(currentStatus).withAlpha(204),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(25),
                     boxShadow: [
                       BoxShadow(
-                        color: _getStatusColor(currentStatus).withOpacity(0.3),
+                        color: _getStatusColor(currentStatus).withAlpha(77),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -183,7 +180,7 @@ class OrderDetailsPage extends StatelessWidget {
   Widget _buildOrderStatus() {
     return Card(
       elevation: 6,
-      shadowColor: Colors.grey.withOpacity(0.2),
+      shadowColor: Colors.grey.withAlpha(51),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         decoration: BoxDecoration(
@@ -203,7 +200,7 @@ class OrderDetailsPage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: ColorPallete.color1.withOpacity(0.1),
+                    color: ColorPallete.color1.withAlpha(25),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -339,7 +336,7 @@ class OrderDetailsPage extends StatelessWidget {
                                         ((isCurrent && !isDelivered)
                                                 ? Colors.orange
                                                 : Colors.green)
-                                            .withOpacity(0.3),
+                                            .withAlpha(77),
                                     blurRadius: 10,
                                     offset: const Offset(0, 3),
                                   ),
@@ -415,7 +412,7 @@ class OrderDetailsPage extends StatelessWidget {
                                       ((isCurrent && !isDelivered)
                                               ? Colors.orange
                                               : Colors.green)
-                                          .withOpacity(0.1),
+                                          .withAlpha(25),
                                   blurRadius: 5,
                                   offset: const Offset(0, 2),
                                 ),
@@ -519,7 +516,7 @@ class OrderDetailsPage extends StatelessWidget {
   Widget _buildDeliveryInfo() {
     return Card(
       elevation: 6,
-      shadowColor: Colors.blue.withOpacity(0.2),
+      shadowColor: Colors.blue.withAlpha(51),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         decoration: BoxDecoration(
@@ -527,7 +524,7 @@ class OrderDetailsPage extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Colors.white, Colors.blue.shade50.withOpacity(0.3)],
+            colors: [Colors.white, Colors.blue.shade50.withAlpha(77)],
           ),
         ),
         padding: const EdgeInsets.all(20),
@@ -539,7 +536,7 @@ class OrderDetailsPage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
+                    color: Colors.blue.withAlpha(25),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -572,7 +569,7 @@ class OrderDetailsPage extends StatelessWidget {
                 border: Border.all(color: Colors.blue.shade200, width: 1.5),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.blue.withOpacity(0.1),
+                    color: Colors.blue.withAlpha(25),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -627,7 +624,7 @@ class OrderDetailsPage extends StatelessWidget {
 
     return Card(
       elevation: 6,
-      shadowColor: Colors.green.withOpacity(0.2),
+      shadowColor: Colors.green.withAlpha(51),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         decoration: BoxDecoration(
@@ -635,7 +632,7 @@ class OrderDetailsPage extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Colors.white, Colors.green.shade50.withOpacity(0.3)],
+            colors: [Colors.white, Colors.green.shade50.withAlpha(77)],
           ),
         ),
         padding: const EdgeInsets.all(20),
@@ -647,7 +644,7 @@ class OrderDetailsPage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
+                    color: Colors.green.withAlpha(25),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -699,7 +696,7 @@ class OrderDetailsPage extends StatelessWidget {
   Widget _buildOrderItems() {
     return Card(
       elevation: 6,
-      shadowColor: Colors.orange.withOpacity(0.2),
+      shadowColor: Colors.orange.withAlpha(51),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         decoration: BoxDecoration(
@@ -707,7 +704,7 @@ class OrderDetailsPage extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Colors.white, Colors.orange.shade50.withOpacity(0.3)],
+            colors: [Colors.white, Colors.orange.shade50.withAlpha(77)],
           ),
         ),
         padding: const EdgeInsets.all(20),
@@ -719,7 +716,7 @@ class OrderDetailsPage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.1),
+                    color: Colors.orange.withAlpha(25),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -757,7 +754,7 @@ class OrderDetailsPage extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade200, width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withAlpha(25),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -773,13 +770,13 @@ class OrderDetailsPage extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  ColorPallete.color1.withOpacity(0.1),
-                  ColorPallete.color1.withOpacity(0.05),
+                  ColorPallete.color1.withAlpha(25),
+                  ColorPallete.color1.withAlpha(13),
                 ],
               ),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: ColorPallete.color1.withOpacity(0.2),
+                color: ColorPallete.color1.withAlpha(51),
                 width: 1,
               ),
             ),
@@ -820,10 +817,10 @@ class OrderDetailsPage extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: ColorPallete.color1.withOpacity(0.1),
+                      color: ColorPallete.color1.withAlpha(25),
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
-                        color: ColorPallete.color1.withOpacity(0.3),
+                        color: ColorPallete.color1.withAlpha(77),
                       ),
                     ),
                     child: Column(
@@ -845,7 +842,7 @@ class OrderDetailsPage extends StatelessWidget {
                               color: ColorPallete.color1,
                             ),
                           );
-                        }).toList(),
+                        }),
                       ],
                     ),
                   ),
@@ -883,7 +880,7 @@ class OrderDetailsPage extends StatelessWidget {
 
     return Card(
       elevation: 8,
-      shadowColor: ColorPallete.color1.withOpacity(0.3),
+      shadowColor: ColorPallete.color1.withAlpha(77),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         decoration: BoxDecoration(
@@ -891,7 +888,7 @@ class OrderDetailsPage extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Colors.white, ColorPallete.color1.withOpacity(0.05)],
+            colors: [Colors.white, ColorPallete.color1.withAlpha(13)],
           ),
         ),
         padding: const EdgeInsets.all(20),
@@ -903,7 +900,7 @@ class OrderDetailsPage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: ColorPallete.color1.withOpacity(0.1),
+                    color: ColorPallete.color1.withAlpha(25),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -941,14 +938,14 @@ class OrderDetailsPage extends StatelessWidget {
                   gradient: LinearGradient(
                     colors: [
                       Colors.green.shade50,
-                      Colors.green.shade100.withOpacity(0.5),
+                      Colors.green.shade100.withAlpha(128),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.green.shade300, width: 1),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.green.withOpacity(0.2),
+                      color: Colors.green.withAlpha(51),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
@@ -1078,7 +1075,7 @@ class OrderDetailsPage extends StatelessWidget {
   Widget _buildInvoiceInfo() {
     return Card(
       elevation: 6,
-      shadowColor: Colors.purple.withOpacity(0.2),
+      shadowColor: Colors.purple.withAlpha(51),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         decoration: BoxDecoration(
@@ -1086,7 +1083,7 @@ class OrderDetailsPage extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Colors.white, Colors.purple.shade50.withOpacity(0.3)],
+            colors: [Colors.white, Colors.purple.shade50.withAlpha(77)],
           ),
         ),
         padding: const EdgeInsets.all(20),
@@ -1098,7 +1095,7 @@ class OrderDetailsPage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.purple.withOpacity(0.1),
+                    color: Colors.purple.withAlpha(25),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -1131,7 +1128,7 @@ class OrderDetailsPage extends StatelessWidget {
                 border: Border.all(color: Colors.purple.shade200, width: 1.5),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.purple.withOpacity(0.1),
+                    color: Colors.purple.withAlpha(25),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),

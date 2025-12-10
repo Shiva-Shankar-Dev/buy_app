@@ -24,7 +24,6 @@ class _SearchResultsState extends State<SearchResults> {
         .limit(20);
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,13 +42,6 @@ class _SearchResultsState extends State<SearchResults> {
           if (docs.isEmpty) {
             return const Center(child: Text('No products found'));
           }
-
-          final filteredDocs = docs.where((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            final name = (data['name'] ?? '').toString().toLowerCase();
-
-            return name == lowerQuery || (data['keywords'] as List<dynamic>? ?? []).contains(lowerQuery);
-          }).toList();
 
           return GridView.builder(
             padding: const EdgeInsets.all(8),
@@ -80,15 +72,22 @@ class ProductCard extends StatelessWidget {
     final name = data['name'] ?? 'No name';
     final price = data['price'] != null ? '\$${data['price']}' : 'N/A';
     final imagesList = data['images'] as List<dynamic>?;
-    final imageUrl = (imagesList != null && imagesList.isNotEmpty) ? imagesList[0] as String? : null;
+    final imageUrl = (imagesList != null && imagesList.isNotEmpty)
+        ? imagesList[0] as String?
+        : null;
     debugPrint('🔥 ProductCard built for: $name');
     Product product = Product.fromFirestore(data);
     return Card(
       elevation: 2,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: (){
-          Navigator.push(context, MaterialPageRoute(builder: (context) => ProductDetailPage(product: product)));
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ProductDetailPage(product: product),
+            ),
+          );
         },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -119,12 +118,19 @@ class ProductCard extends StatelessWidget {
                     name,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     price,
-                    style: const TextStyle(fontSize: 12, color: Colors.green, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),

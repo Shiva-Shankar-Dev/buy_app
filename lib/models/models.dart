@@ -42,7 +42,7 @@ class CartItem {
   @override
   String toString() {
     final variantText = selectedVariantId != null
-        ? ' (${variantDisplayText})'
+        ? ' ($variantDisplayText)'
         : '';
     return 'CartItem(product: ${product.name}$variantText, quantity: $quantity)';
   }
@@ -112,7 +112,7 @@ class ProductVariant {
 
   factory ProductVariant.fromFirestore(Map<String, dynamic> data) {
     try {
-      print('Creating ProductVariant from data: ${data.keys.toList()}');
+      debugPrint('Creating ProductVariant from data: ${data.keys.toList()}');
       return ProductVariant(
         variantId: data['variantId'] ?? '',
         attributes: Map<String, String>.from(data['attributes'] ?? {}),
@@ -128,9 +128,9 @@ class ProductVariant {
         sku: data['sku'],
       );
     } catch (e, stackTrace) {
-      print('Error creating ProductVariant from Firestore: $e');
-      print('Data: $data');
-      print('StackTrace: $stackTrace');
+      debugPrint('Error creating ProductVariant from Firestore: $e');
+      debugPrint('Data: $data');
+      debugPrint('StackTrace: $stackTrace');
       rethrow;
     }
   }
@@ -220,16 +220,16 @@ class Product {
 
   factory Product.fromFirestore(Map<String, dynamic> data) {
     try {
-      print('═══════════════════════════════════════════════════');
-      print('🔍 CREATING PRODUCT FROM FIRESTORE');
-      print('═══════════════════════════════════════════════════');
-      print('Data keys: ${data.keys.toList()}');
+      debugPrint('═══════════════════════════════════════════════════');
+      debugPrint('🔍 CREATING PRODUCT FROM FIRESTORE');
+      debugPrint('═══════════════════════════════════════════════════');
+      debugPrint('Data keys: ${data.keys.toList()}');
 
       // Get variants array with explicit type checking
-      print('');
-      print('📦 VARIANTS PARSING:');
-      print('Raw variants value: ${data['variants']}');
-      print('Variants type: ${data['variants'].runtimeType}');
+      debugPrint('');
+      debugPrint('📦 VARIANTS PARSING:');
+      debugPrint('Raw variants value: ${data['variants']}');
+      debugPrint('Variants type: ${data['variants'].runtimeType}');
 
       final variantsData = data['variants'];
       List<dynamic> variantsList = [];
@@ -237,86 +237,90 @@ class Product {
       if (variantsData != null) {
         if (variantsData is List<dynamic>) {
           variantsList = variantsData;
-          print('✅ Variants is a List<dynamic>');
+          debugPrint('✅ Variants is a List<dynamic>');
         } else if (variantsData is List) {
           variantsList = List<dynamic>.from(variantsData);
-          print('✅ Variants converted to List<dynamic>');
+          debugPrint('✅ Variants converted to List<dynamic>');
         } else {
-          print('❌ Variants is not a list! Type: ${variantsData.runtimeType}');
+          debugPrint(
+            '❌ Variants is not a list! Type: ${variantsData.runtimeType}',
+          );
           variantsList = [];
         }
       } else {
-        print('⚠️ Variants key is null or missing');
+        debugPrint('⚠️ Variants key is null or missing');
         variantsList = [];
       }
 
-      print('Final variantsList count: ${variantsList.length}');
-      print('');
+      debugPrint('Final variantsList count: ${variantsList.length}');
+      debugPrint('');
 
       final variants = <ProductVariant>[];
 
       for (int i = 0; i < variantsList.length; i++) {
         try {
-          print('Processing variant $i:');
+          debugPrint('Processing variant $i:');
           final variantItem = variantsList[i];
-          print('  Raw item: $variantItem');
-          print('  Item type: ${variantItem.runtimeType}');
+          debugPrint('  Raw item: $variantItem');
+          debugPrint('  Item type: ${variantItem.runtimeType}');
 
           // Ensure it's a map
           late Map<String, dynamic> variantMap;
           if (variantItem is Map<String, dynamic>) {
             variantMap = variantItem;
-            print('  ✅ Already a Map<String, dynamic>');
+            debugPrint('  ✅ Already a Map<String, dynamic>');
           } else if (variantItem is Map) {
             variantMap = Map<String, dynamic>.from(variantItem);
-            print('  ✅ Converted to Map<String, dynamic>');
+            debugPrint('  ✅ Converted to Map<String, dynamic>');
           } else {
-            print('  ❌ Item is not a map! Skipping variant $i');
+            debugPrint('  ❌ Item is not a map! Skipping variant $i');
             continue;
           }
 
-          print('  Map keys: ${variantMap.keys.toList()}');
-          print('  variantId: ${variantMap['variantId']}');
-          print('  attributes: ${variantMap['attributes']}');
-          print('  price: ${variantMap['price']}');
+          debugPrint('  Map keys: ${variantMap.keys.toList()}');
+          debugPrint('  variantId: ${variantMap['variantId']}');
+          debugPrint('  attributes: ${variantMap['attributes']}');
+          debugPrint('  price: ${variantMap['price']}');
 
           final variant = ProductVariant.fromFirestore(variantMap);
           variants.add(variant);
-          print('  ✅ Variant $i created successfully');
+          debugPrint('  ✅ Variant $i created successfully');
         } catch (e, st) {
-          print('  ❌ Error processing variant $i: $e');
-          print('  StackTrace: $st');
+          debugPrint('  ❌ Error processing variant $i: $e');
+          debugPrint('  StackTrace: $st');
         }
-        print('');
+        debugPrint('');
       }
 
-      print('Total variants parsed: ${variants.length}');
-      print('');
+      debugPrint('Total variants parsed: ${variants.length}');
+      debugPrint('');
 
       // Auto-detect availableAttributes if not provided
       List<String> finalAvailableAttributes = List<String>.from(
         data['availableAttributes'] ?? [],
       );
 
-      print('📋 AVAILABLE ATTRIBUTES:');
-      print('From data: ${data['availableAttributes']}');
+      debugPrint('📋 AVAILABLE ATTRIBUTES:');
+      debugPrint('From data: ${data['availableAttributes']}');
 
       // If no availableAttributes specified, auto-detect from variants
       if (finalAvailableAttributes.isEmpty && variants.isNotEmpty) {
-        print('Auto-detecting attributes from ${variants.length} variants...');
+        debugPrint(
+          'Auto-detecting attributes from ${variants.length} variants...',
+        );
         final detectedAttrs = <String>{};
         for (final variant in variants) {
-          print('  Variant attributes: ${variant.attributes}');
+          debugPrint('  Variant attributes: ${variant.attributes}');
           detectedAttrs.addAll(variant.attributes.keys);
         }
         finalAvailableAttributes = detectedAttrs.toList()..sort();
-        print('✅ Auto-detected attributes: $finalAvailableAttributes');
+        debugPrint('✅ Auto-detected attributes: $finalAvailableAttributes');
       } else if (finalAvailableAttributes.isNotEmpty) {
-        print('✅ Using provided attributes: $finalAvailableAttributes');
+        debugPrint('✅ Using provided attributes: $finalAvailableAttributes');
       } else {
-        print('⚠️ No attributes found');
+        debugPrint('⚠️ No attributes found');
       }
-      print('');
+      debugPrint('');
 
       final product = Product(
         name: data['name'] ?? 'Untitled',
@@ -336,20 +340,20 @@ class Product {
         availableAttributes: finalAvailableAttributes,
       );
 
-      print('✅ PRODUCT CREATED:');
-      print('  Name: ${product.name}');
-      print('  PID: ${product.pid}');
-      print('  hasVariants: ${product.hasVariants}');
-      print('  Variants: ${product.variants.length}');
-      print('  Available Attributes: ${product.availableAttributes}');
-      print('═══════════════════════════════════════════════════');
-      print('');
+      debugPrint('✅ PRODUCT CREATED:');
+      debugPrint('  Name: ${product.name}');
+      debugPrint('  PID: ${product.pid}');
+      debugPrint('  hasVariants: ${product.hasVariants}');
+      debugPrint('  Variants: ${product.variants.length}');
+      debugPrint('  Available Attributes: ${product.availableAttributes}');
+      debugPrint('═══════════════════════════════════════════════════');
+      debugPrint('');
 
       return product;
     } catch (e, stackTrace) {
-      print('❌ ERROR CREATING PRODUCT FROM FIRESTORE: $e');
-      print('StackTrace: $stackTrace');
-      print('═══════════════════════════════════════════════════');
+      debugPrint('❌ ERROR CREATING PRODUCT FROM FIRESTORE: $e');
+      debugPrint('StackTrace: $stackTrace');
+      debugPrint('═══════════════════════════════════════════════════');
       rethrow;
     }
   }
@@ -379,7 +383,10 @@ class Product {
   /// Get total available stock (sum of all variant stocks or base stock)
   int get totalAvailableStock {
     if (hasVariants) {
-      return variants.fold(0, (sum, variant) => sum + variant.stockQuantity);
+      return variants.fold(
+        0,
+        (total, variant) => total + variant.stockQuantity,
+      );
     }
     return stockQuantity;
   }

@@ -27,7 +27,7 @@ class _CartPageState extends State<CartPage> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withAlpha(20),
             blurRadius: 8,
             offset: Offset(0, 2),
           ),
@@ -102,7 +102,7 @@ class _CartPageState extends State<CartPage> {
                 decoration: BoxDecoration(
                   border: Border.all(color: ColorPallete.color1, width: 2),
                   borderRadius: BorderRadius.circular(8),
-                  color: ColorPallete.color1.withOpacity(0.05),
+                  color: ColorPallete.color1.withAlpha(13),
                 ),
                 child: Row(
                   children: [
@@ -398,7 +398,7 @@ class _CartPageState extends State<CartPage> {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.08),
+                          color: Colors.black.withAlpha(20),
                           blurRadius: 8,
                           offset: Offset(0, 2),
                         ),

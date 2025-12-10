@@ -1,8 +1,8 @@
-import 'dart:typed_data';
 import 'package:buy_app/services/addresses.dart';
 import 'package:buy_app/models/models.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 class PdfService {
@@ -28,7 +28,7 @@ class PdfService {
       watermarkImage = pw.MemoryImage(watermarkData.buffer.asUint8List());
     } catch (e) {
       // Watermark loading failed, continue without it
-      print('Could not load watermark: $e');
+      debugPrint('Could not load watermark: $e');
     }
 
     try {
@@ -36,7 +36,7 @@ class PdfService {
       appIconImage = pw.MemoryImage(appIconData.buffer.asUint8List());
     } catch (e) {
       // App icon loading failed, continue without it
-      print('Could not load app icon: $e');
+      debugPrint('Could not load app icon: $e');
     }
 
     // Calculate totals
@@ -282,12 +282,12 @@ class PdfService {
                                         ),
                                       ),
                                       pw.Text(
-                                        '${shippingAddress.line1}',
+                                        shippingAddress.line1,
                                         style: const pw.TextStyle(fontSize: 11),
                                       ),
                                       if (shippingAddress.line2.isNotEmpty)
                                         pw.Text(
-                                          '${shippingAddress.line2}',
+                                          shippingAddress.line2,
                                           style: const pw.TextStyle(
                                             fontSize: 11,
                                           ),
@@ -588,7 +588,7 @@ class PdfService {
                                             color: PdfColors.orange900,
                                           ),
                                         );
-                                      }).toList(),
+                                      }),
                                     ],
                                   ),
                                 ),
@@ -638,7 +638,7 @@ class PdfService {
                         ),
                       ],
                     );
-                  }).toList(),
+                  }),
                 ],
               ),
             ),
