@@ -266,7 +266,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           ),
                           SizedBox(height: 4),
                           Text(
-                            '₹${item.product.price.toStringAsFixed(2)} each',
+                            '₹${item.effectivePrice.toStringAsFixed(2)} each',
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey.shade600,
@@ -278,7 +278,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
                     // Total for this item
                     Text(
-                      '₹${(item.product.price * item.quantity).toStringAsFixed(2)}',
+                      '₹${(item.effectivePrice * item.quantity).toStringAsFixed(2)}',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,

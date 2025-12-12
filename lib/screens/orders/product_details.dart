@@ -40,12 +40,6 @@ class _ProductDetailPageState extends State<ProductDetailPage>
   void initState() {
     super.initState();
 
-    debugPrint('=== PRODUCT LOADING DEBUG ===');
-    debugPrint('Product received: ${widget.product}');
-    debugPrint('Product name: ${widget.product.name}');
-    debugPrint('Product hasVariants: ${widget.product.hasVariants}');
-    debugPrint('=============================');
-
     try {
       _pageController = AnimationController(
         duration: const Duration(milliseconds: 800),
@@ -84,50 +78,23 @@ class _ProductDetailPageState extends State<ProductDetailPage>
   }
 
   bool _shouldShowVariants() {
-    debugPrint('=== _shouldShowVariants DEBUG ===');
-    debugPrint('hasVariants: ${widget.product.hasVariants}');
-    debugPrint('variants.isEmpty: ${widget.product.variants.isEmpty}');
-    debugPrint('variants.length: ${widget.product.variants.length}');
-    debugPrint('availableAttributes: ${widget.product.availableAttributes}');
-
     // Check if product is marked as having variants
     if (!widget.product.hasVariants) {
-      debugPrint('Product hasVariants is false, not showing variants');
-      return false;
-    }
-
-    // Enhanced variant detection - if product has variants, try to show them
-    if (widget.product.variants.isEmpty) {
-      debugPrint('No variants found in variants list');
       return false;
     }
 
     // If hasVariants is true and we have variants, show them
     if (widget.product.hasVariants && widget.product.variants.isNotEmpty) {
-      debugPrint('Product has variants flag set to true and variants exist');
-
       // If availableAttributes is provided, use it
       if (widget.product.availableAttributes.isNotEmpty) {
-        debugPrint(
-          'Using provided availableAttributes: ${widget.product.availableAttributes}',
-        );
         return true;
       }
 
       // If availableAttributes is empty, try to detect from variant data
       final detectedAttributes = _getDetectedAttributes();
-      debugPrint('Detected attributes: $detectedAttributes');
-      if (detectedAttributes.isNotEmpty) {
-        debugPrint('Found detectable attributes, showing variants');
-        return true;
-      } else {
-        debugPrint('No detectable attributes found');
-        return false;
-      }
+      return detectedAttributes.isNotEmpty;
     }
 
-    debugPrint('Default case - not showing variants');
-    debugPrint('================================');
     return false;
   }
 
@@ -135,40 +102,17 @@ class _ProductDetailPageState extends State<ProductDetailPage>
     // Automatically detect available attributes from variant data
     final attributeNames = <String>{};
 
-    debugPrint('=== _getDetectedAttributes DEBUG ===');
-    debugPrint(
-      'Checking ${widget.product.variants.length} variants for attributes',
-    );
-
     if (widget.product.variants.isEmpty) {
-      debugPrint('No variants to check');
       return [];
     }
 
-    for (int i = 0; i < widget.product.variants.length; i++) {
-      final variant = widget.product.variants[i];
-      debugPrint('Variant $i: ${variant.variantId}');
-      debugPrint('Variant $i attributes: ${variant.attributes}');
-      debugPrint(
-        'Variant $i attributes keys: ${variant.attributes.keys.toList()}',
-      );
-      debugPrint(
-        'Variant $i attributes values: ${variant.attributes.values.toList()}',
-      );
-
+    for (final variant in widget.product.variants) {
       if (variant.attributes.isNotEmpty) {
         attributeNames.addAll(variant.attributes.keys);
-        debugPrint('Added attribute keys: ${variant.attributes.keys.toList()}');
-      } else {
-        debugPrint('Variant $i has no attributes');
       }
     }
 
     final result = attributeNames.toList()..sort();
-    debugPrint('All collected attribute names: $attributeNames');
-    debugPrint('Final detected attributes (sorted): $result');
-    debugPrint('Detected attributes count: ${result.length}');
-    debugPrint('===================================');
     return result;
   }
 
@@ -202,66 +146,28 @@ class _ProductDetailPageState extends State<ProductDetailPage>
   List<String> _getCorrectedAttributeValues(String attributeName) {
     final values = <String>{};
 
-    debugPrint('=== _getCorrectedAttributeValues DEBUG ===');
-    debugPrint('Getting values for attribute: $attributeName');
-
-    for (int i = 0; i < widget.product.variants.length; i++) {
-      final variant = widget.product.variants[i];
-      debugPrint('Checking variant $i: ${variant.variantId}');
-
+    for (final variant in widget.product.variants) {
       if (attributeName.toLowerCase() == 'colour' ||
           attributeName.toLowerCase() == 'color') {
         final correctedColor = _getCorrectedColor(variant);
-        debugPrint('Corrected color for variant $i: $correctedColor');
         values.add(correctedColor);
       } else {
         final value = variant.attributes[attributeName];
-        debugPrint('Raw value for $attributeName in variant $i: $value');
         if (value != null) {
           values.add(value);
-          debugPrint('Added value: $value');
         }
       }
     }
 
     final result = values.toList()..sort();
-    debugPrint('Final values for $attributeName: $result');
-    debugPrint('=========================================');
     return result;
   }
 
   void _initializeVariantState() {
-    // Debug prints to check variant data structure
-    debugPrint('=== VARIANT INITIALIZATION DEBUG ===');
-    debugPrint('Product name: ${widget.product.name}');
-    debugPrint('Product PID: ${widget.product.pid}');
-    debugPrint('Product price: ${widget.product.price}');
-    debugPrint('Product basePrice: ${widget.product.basePrice}');
-    debugPrint('Has variants: ${widget.product.hasVariants}');
-    debugPrint('Variants count: ${widget.product.variants.length}');
-    debugPrint('Available attributes: ${widget.product.availableAttributes}');
-    debugPrint('Detected attributes: ${_getDetectedAttributes()}');
-
-    if (widget.product.variants.isNotEmpty) {
-      for (int i = 0; i < widget.product.variants.length; i++) {
-        final variant = widget.product.variants[i];
-        debugPrint(
-          'Variant $i: ID=${variant.variantId}, Attributes=${variant.attributes}, Price=${variant.price}, BasePrice=${variant.basePrice}, Image=${variant.image}, Stock=${variant.stockQuantity}',
-        );
-      }
-    } else {
-      debugPrint('NO VARIANTS FOUND - variants list is empty');
-    }
-    debugPrint('Should show variants: ${_shouldShowVariants()}');
-    debugPrint('====================================');
-
     if (_shouldShowVariants()) {
       try {
         // Select the first variant by default
         final firstVariant = widget.product.variants.first;
-        debugPrint(
-          'Initializing with first variant: ${firstVariant.variantId}',
-        );
 
         selectedVariantId = firstVariant.variantId;
         selectedAttributes = Map.from(firstVariant.attributes);
@@ -275,13 +181,9 @@ class _ProductDetailPageState extends State<ProductDetailPage>
           selectedAttributes[colorKey] = _getCorrectedColor(firstVariant);
         }
 
-        currentPrice = firstVariant.price ?? widget.product.price;
+        currentPrice = firstVariant.getEffectivePrice();
         currentStock = firstVariant.stockQuantity;
         currentImages = firstVariant.getEffectiveImages(widget.product.images);
-
-        debugPrint(
-          'Initialized variant state - Price: $currentPrice, Stock: $currentStock, Images: ${currentImages.length}',
-        );
       } catch (e) {
         debugPrint('Error initializing variant state: $e');
         // Fallback to product defaults
@@ -328,13 +230,9 @@ class _ProductDetailPageState extends State<ProductDetailPage>
       }, orElse: () => widget.product.variants.first);
 
       selectedVariantId = matchingVariant.variantId;
-      currentPrice = matchingVariant.price ?? widget.product.price;
+      currentPrice = matchingVariant.getEffectivePrice();
       currentStock = matchingVariant.stockQuantity;
       currentImages = matchingVariant.getEffectiveImages(widget.product.images);
-
-      debugPrint(
-        'Variant selected: ${matchingVariant.variantId}, Price: $currentPrice, Stock: $currentStock',
-      );
     });
   }
 
@@ -681,29 +579,16 @@ class _ProductDetailPageState extends State<ProductDetailPage>
   Widget _buildVariantSelection() {
     final effectiveAttributes = _effectiveAvailableAttributes;
 
-    debugPrint('=== _buildVariantSelection DEBUG ===');
-    debugPrint('hasVariants: ${widget.product.hasVariants}');
-    debugPrint('availableAttributes: ${widget.product.availableAttributes}');
-    debugPrint('effectiveAttributes: $effectiveAttributes');
-    debugPrint('variants count: ${widget.product.variants.length}');
-
     // If hasVariants is true but no attributes detected, still try to show something
     if (widget.product.hasVariants && effectiveAttributes.isEmpty) {
-      debugPrint(
-        'hasVariants=true but no attributes detected, trying auto-detection again',
-      );
       final detectedAttrs = _getDetectedAttributes();
-      debugPrint('Re-detected attributes: $detectedAttrs');
       if (detectedAttrs.isNotEmpty) {
-        debugPrint('Using re-detected attributes instead');
         // Use the detected attributes directly
         return _buildVariantSelectionWithAttributes(detectedAttrs);
       }
     }
-    debugPrint('===================================');
 
     if (effectiveAttributes.isEmpty) {
-      debugPrint('No effective attributes found, showing error message');
       return _buildVariantErrorMessage();
     }
 
@@ -755,12 +640,8 @@ class _ProductDetailPageState extends State<ProductDetailPage>
           // Build attribute selectors
           ...attributes.map((attributeName) {
             final values = _getCorrectedAttributeValues(attributeName);
-            debugPrint(
-              'Building selector for $attributeName with values: $values',
-            );
 
             if (values.isEmpty) {
-              debugPrint('Skipping $attributeName - no values found');
               return const SizedBox.shrink(); // Skip empty attributes
             }
 
@@ -770,8 +651,6 @@ class _ProductDetailPageState extends State<ProductDetailPage>
                         attributeName.toLowerCase() == 'color'
                     ? _getCorrectedColor(widget.product.variants.first)
                     : values.first);
-
-            debugPrint('Selected value for $attributeName: $selectedValue');
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1045,14 +924,6 @@ class _ProductDetailPageState extends State<ProductDetailPage>
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('=== BUILD METHOD DEBUG ===');
-    debugPrint('Current images: $currentImages');
-    debugPrint('Current price: $currentPrice');
-    debugPrint('Current stock: $currentStock');
-    debugPrint('Selected variant ID: $selectedVariantId');
-    debugPrint('Selected attributes: $selectedAttributes');
-    debugPrint('========================');
-
     final images = currentImages.isNotEmpty
         ? currentImages
               .map<Widget>(

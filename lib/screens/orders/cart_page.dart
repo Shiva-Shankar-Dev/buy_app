@@ -354,7 +354,7 @@ class _CartPageState extends State<CartPage> {
                                       ),
                                       SizedBox(height: 8),
                                       Text(
-                                        '₹${item.product.price.toStringAsFixed(2)} each',
+                                        '₹${item.effectivePrice.toStringAsFixed(2)} each',
                                         style: TextStyle(
                                           fontSize: 14,
                                           color: Colors.grey.shade600,
@@ -367,7 +367,7 @@ class _CartPageState extends State<CartPage> {
                                         children: [
                                           _buildQuantityControls(item),
                                           Text(
-                                            '₹${(item.product.price * item.quantity).toStringAsFixed(2)}',
+                                            '₹${(item.effectivePrice * item.quantity).toStringAsFixed(2)}',
                                             style: TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.bold,

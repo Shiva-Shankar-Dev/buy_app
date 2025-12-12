@@ -39,7 +39,7 @@ class _PaymentPageState extends State<PaymentPage> {
   // Fix: Use item.product.price instead of item.price
   double get totalAmount => Cart.instance.items.fold(
     0.0,
-    (sum, item) => sum + (item.product.price * item.quantity),
+    (sum, item) => sum + (item.effectivePrice * item.quantity),
   );
 
   @override
