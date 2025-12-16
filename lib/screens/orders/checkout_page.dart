@@ -226,9 +226,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: Image.network(
-                        item.product.images.isNotEmpty
-                            ? item.product.images.first
-                            : '',
+                        item.effectiveImages.isNotEmpty
+                            ? item.effectiveImages.first
+                            : (item.product.images.isNotEmpty
+                                  ? item.product.images.first
+                                  : ''),
                         width: 60,
                         height: 60,
                         fit: BoxFit.cover,
@@ -257,6 +259,32 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             overflow: TextOverflow.ellipsis,
                           ),
                           SizedBox(height: 4),
+                          // Show variant details if available
+                          if (item.selectedAttributes != null &&
+                              item.selectedAttributes!.isNotEmpty) ...[
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: ColorPallete.color1.withAlpha(20),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: ColorPallete.color1.withAlpha(60),
+                                ),
+                              ),
+                              child: Text(
+                                item.selectedAttributes!.values.join(' • '),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: ColorPallete.color1,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                          ],
                           Text(
                             'Qty: ${item.quantity}',
                             style: TextStyle(

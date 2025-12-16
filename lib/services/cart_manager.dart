@@ -95,7 +95,11 @@ class Cart {
         product: _items[existingIndex].product,
         quantity: _items[existingIndex].quantity + quantity,
         selectedVariantId: _items[existingIndex].selectedVariantId,
-        selectedAttributes: _items[existingIndex].selectedAttributes,
+        selectedAttributes: _items[existingIndex].selectedAttributes != null
+            ? Map<String, String>.from(
+                _items[existingIndex].selectedAttributes!,
+              )
+            : null,
       );
     } else {
       _items.add(
@@ -103,7 +107,9 @@ class Cart {
           product: product,
           quantity: quantity,
           selectedVariantId: variantId,
-          selectedAttributes: variantAttributes,
+          selectedAttributes: variantAttributes != null
+              ? Map<String, String>.from(variantAttributes)
+              : null,
         ),
       );
     }
@@ -143,7 +149,11 @@ class Cart {
           product: _items[existingIndex].product,
           quantity: quantity,
           selectedVariantId: _items[existingIndex].selectedVariantId,
-          selectedAttributes: _items[existingIndex].selectedAttributes,
+          selectedAttributes: _items[existingIndex].selectedAttributes != null
+              ? Map<String, String>.from(
+                  _items[existingIndex].selectedAttributes!,
+                )
+              : null,
         );
       }
     }

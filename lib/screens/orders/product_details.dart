@@ -71,7 +71,10 @@ class _ProductDetailPageState extends State<ProductDetailPage>
   }
 
   Future<void> checkWishlistStatus() async {
-    final inWishlist = await WishlistService.isInWishlist(widget.product);
+    final inWishlist = await WishlistService.isInWishlist(
+      widget.product,
+      variantId: selectedVariantId,
+    );
     setState(() {
       isInWishlist = inWishlist;
       isCheckingWishlist = false;
@@ -202,6 +205,13 @@ class _ProductDetailPageState extends State<ProductDetailPage>
       currentStock = widget.product.stockQuantity;
       currentImages = widget.product.images;
     }
+
+    // Check if the current variant is already in cart and set button state
+    final currentQuantity = cart.getQuantity(
+      widget.product,
+      variantId: selectedVariantId,
+    );
+    showGoToCartButton = currentQuantity > 0;
   }
 
   void _updateVariantSelection(String attributeName, String value) {
@@ -230,10 +240,23 @@ class _ProductDetailPageState extends State<ProductDetailPage>
         return true;
       }, orElse: () => widget.product.variants.first);
 
+      final oldVariantId = selectedVariantId;
       selectedVariantId = matchingVariant.variantId;
       currentPrice = matchingVariant.getEffectivePrice();
       currentStock = matchingVariant.stockQuantity;
       currentImages = matchingVariant.getEffectiveImages(widget.product.images);
+
+      // Update button state based on new variant (don't modify existing cart items)
+      if (oldVariantId != selectedVariantId) {
+        final newQuantity = cart.getQuantity(
+          widget.product,
+          variantId: selectedVariantId,
+        );
+        showGoToCartButton = newQuantity > 0;
+
+        // Check wishlist status for new variant
+        checkWishlistStatus();
+      }
     });
   }
 
@@ -272,7 +295,10 @@ class _ProductDetailPageState extends State<ProductDetailPage>
   Future<void> toggleWishlist() async {
     _heartController.forward(from: 0.0);
     if (isInWishlist) {
-      final removed = await WishlistService.removeFromWishlist(widget.product);
+      final removed = await WishlistService.removeFromWishlist(
+        widget.product,
+        variantId: selectedVariantId,
+      );
       if (removed) {
         setState(() {
           isInWishlist = false;
@@ -287,7 +313,11 @@ class _ProductDetailPageState extends State<ProductDetailPage>
         );
       }
     } else {
-      final added = await WishlistService.addToWishlist(widget.product);
+      final added = await WishlistService.addToWishlist(
+        widget.product,
+        variantId: selectedVariantId,
+        variantAttributes: selectedAttributes,
+      );
       if (added) {
         setState(() {
           isInWishlist = true;
@@ -1555,7 +1585,9 @@ class _ProductDetailPageState extends State<ProductDetailPage>
                         widget.product,
                         quantity: 1,
                         variantId: selectedVariantId,
-                        variantAttributes: selectedAttributes,
+                        variantAttributes: Map<String, String>.from(
+                          selectedAttributes,
+                        ),
                       );
                       showGoToCartButton = true;
                     });

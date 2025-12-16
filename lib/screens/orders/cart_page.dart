@@ -131,7 +131,10 @@ class _CartPageState extends State<CartPage> {
   }
 
   Widget _buildQuantityControls(CartItem item) {
-    final limitInfo = cart.getQuantityLimitInfo(item.product);
+    final limitInfo = cart.getQuantityLimitInfo(
+      item.product,
+      variantId: item.selectedVariantId,
+    );
     final canIncrease = limitInfo['availableToAdd'] > 0;
 
     return Column(
@@ -150,9 +153,16 @@ class _CartPageState extends State<CartPage> {
                 onTap: () {
                   setState(() {
                     if (item.quantity > 1) {
-                      cart.updateQuantity(item.product, item.quantity - 1);
+                      cart.updateQuantity(
+                        item.product,
+                        item.quantity - 1,
+                        variantId: item.selectedVariantId,
+                      );
                     } else {
-                      cart.remove(item.product);
+                      cart.remove(
+                        item.product,
+                        variantId: item.selectedVariantId,
+                      );
                     }
                   });
                 },
@@ -180,7 +190,11 @@ class _CartPageState extends State<CartPage> {
                 onTap: () {
                   if (canIncrease) {
                     setState(() {
-                      cart.updateQuantity(item.product, item.quantity + 1);
+                      cart.updateQuantity(
+                        item.product,
+                        item.quantity + 1,
+                        variantId: item.selectedVariantId,
+                      );
                     });
                   } else {
                     // Show limit message
@@ -308,9 +322,11 @@ class _CartPageState extends State<CartPage> {
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(8),
                                   child: Image.network(
-                                    item.product.images.isNotEmpty
-                                        ? item.product.images.first
-                                        : '',
+                                    item.effectiveImages.isNotEmpty
+                                        ? item.effectiveImages.first
+                                        : (item.product.images.isNotEmpty
+                                              ? item.product.images.first
+                                              : ''),
                                     width: 80,
                                     height: 80,
                                     fit: BoxFit.cover,
@@ -343,6 +359,39 @@ class _CartPageState extends State<CartPage> {
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                       SizedBox(height: 4),
+                                      // Show variant details if available
+                                      if (item.selectedAttributes != null &&
+                                          item
+                                              .selectedAttributes!
+                                              .isNotEmpty) ...[
+                                        Container(
+                                          margin: EdgeInsets.only(bottom: 4),
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 4,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: ColorPallete.color1
+                                                .withAlpha(20),
+                                            borderRadius: BorderRadius.circular(
+                                              6,
+                                            ),
+                                            border: Border.all(
+                                              color: ColorPallete.color1
+                                                  .withAlpha(60),
+                                            ),
+                                          ),
+                                          child: Text(
+                                            item.selectedAttributes!.values
+                                                .join(' • '),
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: ColorPallete.color1,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                       Text(
                                         item.product.description,
                                         style: TextStyle(

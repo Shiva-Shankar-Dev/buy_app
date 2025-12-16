@@ -12,7 +12,7 @@ class WishlistPage extends StatefulWidget {
 }
 
 class _WishlistPageState extends State<WishlistPage> {
-  List<Product> wishlistItems = [];
+  List<WishlistItem> wishlistItems = [];
   bool isLoading = true;
 
   @override
@@ -27,7 +27,7 @@ class _WishlistPageState extends State<WishlistPage> {
     });
 
     try {
-      final items = await WishlistService.getWishlistProducts();
+      final items = await WishlistService.getWishlistItemsWithVariants();
       setState(() {
         wishlistItems = items;
         isLoading = false;
@@ -41,27 +41,34 @@ class _WishlistPageState extends State<WishlistPage> {
     }
   }
 
-  Future<void> removeFromWishlist(Product product) async {
-    final success = await WishlistService.removeFromWishlist(product);
+  Future<void> removeFromWishlist(WishlistItem wishlistItem) async {
+    final success = await WishlistService.removeFromWishlist(
+      wishlistItem.product,
+      variantId: wishlistItem.selectedVariantId,
+    );
 
     if (success) {
       setState(() {
-        wishlistItems.remove(product);
+        wishlistItems.remove(wishlistItem);
       });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${product.name} removed from wishlist'),
+            content: Text('${wishlistItem.product.name} removed from wishlist'),
             backgroundColor: Colors.red,
             action: SnackBarAction(
               label: 'UNDO',
               textColor: Colors.white,
               onPressed: () async {
-                final added = await WishlistService.addToWishlist(product);
+                final added = await WishlistService.addToWishlist(
+                  wishlistItem.product,
+                  variantId: wishlistItem.selectedVariantId,
+                  variantAttributes: wishlistItem.selectedAttributes,
+                );
                 if (added) {
                   setState(() {
-                    wishlistItems.add(product);
+                    wishlistItems.add(wishlistItem);
                   });
                 }
               },
@@ -91,16 +98,16 @@ class _WishlistPageState extends State<WishlistPage> {
     }
   }
 
-  void moveToCart(Product product) {
+  void moveToCart(WishlistItem wishlistItem) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${product.name} moved to cart'),
+        content: Text('${wishlistItem.product.name} moved to cart'),
         backgroundColor: Colors.green,
       ),
     );
 
     // Remove from wishlist after moving to cart
-    removeFromWishlist(product);
+    removeFromWishlist(wishlistItem);
   }
 
   @override
@@ -229,8 +236,8 @@ class _WishlistPageState extends State<WishlistPage> {
             ),
             itemCount: wishlistItems.length,
             itemBuilder: (context, index) {
-              final product = wishlistItems[index];
-              return _buildWishlistCard(product);
+              final wishlistItem = wishlistItems[index];
+              return _buildWishlistCard(wishlistItem);
             },
           ),
         ),
@@ -238,7 +245,9 @@ class _WishlistPageState extends State<WishlistPage> {
     );
   }
 
-  Widget _buildWishlistCard(Product product) {
+  Widget _buildWishlistCard(WishlistItem wishlistItem) {
+    final product = wishlistItem.product;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -338,7 +347,7 @@ class _WishlistPageState extends State<WishlistPage> {
                 top: 8,
                 right: 8,
                 child: GestureDetector(
-                  onTap: () => removeFromWishlist(product),
+                  onTap: () => removeFromWishlist(wishlistItem),
                   child: Container(
                     padding: EdgeInsets.all(6),
                     decoration: BoxDecoration(
@@ -370,7 +379,7 @@ class _WishlistPageState extends State<WishlistPage> {
                 Text(
                   product.name,
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                  maxLines: 2,
+                  maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
 
@@ -387,7 +396,7 @@ class _WishlistPageState extends State<WishlistPage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () => moveToCart(product),
+                    onPressed: () => moveToCart(wishlistItem),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: ColorPallete.color1,
                     ),
