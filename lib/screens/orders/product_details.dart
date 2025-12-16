@@ -1,6 +1,6 @@
 import 'package:buy_app/services/cart_manager.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:buy_app/ColorPallete/color_pallete.dart';
+import 'package:buy_app/colorPallete/color_pallete.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:buy_app/models/models.dart';

@@ -10,7 +10,7 @@ import 'package:buy_app/services/pdf_service.dart';
 import 'package:buy_app/models/models.dart'; // Import from models file
 
 class EmailService {
-  static const String _emailServerUrl = 'http://localhost:3000/send';
+  static const String _emailServerUrl = 'https://mail-sender-black.vercel.app/send';
 
   /// Send a basic email
   static Future<bool> sendEmail({
@@ -366,7 +366,7 @@ class EmailService {
 
       // Send email with PDF attachment
       final response = await http.post(
-        Uri.parse('http://localhost:3000/send/receipt'),
+        Uri.parse('https://mail-sender-black.vercel.app/send/receipt/'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'customerEmail': customerEmail,

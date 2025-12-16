@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:buy_app/ColorPallete/color_pallete.dart';
+import 'package:buy_app/colorPallete/color_pallete.dart';
 import 'package:buy_app/services/comment_service.dart';
 
 class AddCommentDialog extends StatefulWidget {

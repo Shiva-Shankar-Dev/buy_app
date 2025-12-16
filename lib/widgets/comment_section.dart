@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:buy_app/models/models.dart';
-import 'package:buy_app/ColorPallete/color_pallete.dart';
+import 'package:buy_app/colorPallete/color_pallete.dart';
 import 'package:buy_app/services/comment_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:buy_app/widgets/comment_tile.dart';

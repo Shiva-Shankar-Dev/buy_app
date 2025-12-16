@@ -1,6 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:buy_app/ColorPallete/color_pallete.dart';
+import 'package:buy_app/colorPallete/color_pallete.dart';
 import 'package:buy_app/screens/orders/product_details.dart';
 import 'package:buy_app/screens/category_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
