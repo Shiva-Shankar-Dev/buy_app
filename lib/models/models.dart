@@ -169,9 +169,9 @@ class ProductVariant {
       return price!;
     }
     // Fallback: calculate from basePrice + priceModifier
-    double basePrice = this.basePrice ?? 0;
-    double modifier = this.priceModifier ?? 0;
-    return basePrice + modifier;
+    double base = basePrice ?? 0;
+    double mod = priceModifier ?? 0;
+    return base + mod;
   }
 
   // Check if variant matches given attributes
