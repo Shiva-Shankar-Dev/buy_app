@@ -1,6 +1,112 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
+// Comment and Review Models
+class ProductComment {
+  final String commentId;
+  final String productId;
+  final String userId;
+  final String userName;
+  final String userEmail;
+  final String comment;
+  final double rating;
+  final DateTime timestamp;
+  final bool isVerified;
+  final List<String> images;
+  final String? variantId;
+  final Map<String, String>? variantAttributes;
+
+  ProductComment({
+    required this.commentId,
+    required this.productId,
+    required this.userId,
+    required this.userName,
+    required this.userEmail,
+    required this.comment,
+    required this.rating,
+    required this.timestamp,
+    this.isVerified = false,
+    this.images = const [],
+    this.variantId,
+    this.variantAttributes,
+  });
+
+  factory ProductComment.fromFirestore(
+    Map<String, dynamic> data,
+    String documentId,
+  ) {
+    return ProductComment(
+      commentId: documentId,
+      productId: data['productId'] ?? '',
+      userId: data['userId'] ?? '',
+      userName: data['userName'] ?? 'Anonymous',
+      userEmail: data['userEmail'] ?? '',
+      comment: data['comment'] ?? '',
+      rating: (data['rating'] ?? 0.0).toDouble(),
+      timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      isVerified: data['isVerified'] ?? false,
+      images: List<String>.from(data['images'] ?? []),
+      variantId: data['variantId'],
+      variantAttributes: data['variantAttributes'] != null
+          ? Map<String, String>.from(data['variantAttributes'])
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      'productId': productId,
+      'userId': userId,
+      'userName': userName,
+      'userEmail': userEmail,
+      'comment': comment,
+      'rating': rating,
+      'timestamp': Timestamp.fromDate(timestamp),
+      'isVerified': isVerified,
+      'images': images,
+      if (variantId != null) 'variantId': variantId,
+      if (variantAttributes != null) 'variantAttributes': variantAttributes,
+    };
+  }
+
+  // Get display text for variant
+  String get variantDisplayText {
+    if (variantAttributes != null && variantAttributes!.isNotEmpty) {
+      return variantAttributes!.values.join(', ');
+    }
+    return '';
+  }
+
+  // Check if comment has variant info
+  bool get hasVariantInfo => variantId != null && variantId!.isNotEmpty;
+
+  @override
+  String toString() {
+    return 'ProductComment(id: $commentId, user: $userName, rating: $rating)';
+  }
+}
+
+// Comment Statistics Model
+class CommentStatistics {
+  final int totalComments;
+  final double averageRating;
+  final Map<int, int> ratingDistribution; // rating (1-5) -> count
+
+  CommentStatistics({
+    required this.totalComments,
+    required this.averageRating,
+    required this.ratingDistribution,
+  });
+
+  factory CommentStatistics.empty() {
+    return CommentStatistics(
+      totalComments: 0,
+      averageRating: 0.0,
+      ratingDistribution: {1: 0, 2: 0, 3: 0, 4: 0, 5: 0},
+    );
+  }
+}
+
 class CartItem {
   final Product product;
   final int quantity;

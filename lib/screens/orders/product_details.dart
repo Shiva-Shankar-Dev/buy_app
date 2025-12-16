@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:buy_app/models/models.dart';
 import 'package:buy_app/services/wishlist_service.dart';
 import 'package:buy_app/services/selected_address_service.dart';
+import 'package:buy_app/widgets/comment_section.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final Product product;
@@ -1288,6 +1289,15 @@ class _ProductDetailPageState extends State<ProductDetailPage>
 
                     // Seller Card
                     _buildSellerCard(),
+
+                    Divider(thickness: 6, color: Colors.grey[100]),
+
+                    // Comment Section
+                    CommentSection(
+                      productId: widget.product.pid,
+                      variantId: selectedVariantId,
+                      variantAttributes: selectedAttributes,
+                    ),
 
                     // Bottom padding
                     const SizedBox(height: 140),
