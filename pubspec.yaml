@@ -48,7 +48,7 @@ dependencies:
   hive: ^2.2.3
   hive_flutter: 
   http:
-  pdf: ^3.10.7
+  pdf: ^3.10.7 
   smooth_page_indicator: ^1.2.1
   intl: ^0.18.1
   flutter_animate: ^4.5.2

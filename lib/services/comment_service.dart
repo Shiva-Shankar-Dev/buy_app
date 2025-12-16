@@ -7,6 +7,38 @@ class CommentService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static const String _collection = 'product_comments';
 
+  /// Get user details from database
+  static Future<Map<String, dynamic>> _getUserDetails(String userId) async {
+    try {
+      // Try customers collection first
+      var doc = await _firestore.collection('customers').doc(userId).get();
+      if (doc.exists && doc.data() != null) {
+        debugPrint('✅ Found user in customers collection');
+        return doc.data()!;
+      }
+
+      // Try users collection as fallback
+      doc = await _firestore.collection('users').doc(userId).get();
+      if (doc.exists && doc.data() != null) {
+        debugPrint('✅ Found user in users collection');
+        return doc.data()!;
+      }
+
+      // Try sellers collection as another fallback
+      doc = await _firestore.collection('sellers').doc(userId).get();
+      if (doc.exists && doc.data() != null) {
+        debugPrint('✅ Found user in sellers collection');
+        return doc.data()!;
+      }
+
+      debugPrint('❌ User not found in any collection');
+      return {};
+    } catch (e) {
+      debugPrint('❌ Error fetching user details: $e');
+      return {};
+    }
+  }
+
   /// Add a new comment/review for a product
   static Future<bool> addComment({
     required String productId,
@@ -34,12 +66,15 @@ class CommentService {
         return false;
       }
 
+      // Get user details from database
+      final userDetails = await _getUserDetails(currentUser.uid);
+
       // Create comment document
       final commentData = {
         'productId': productId,
         'userId': currentUser.uid,
-        'userName': currentUser.displayName ?? 'Anonymous',
-        'userEmail': currentUser.email ?? '',
+        'userName': userDetails['name'] ?? 'Anonymous',
+        'userEmail': userDetails['email'] ?? currentUser.email ?? '',
         'comment': comment.trim(),
         'rating': rating,
         'timestamp': FieldValue.serverTimestamp(),
