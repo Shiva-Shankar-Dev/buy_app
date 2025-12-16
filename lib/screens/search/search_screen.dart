@@ -1,7 +1,6 @@
 import 'package:buy_app/screens/search/search_results.dart';
 import 'package:flutter/material.dart';
 
-
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
 
@@ -25,8 +24,15 @@ class _SearchScreenState extends State<SearchScreen> {
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
-              onSubmitted: (value){
-                Navigator.push(context, MaterialPageRoute(builder: (context) => SearchResults(query: _searchController.text)));
+              autofocus: true,
+              onSubmitted: (value) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        SearchResults(query: _searchController.text),
+                  ),
+                );
               },
               controller: _searchController,
               decoration: InputDecoration(
@@ -36,12 +42,12 @@ class _SearchScreenState extends State<SearchScreen> {
                 prefixIcon: Icon(Icons.search),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(50),
-                  borderSide: BorderSide.none
+                  borderSide: BorderSide.none,
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(50),
-                  borderSide: BorderSide.none
-                )
+                  borderSide: BorderSide.none,
+                ),
               ),
             ),
           ),
