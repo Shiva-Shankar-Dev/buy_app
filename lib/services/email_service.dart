@@ -10,8 +10,7 @@ import 'package:buy_app/services/pdf_service.dart';
 import 'package:buy_app/models/models.dart'; // Import from models file
 
 class EmailService {
-  static const String _emailServerUrl =
-      'https://mail-sender-black.vercel.app/send';
+  static const String _emailServerUrl = 'http://3.108.59.161:3000/send';
 
   // Alternative email services (uncomment to use)
   // static const String _emailServerUrl = 'https://formspree.io/f/YOUR_FORM_ID';
@@ -121,6 +120,7 @@ class EmailService {
         "<p><strong>TOTAL AMOUNT: ₹${totalAmount.toStringAsFixed(2)}</strong></p>";
     message1 += "<p><strong>Payment Method:</strong> $paymentMethod</p>";
     message1 += "<p><strong>Transaction ID:</strong> $txnId</p>";
+    message1 += "<p><strong>Order Status:</strong> Confirmed</p>";
 
     message1 += "<h4>SHIPPING ADDRESS:</h4>";
     message1 +=
@@ -275,6 +275,7 @@ class EmailService {
 
       orderDetails += "<h3>🛍️ ORDERED PRODUCTS</h3>";
       orderDetails += "<p><strong>Order ID:</strong> $ordId</p>";
+      orderDetails += "<p><strong>Order Status:</strong> Confirmed</p>";
 
       // Create HTML table for products with quantities
       orderDetails +=
@@ -385,7 +386,7 @@ class EmailService {
 
       // Send email with PDF attachment
       final response = await http.post(
-        Uri.parse('https://mail-sender-black.vercel.app/send/receipt/'),
+        Uri.parse('http://3.108.59.161:3000/send/receipt/'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'customerEmail': customerEmail,
@@ -452,7 +453,7 @@ Future<void> placeOrder(Map<String, dynamic> customer, Address address) async {
         0.0,
         (total, item) => total + (item.product.price * item.quantity),
       ),
-      'status': 'pending',
+      'status': 'confirmed',
       'createdAt': FieldValue.serverTimestamp(),
     });
     debugPrint('✅ Order created: ${orderRef.id}');

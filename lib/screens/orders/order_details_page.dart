@@ -62,24 +62,10 @@ class OrderDetailsPage extends StatelessWidget {
   }
 
   Widget _buildOrderHeader() {
-    // Calculate current status based on timeline logic
-    final now = DateTime.now();
-    final daysSinceOrder = now.difference(order.orderDate).inDays;
-    final expectedDeliveryDate = order.orderDate.add(const Duration(days: 4));
-    final isDeliveryDatePassed =
-        now.isAfter(expectedDeliveryDate) ||
-        now.difference(expectedDeliveryDate).inDays >= 0;
-
-    String currentStatus;
-    if (isDeliveryDatePassed || daysSinceOrder >= 4) {
-      currentStatus = 'Delivered';
-    } else if (daysSinceOrder >= 2) {
-      currentStatus = 'Shipped';
-    } else if (daysSinceOrder >= 1) {
-      currentStatus = 'Packed';
-    } else {
-      currentStatus = 'Confirmed';
-    }
+    // Use persisted order status directly (fallback to Confirmed)
+    final String currentStatus = (order.status.isNotEmpty
+        ? order.status
+        : 'Confirmed');
 
     return Card(
       elevation: 8,
@@ -252,29 +238,50 @@ class OrderDetailsPage extends StatelessWidget {
       },
     ];
 
-    // Determine current status based on days since order date
-    final now = DateTime.now();
-    final daysSinceOrder = now.difference(order.orderDate).inDays;
-
-    int currentStatusIndex;
-    if (daysSinceOrder >= 4) {
-      currentStatusIndex = 3; // Delivered on/after day 4
-    } else if (daysSinceOrder >= 2) {
-      currentStatusIndex = 2; // Shipped on/after day 2
-    } else if (daysSinceOrder >= 1) {
-      currentStatusIndex = 1; // Packed on/after day 1
-    } else {
-      currentStatusIndex = 0; // Confirmed same day
-    }
-
-    // Check if delivery date has passed - if so, mark as delivered
-    final expectedDeliveryDate = order.orderDate.add(const Duration(days: 4));
-    final isDeliveryDatePassed =
-        now.isAfter(expectedDeliveryDate) ||
-        now.difference(expectedDeliveryDate).inDays >= 0;
-
-    if (isDeliveryDatePassed) {
-      currentStatusIndex = 3; // Force delivered status if delivery date passed
+    // Determine current status based on persisted order.status
+    int currentStatusIndex = 0; // default to Confirmed
+    final status = (order.status.isEmpty ? 'confirmed' : order.status)
+        .toLowerCase();
+    switch (status) {
+      case 'confirmed':
+        currentStatusIndex = 0;
+        break;
+      case 'packed':
+        currentStatusIndex = 1;
+        break;
+      case 'shipped':
+        currentStatusIndex = 2;
+        break;
+      case 'delivered':
+        currentStatusIndex = 3;
+        break;
+      case 'cancelled':
+        // No explicit timeline step for cancelled; show as first step and rely on header chip color
+        currentStatusIndex = 0;
+        break;
+      default:
+        // Fallback to previous date-based inference if unknown status
+        final now = DateTime.now();
+        final daysSinceOrder = now.difference(order.orderDate).inDays;
+        if (daysSinceOrder >= 4) {
+          currentStatusIndex = 3;
+        } else if (daysSinceOrder >= 2) {
+          currentStatusIndex = 2;
+        } else if (daysSinceOrder >= 1) {
+          currentStatusIndex = 1;
+        } else {
+          currentStatusIndex = 0;
+        }
+        // If delivery date passed, force delivered
+        final expectedDeliveryDate = order.orderDate.add(
+          const Duration(days: 4),
+        );
+        final isDeliveryDatePassed =
+            now.isAfter(expectedDeliveryDate) ||
+            now.difference(expectedDeliveryDate).inDays >= 0;
+        if (isDeliveryDatePassed) {
+          currentStatusIndex = 3;
+        }
     }
 
     return Column(
@@ -474,7 +481,7 @@ class OrderDetailsPage extends StatelessWidget {
                                   : Colors.grey.shade500,
                             ),
                           ),
-                          if (isCompleted) ...[
+                          if (isCurrent) ...[
                             const SizedBox(height: 6),
                             Row(
                               children: [
@@ -485,11 +492,7 @@ class OrderDetailsPage extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  _formatDateTime(
-                                    order.orderDate.add(
-                                      Duration(days: [0, 1, 2, 4][index]),
-                                    ),
-                                  ),
+                                  'Updated: ${_formatDateTime(order.lastUpdated)}',
                                   style: TextStyle(
                                     fontSize: 11,
                                     color: Colors.grey.shade600,

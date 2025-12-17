@@ -89,6 +89,7 @@ class Order {
   final DateTime orderDate;
   final Map<String, dynamic> shippingAddress;
   final List<String> sellerIds;
+  final DateTime lastUpdated;
 
   Order({
     required this.orderId,
@@ -102,6 +103,7 @@ class Order {
     required this.orderDate,
     required this.shippingAddress,
     required this.sellerIds,
+    required this.lastUpdated,
   });
 
   // Convert to Map for Firestore
@@ -118,6 +120,7 @@ class Order {
       'orderDate': Timestamp.fromDate(orderDate),
       'shippingAddress': shippingAddress,
       'sellerIds': sellerIds,
+      'lastUpdated': Timestamp.fromDate(lastUpdated),
       'createdAt': Timestamp.now(),
     };
   }
@@ -139,6 +142,8 @@ class Order {
       orderDate: (data['orderDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
       shippingAddress: Map<String, dynamic>.from(data['shippingAddress'] ?? {}),
       sellerIds: List<String>.from(data['sellerIds'] ?? []),
+      lastUpdated:
+          (data['lastUpdated'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
 }
@@ -233,6 +238,7 @@ class OrderService {
         orderDate: DateTime.now(),
         shippingAddress: shippingAddress,
         sellerIds: sellerIds,
+        lastUpdated: DateTime.now(),
       );
       debugPrint('✅ [ORDER_CREATE] Order object created: $order');
 

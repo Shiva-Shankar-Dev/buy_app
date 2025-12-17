@@ -507,6 +507,7 @@ class Order {
   final DateTime orderDate;
   final String status;
   final Map<String, dynamic> shippingAddress;
+  final DateTime lastUpdated;
 
   Order({
     required this.orderId,
@@ -519,6 +520,7 @@ class Order {
     required this.orderDate,
     required this.status,
     required this.shippingAddress,
+    required this.lastUpdated,
   });
 
   factory Order.fromFirestore(Map<String, dynamic> data) {
@@ -536,6 +538,7 @@ class Order {
         shippingAddress: Map<String, dynamic>.from(
           data['shippingAddress'] ?? {},
         ),
+        lastUpdated: _parseDateTime(data['lastUpdated']),
       );
     } catch (e) {
       debugPrint('❌ Error parsing Order from Firestore: $e');
@@ -551,6 +554,7 @@ class Order {
         orderDate: DateTime.now(),
         status: 'Error',
         shippingAddress: {},
+        lastUpdated: DateTime.now(),
       );
     }
   }
@@ -627,6 +631,7 @@ class Order {
       'orderDate': Timestamp.fromDate(orderDate),
       'status': status,
       'shippingAddress': shippingAddress,
+      'lastUpdated': Timestamp.fromDate(lastUpdated),
     };
   }
 
