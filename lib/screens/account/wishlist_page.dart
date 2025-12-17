@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:buy_app/colorPallete/color_pallete.dart';
-import 'package:buy_app/models/models.dart';
 import 'package:buy_app/screens/orders/product_details.dart';
 import 'package:buy_app/services/wishlist_service.dart';
 
@@ -248,6 +247,11 @@ class _WishlistPageState extends State<WishlistPage> {
   Widget _buildWishlistCard(WishlistItem wishlistItem) {
     final product = wishlistItem.product;
 
+    // Get images from the variant
+    final displayImages = product.getImagesForVariant(
+      wishlistItem.selectedVariantId,
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -275,10 +279,10 @@ class _WishlistPageState extends State<WishlistPage> {
                     borderRadius: BorderRadius.vertical(
                       top: Radius.circular(12),
                     ),
-                    child: product.images.isNotEmpty
+                    child: displayImages.isNotEmpty
                         ? Center(
                             child: Image.network(
-                              product.images[0],
+                              displayImages[0],
                               fit: BoxFit.fill,
                               loadingBuilder:
                                   (context, child, loadingProgress) {

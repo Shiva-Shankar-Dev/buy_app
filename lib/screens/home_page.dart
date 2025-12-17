@@ -23,6 +23,16 @@ class _HomePage extends State<HomePage> with TickerProviderStateMixin {
   List<Product> filteredProducts = [];
   bool isSearching = false;
   String? selectedCategory;
+
+  // Helper method to get first variant image or empty string
+  String _getFirstVariantImage(Product product) {
+    if (product.variants.isNotEmpty &&
+        product.variants.first.images.isNotEmpty) {
+      return product.variants.first.images.first;
+    }
+    return '';
+  }
+
   late PageController _pageController;
   late AnimationController _fadeController;
   final Map<int, AnimationController> _productAnimations = {};
@@ -918,7 +928,7 @@ class _HomePage extends State<HomePage> with TickerProviderStateMixin {
                   child: Stack(
                     children: [
                       Image.network(
-                        product.images.isNotEmpty ? product.images.first : '',
+                        _getFirstVariantImage(product),
                         height: 160,
                         width: double.infinity,
                         fit: BoxFit.contain,

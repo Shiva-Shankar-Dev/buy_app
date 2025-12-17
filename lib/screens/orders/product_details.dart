@@ -187,7 +187,7 @@ class _ProductDetailPageState extends State<ProductDetailPage>
 
         currentPrice = firstVariant.getEffectivePrice();
         currentStock = firstVariant.stockQuantity;
-        currentImages = firstVariant.getEffectiveImages(widget.product.images);
+        currentImages = firstVariant.getEffectiveImages();
       } catch (e) {
         debugPrint('Error initializing variant state: $e');
         // Fallback to product defaults
@@ -195,7 +195,7 @@ class _ProductDetailPageState extends State<ProductDetailPage>
         selectedAttributes = {};
         currentPrice = widget.product.price;
         currentStock = widget.product.stockQuantity;
-        currentImages = widget.product.images;
+        currentImages = [];
       }
     } else {
       // No variants, use base product values
@@ -203,7 +203,7 @@ class _ProductDetailPageState extends State<ProductDetailPage>
       selectedAttributes = {};
       currentPrice = widget.product.price;
       currentStock = widget.product.stockQuantity;
-      currentImages = widget.product.images;
+      currentImages = [];
     }
 
     // Check if the current variant is already in cart and set button state
@@ -244,7 +244,7 @@ class _ProductDetailPageState extends State<ProductDetailPage>
       selectedVariantId = matchingVariant.variantId;
       currentPrice = matchingVariant.getEffectivePrice();
       currentStock = matchingVariant.stockQuantity;
-      currentImages = matchingVariant.getEffectiveImages(widget.product.images);
+      currentImages = matchingVariant.getEffectiveImages();
 
       // Update button state based on new variant (don't modify existing cart items)
       if (oldVariantId != selectedVariantId) {

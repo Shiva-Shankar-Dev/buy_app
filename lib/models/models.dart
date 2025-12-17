@@ -199,8 +199,7 @@ class ProductVariant {
   final double? priceModifier; // Price modifier amount
   final String? name; // Variant name
   final int stockQuantity;
-  final List<String>? images; // Variant-specific images
-  final String? image; // Single variant image (for compatibility)
+  final List<String> images; // Variant-specific images
   final String? sku; // Stock Keeping Unit
 
   ProductVariant({
@@ -211,8 +210,7 @@ class ProductVariant {
     this.priceModifier,
     this.name,
     required this.stockQuantity,
-    this.images,
-    this.image,
+    this.images = const [],
     this.sku,
   });
 
@@ -226,10 +224,7 @@ class ProductVariant {
         priceModifier: data['priceModifier']?.toDouble(),
         name: data['name'],
         stockQuantity: data['stockQuantity'] ?? 0,
-        images: data['images'] != null
-            ? List<String>.from(data['images'])
-            : null,
-        image: data['image'],
+        images: data['images'] != null ? List<String>.from(data['images']) : [],
         sku: data['sku'],
       );
     } catch (e) {
@@ -247,21 +242,14 @@ class ProductVariant {
       if (priceModifier != null) 'priceModifier': priceModifier,
       if (name != null) 'name': name,
       'stockQuantity': stockQuantity,
-      if (images != null) 'images': images,
-      if (image != null) 'image': image,
+      'images': images,
       if (sku != null) 'sku': sku,
     };
   }
 
   // Get effective images for the variant
-  List<String> getEffectiveImages(List<String> fallbackImages) {
-    if (image != null && image!.isNotEmpty) {
-      return [image!];
-    } else if (images != null && images!.isNotEmpty) {
-      return images!;
-    } else {
-      return fallbackImages;
-    }
+  List<String> getEffectiveImages() {
+    return images;
   }
 
   // Get display text for variant (e.g., "Red, Size M")
@@ -306,7 +294,6 @@ class Product {
   final double? basePrice; // Base price from product data
   final String category;
   final List<String> keywords;
-  final List<String> images; // Base product images
   final int stockQuantity; // Base stock (used when no variants)
   final List<ProductVariant> variants; // Product variants
   final bool
@@ -317,7 +304,6 @@ class Product {
   Product({
     required this.name,
     required this.brand,
-    required this.images,
     required this.description,
     required this.category,
     required this.price,
@@ -392,7 +378,6 @@ class Product {
         basePrice: data['basePrice']?.toDouble(),
         category: data['category'] ?? '',
         keywords: List<String>.from(data['keywords'] ?? []),
-        images: List<String>.from(data['images'] ?? []),
         stockQuantity: data['stockQuantity'] ?? 0,
         sellerId: data['sellerId'] ?? '',
         hasVariants: data['hasVariants'] ?? false,
@@ -418,7 +403,6 @@ class Product {
       if (basePrice != null) 'basePrice': basePrice,
       'category': category,
       'keywords': keywords,
-      'images': images,
       'stockQuantity': stockQuantity,
       'sellerId': sellerId,
       'variants': variants.map((v) => v.toFirestore()).toList(),
@@ -486,15 +470,15 @@ class Product {
     return stockQuantity;
   }
 
-  /// Get images for specific variant or base images
+  /// Get images for specific variant
   List<String> getImagesForVariant(String? variantId) {
     if (variantId != null && hasVariants) {
       final variant = getVariantById(variantId);
       if (variant != null) {
-        return variant.getEffectiveImages(images);
+        return variant.getEffectiveImages();
       }
     }
-    return images;
+    return [];
   }
 
   @override
@@ -591,7 +575,6 @@ class Order {
                 price: 0.0,
                 category: '',
                 keywords: [],
-                images: [],
                 stockQuantity: 0,
                 sellerId: '',
                 hasVariants: false,

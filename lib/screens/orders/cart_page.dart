@@ -324,9 +324,7 @@ class _CartPageState extends State<CartPage> {
                                   child: Image.network(
                                     item.effectiveImages.isNotEmpty
                                         ? item.effectiveImages.first
-                                        : (item.product.images.isNotEmpty
-                                              ? item.product.images.first
-                                              : ''),
+                                        : '',
                                     width: 80,
                                     height: 80,
                                     fit: BoxFit.cover,

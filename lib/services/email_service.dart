@@ -10,7 +10,12 @@ import 'package:buy_app/services/pdf_service.dart';
 import 'package:buy_app/models/models.dart'; // Import from models file
 
 class EmailService {
-  static const String _emailServerUrl = 'https://mail-sender-black.vercel.app/send';
+  static const String _emailServerUrl =
+      'https://mail-sender-black.vercel.app/send';
+
+  // Alternative email services (uncomment to use)
+  // static const String _emailServerUrl = 'https://formspree.io/f/YOUR_FORM_ID';
+  // static const String _emailServerUrl = 'https://api.emailjs.com/api/v1.0/email/send';
 
   /// Send a basic email
   static Future<bool> sendEmail({
@@ -30,6 +35,20 @@ class EmailService {
         return true;
       } else {
         debugPrint('❌ Failed to send email: ${response.body}');
+
+        // Parse error response for better debugging
+        try {
+          final errorData = jsonDecode(response.body);
+          if (errorData['error']?.contains('Missing credentials') == true) {
+            debugPrint('💡 Server needs SMTP credentials configuration');
+            debugPrint(
+              '💡 Check your Vercel environment variables: EMAIL_USER, EMAIL_PASS',
+            );
+          }
+        } catch (_) {
+          // Ignore JSON parsing errors
+        }
+
         return false;
       }
     } catch (e) {
@@ -452,6 +471,9 @@ Future<void> placeOrder(Map<String, dynamic> customer, Address address) async {
 
     // Step 4: Send customer confirmation with PDF invoice
     try {
+      // TODO: Fix SMTP credentials on server before enabling
+      debugPrint('📧 Skipping email (server credentials not configured)');
+      /* 
       await EmailService.sendCustomerConfirmationEmail(
         customerEmail: customer['email'] ?? '',
         customerName: customer['name'] ?? 'Customer',
@@ -462,6 +484,7 @@ Future<void> placeOrder(Map<String, dynamic> customer, Address address) async {
         txnId: 'N/A',
       );
       debugPrint('✅ Customer confirmation email sent');
+      */
 
       // Send PDF invoice automatically
       await EmailService.sendOrderInvoiceEmail(

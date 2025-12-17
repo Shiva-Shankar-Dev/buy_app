@@ -26,6 +26,15 @@ class _CategoryPageState extends State<CategoryPage> {
   Set<String> selectedSubcategories = {};
   bool isLoading = true;
 
+  // Helper method to get first variant image or empty string
+  String _getFirstVariantImage(Product product) {
+    if (product.variants.isNotEmpty &&
+        product.variants.first.images.isNotEmpty) {
+      return product.variants.first.images.first;
+    }
+    return '';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -34,7 +43,9 @@ class _CategoryPageState extends State<CategoryPage> {
 
   Future<void> loadProducts() async {
     try {
-      final snapshot = await FirebaseFirestore.instance.collection('products').get();
+      final snapshot = await FirebaseFirestore.instance
+          .collection('products')
+          .get();
 
       final loadedProducts = <Product>[];
       for (final doc in snapshot.docs) {
@@ -70,7 +81,9 @@ class _CategoryPageState extends State<CategoryPage> {
 
     // Exclude mobile products from electronics
     if (filterCategory == 'electronics' &&
-        (productCategory.contains('mobile') || productCategory.contains('phone') || productCategory.contains('smartphone'))) {
+        (productCategory.contains('mobile') ||
+            productCategory.contains('phone') ||
+            productCategory.contains('smartphone'))) {
       return false;
     }
 
@@ -80,7 +93,9 @@ class _CategoryPageState extends State<CategoryPage> {
       final keywords = List<String>.from(subcategory['keywords']);
       for (final keyword in keywords) {
         if (productCategory.contains(keyword.toLowerCase()) ||
-            product.keywords.any((k) => k.toLowerCase().contains(keyword.toLowerCase()))) {
+            product.keywords.any(
+              (k) => k.toLowerCase().contains(keyword.toLowerCase()),
+            )) {
           return true;
         }
       }
@@ -100,15 +115,19 @@ class _CategoryPageState extends State<CategoryPage> {
 
           for (final subcategoryName in selectedSubcategories) {
             final subcategory = subcategories.firstWhere(
-                  (sub) => sub['name'] == subcategoryName,
+              (sub) => sub['name'] == subcategoryName,
               orElse: () => {},
             );
 
             if (subcategory.isNotEmpty) {
               final keywords = List<String>.from(subcategory['keywords']);
-              if (keywords.any((keyword) =>
-              productCategory.contains(keyword.toLowerCase()) ||
-                  product.keywords.any((k) => k.toLowerCase().contains(keyword.toLowerCase())))) {
+              if (keywords.any(
+                (keyword) =>
+                    productCategory.contains(keyword.toLowerCase()) ||
+                    product.keywords.any(
+                      (k) => k.toLowerCase().contains(keyword.toLowerCase()),
+                    ),
+              )) {
                 return true;
               }
             }
@@ -200,7 +219,8 @@ class _CategoryPageState extends State<CategoryPage> {
                           itemCount: subcategories.length,
                           itemBuilder: (context, index) {
                             final subcategory = subcategories[index];
-                            final isSelected = tempSelectedSubcategories.contains(subcategory['name']);
+                            final isSelected = tempSelectedSubcategories
+                                .contains(subcategory['name']);
 
                             return CheckboxListTile(
                               value: isSelected,
@@ -216,7 +236,9 @@ class _CategoryPageState extends State<CategoryPage> {
                                   Text(
                                     subcategory['name'],
                                     style: TextStyle(
-                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
                                     ),
                                   ),
                                 ],
@@ -224,9 +246,13 @@ class _CategoryPageState extends State<CategoryPage> {
                               onChanged: (value) {
                                 setModalState(() {
                                   if (value == true) {
-                                    tempSelectedSubcategories.add(subcategory['name']);
+                                    tempSelectedSubcategories.add(
+                                      subcategory['name'],
+                                    );
                                   } else {
-                                    tempSelectedSubcategories.remove(subcategory['name']);
+                                    tempSelectedSubcategories.remove(
+                                      subcategory['name'],
+                                    );
                                   }
                                 });
                               },
@@ -289,7 +315,10 @@ class _CategoryPageState extends State<CategoryPage> {
             SizedBox(width: 8),
             Text(
               widget.categoryName,
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
           ],
         ),
@@ -331,189 +360,220 @@ class _CategoryPageState extends State<CategoryPage> {
       ),
       body: isLoading
           ? Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircularProgressIndicator(color: widget.categoryColor),
-            SizedBox(height: 16),
-            Text('Loading ${widget.categoryName} products...'),
-          ],
-        ),
-      ) : Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Active filters display
-          if (selectedSubcategories.isNotEmpty)
-            Container(
-              padding: EdgeInsets.all(12),
-              color: widget.categoryColor.withAlpha(10),
-              child: Row(
-                children: [
-                  Icon(Icons.filter_alt, size: 18, color: widget.categoryColor),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Filters: ${selectedSubcategories.join(", ")}',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: widget.categoryColor,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        selectedSubcategories.clear();
-                      });
-                      applyFilters();
-                    },
-                    child: Text(
-                      'Clear',
-                      style: TextStyle(color: widget.categoryColor),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-          // Product count
-          Padding(
-            padding: EdgeInsets.all(16),
-            child: Text(
-              '${filteredProducts.length} products found',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
-            ),
-          ),
-
-          // Products grid
-          Expanded(
-            child: filteredProducts.isEmpty
-                ? Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey[400]),
+                  CircularProgressIndicator(color: widget.categoryColor),
                   SizedBox(height: 16),
-                  Text(
-                    selectedSubcategories.isNotEmpty
-                        ? 'No products match selected filters'
-                        : 'No ${widget.categoryName.toLowerCase()} products available',
-                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                  ),
-                  if (selectedSubcategories.isNotEmpty) ...[
-                    SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          selectedSubcategories.clear();
-                        });
-                        applyFilters();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: widget.categoryColor,
-                      ),
-                      child: Text('Clear Filters', style: TextStyle(color: Colors.white)),
-                    ),
-                  ],
+                  Text('Loading ${widget.categoryName} products...'),
                 ],
               ),
             )
-                : Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8),
-              child: GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
-                  childAspectRatio: 0.65,
-                ),
-                itemCount: filteredProducts.length,
-                itemBuilder: (context, index) {
-                  final product = filteredProducts[index];
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ProductDetailPage(product: product),
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Active filters display
+                if (selectedSubcategories.isNotEmpty)
+                  Container(
+                    padding: EdgeInsets.all(12),
+                    color: widget.categoryColor.withAlpha(10),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.filter_alt,
+                          size: 18,
+                          color: widget.categoryColor,
                         ),
-                      );
-                    },
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 2,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            flex: 3,
-                            child: Container(
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade100,
-                                borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Filters: ${selectedSubcategories.join(", ")}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: widget.categoryColor,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              selectedSubcategories.clear();
+                            });
+                            applyFilters();
+                          },
+                          child: Text(
+                            'Clear',
+                            style: TextStyle(color: widget.categoryColor),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                // Product count
+                Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text(
+                    '${filteredProducts.length} products found',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  ),
+                ),
+
+                // Products grid
+                Expanded(
+                  child: filteredProducts.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.inventory_2_outlined,
+                                size: 64,
+                                color: Colors.grey[400],
                               ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-                                child: Image.network(
-                                  product.images.isNotEmpty ? product.images.first : '',
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, _, _) => Container(
-                                    color: Colors.grey[200],
-                                    child: Icon(Icons.image, size: 50, color: Colors.grey[400]),
-                                  ),
+                              SizedBox(height: 16),
+                              Text(
+                                selectedSubcategories.isNotEmpty
+                                    ? 'No products match selected filters'
+                                    : 'No ${widget.categoryName.toLowerCase()} products available',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey[600],
                                 ),
                               ),
-                            ),
+                              if (selectedSubcategories.isNotEmpty) ...[
+                                SizedBox(height: 16),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      selectedSubcategories.clear();
+                                    });
+                                    applyFilters();
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: widget.categoryColor,
+                                  ),
+                                  child: Text(
+                                    'Clear Filters',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
-                          Expanded(
-                            flex: 2,
-                            child: Padding(
-                              padding: EdgeInsets.all(8),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    product.name,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    product.brand,
-                                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                                  ),
-                                  Spacer(),
-                                  Text(
-                                    '₹${product.price.toStringAsFixed(2)}',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: widget.categoryColor,
+                        )
+                      : Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 8),
+                          child: GridView.builder(
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  crossAxisSpacing: 8,
+                                  mainAxisSpacing: 8,
+                                  childAspectRatio: 0.65,
+                                ),
+                            itemCount: filteredProducts.length,
+                            itemBuilder: (context, index) {
+                              final product = filteredProducts[index];
+                              return GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          ProductDetailPage(product: product),
                                     ),
+                                  );
+                                },
+                                child: Card(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
-                                ],
-                              ),
-                            ),
+                                  elevation: 2,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        flex: 3,
+                                        child: Container(
+                                          width: double.infinity,
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey.shade100,
+                                            borderRadius: BorderRadius.vertical(
+                                              top: Radius.circular(12),
+                                            ),
+                                          ),
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.vertical(
+                                              top: Radius.circular(12),
+                                            ),
+                                            child: Image.network(
+                                              _getFirstVariantImage(product),
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (_, _, _) =>
+                                                  Container(
+                                                    color: Colors.grey[200],
+                                                    child: Icon(
+                                                      Icons.image,
+                                                      size: 50,
+                                                      color: Colors.grey[400],
+                                                    ),
+                                                  ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Padding(
+                                          padding: EdgeInsets.all(8),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                product.name,
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                              SizedBox(height: 4),
+                                              Text(
+                                                product.brand,
+                                                style: TextStyle(
+                                                  color: Colors.grey[600],
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                              Spacer(),
+                                              Text(
+                                                '₹${product.price.toStringAsFixed(2)}',
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: widget.categoryColor,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
                           ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
+                        ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
     );
   }
 }

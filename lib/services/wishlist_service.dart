@@ -99,41 +99,15 @@ class WishlistService {
                 : product.price;
             effectiveStock = selectedVariant.stockQuantity;
 
-            // Check variant images with detailed logging
-            final variantImages = selectedVariant.images;
-            debugPrint(
-              '📸 Variant images: $variantImages (length: ${variantImages?.length ?? 0})',
-            );
-
-            if (variantImages != null && variantImages.isNotEmpty) {
-              effectiveImages = variantImages;
-              debugPrint(
-                '✅ Using variant images: ${effectiveImages.length} images',
-              );
-            } else {
-              // Fallback to product images if variant has no images
-              effectiveImages = product.images;
-              debugPrint(
-                '⚠️ Variant has no images, using product images: ${effectiveImages.length} images',
-              );
-            }
+            // Use variant images
+            effectiveImages = selectedVariant.images;
+            debugPrint('📸 Variant images: ${effectiveImages.length} image(s)');
           } catch (e) {
             debugPrint('Error accessing variant properties: $e');
-            effectiveImages = product.images; // Fallback to product images
+            effectiveImages = [];
           }
-        } else if (!product.hasVariants) {
-          // For products without variants, use base product images
-          effectiveImages = product.images;
-          debugPrint(
-            '📱 Using product images (no variants): ${effectiveImages.length} images',
-          );
-        } else {
-          // For products with variants but no selectedVariant found, use product images as fallback
-          effectiveImages = product.images;
-          debugPrint(
-            '🔄 Using product images as fallback: ${effectiveImages.length} images',
-          );
         }
+        // For products without variants or variant not found, images will be empty
 
         // Add only essential product info and specific variant details
         final wishlistItem = {
@@ -433,13 +407,12 @@ class WishlistService {
         category: data['category']?.toString() ?? '',
         price: _safeToDouble(data['price']),
         stockQuantity: _safeToInt(data['stockQuantity']),
-        images: _safeToStringList(data['images']),
         sellerId: data['sellerId']?.toString() ?? '',
         deliveryTime: data['deliveryTime']?.toString() ?? '',
         keywords: _safeToStringList(data['keywords']),
         hasVariants: data['hasVariants'] == true,
-        variants: <ProductVariant>[], // Explicitly typed empty list
-        availableAttributes: <String>[], // Explicitly typed empty list
+        variants: _createVariantsFromWishlistData(data),
+        availableAttributes: <String>[],
       );
     } catch (e, stackTrace) {
       debugPrint('Error creating product from wishlist data: $e');
@@ -458,7 +431,7 @@ class WishlistService {
           category: data['category']?.toString() ?? '',
           price: _safeToDouble(data['price']),
           stockQuantity: _safeToInt(data['stockQuantity']),
-          images: _safeToStringList(data['images']),
+
           sellerId: data['sellerId']?.toString() ?? '',
           deliveryTime: data['deliveryTime']?.toString() ?? '',
           keywords: _safeToStringList(data['keywords']),
@@ -477,7 +450,6 @@ class WishlistService {
           category: '',
           price: 0.0,
           stockQuantity: 0,
-          images: <String>[],
           sellerId: '',
           deliveryTime: '',
           keywords: <String>[],
@@ -486,6 +458,38 @@ class WishlistService {
           availableAttributes: <String>[],
         );
       }
+    }
+  }
+
+  // Helper method to create variants from wishlist data
+  static List<ProductVariant> _createVariantsFromWishlistData(
+    Map<String, dynamic> data,
+  ) {
+    try {
+      final variantId = data['selectedVariantId']?.toString();
+      final attributes = data['selectedAttributes'];
+      final images = data['images'];
+
+      if (variantId != null && variantId != 'default') {
+        // Create a single variant from the wishlist data
+        return [
+          ProductVariant(
+            variantId: variantId,
+            attributes: attributes != null && attributes is Map
+                ? Map<String, String>.from(attributes)
+                : <String, String>{},
+            price: _safeToDouble(data['price']),
+            stockQuantity: _safeToInt(data['stockQuantity']),
+            images: images != null && images is List
+                ? List<String>.from(images)
+                : [],
+          ),
+        ];
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Error creating variants from wishlist data: $e');
+      return [];
     }
   }
 

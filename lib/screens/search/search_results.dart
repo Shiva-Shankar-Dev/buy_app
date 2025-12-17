@@ -282,7 +282,7 @@ class ProductCard extends StatelessWidget {
         product = Product(
           name: name,
           brand: brand,
-          images: imagesList?.cast<String>() ?? [],
+
           description: data['description'] ?? '',
           category: category,
           price: (price ?? 0).toDouble(),

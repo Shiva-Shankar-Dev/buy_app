@@ -228,9 +228,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       child: Image.network(
                         item.effectiveImages.isNotEmpty
                             ? item.effectiveImages.first
-                            : (item.product.images.isNotEmpty
-                                  ? item.product.images.first
-                                  : ''),
+                            : '',
                         width: 60,
                         height: 60,
                         fit: BoxFit.cover,
