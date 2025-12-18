@@ -773,6 +773,206 @@ class _ProductDetailPageState extends State<ProductDetailPage>
     );
   }
 
+  Widget _buildReturnReplacementPolicy() {
+    // Check if any policy info is available
+    final hasReturnDays = widget.product.returnDays != null;
+    final hasReplacementDays = widget.product.replacementDays != null;
+    final hasCancellationCharge = widget.product.cancellationCharge != null;
+
+    if (!hasReturnDays && !hasReplacementDays && !hasCancellationCharge) {
+      return SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Policies & Charges',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: Colors.grey[900],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.grey[200] ?? Colors.grey,
+                width: 1,
+              ),
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(5),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                // Returns Policy
+                if (hasReturnDays) ...[
+                  Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: Colors.blue[50],
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            Icons.keyboard_return,
+                            color: Colors.blue[700],
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Easy Returns',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.grey[900],
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                'Return within ${widget.product.returnDays} days of delivery',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (hasReplacementDays || hasCancellationCharge)
+                    Divider(thickness: 0.5, height: 0, color: Colors.grey[200]),
+                ],
+
+                // Replacement Policy
+                if (hasReplacementDays) ...[
+                  Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: Colors.green[50],
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            Icons.swap_horizontal_circle,
+                            color: Colors.green[700],
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Replacements',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.grey[900],
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                'Replace within ${widget.product.replacementDays} days of delivery',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (hasCancellationCharge)
+                    Divider(thickness: 0.5, height: 0, color: Colors.grey[200]),
+                ],
+
+                // Cancellation Charge
+                if (hasCancellationCharge) ...[
+                  Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: Colors.orange[50],
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            Icons.close_outlined,
+                            color: Colors.orange[700],
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Cancellation Charge',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.grey[900],
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                '₹${widget.product.cancellationCharge!.toStringAsFixed(0)} if cancelled after order shipped',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildAddressCard() {
     final hasAddress = selectedAddressService.hasSelectedAddress;
 
@@ -1309,6 +1509,11 @@ class _ProductDetailPageState extends State<ProductDetailPage>
                         ],
                       ),
                     ),
+
+                    Divider(thickness: 6, color: Colors.grey[100]),
+
+                    // Return/Replacement Policy Section
+                    _buildReturnReplacementPolicy(),
 
                     Divider(thickness: 6, color: Colors.grey[100]),
 

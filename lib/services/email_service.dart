@@ -10,7 +10,7 @@ import 'package:buy_app/services/pdf_service.dart';
 import 'package:buy_app/models/models.dart'; // Import from models file
 
 class EmailService {
-  static const String _emailServerUrl = 'http://3.108.59.161:3000/send';
+  static const String _emailServerUrl = 'http://13.203.224.103:3000/send';
 
   // Alternative email services (uncomment to use)
   // static const String _emailServerUrl = 'https://formspree.io/f/YOUR_FORM_ID';
@@ -386,7 +386,7 @@ class EmailService {
 
       // Send email with PDF attachment
       final response = await http.post(
-        Uri.parse('http://3.108.59.161:3000/send/receipt/'),
+        Uri.parse('http://13.203.224.103:3000/send/receipt/'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'customerEmail': customerEmail,

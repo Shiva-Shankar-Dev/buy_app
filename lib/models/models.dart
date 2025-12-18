@@ -300,6 +300,11 @@ class Product {
   hasVariants; // Flag to indicate if product has variants (from Firestore)
   final List<String>
   availableAttributes; // Available attribute types (e.g., ["color", "size"])
+  final int? returnDays; // Return policy in days (null if not available)
+  final int?
+  replacementDays; // Replacement policy in days (null if not available)
+  final double?
+  cancellationCharge; // Cancellation charge (null if not available)
 
   Product({
     required this.name,
@@ -316,6 +321,9 @@ class Product {
     required this.hasVariants,
     this.variants = const [],
     this.availableAttributes = const [],
+    this.returnDays,
+    this.replacementDays,
+    this.cancellationCharge,
   });
 
   factory Product.fromFirestore(Map<String, dynamic> data) {
@@ -383,6 +391,9 @@ class Product {
         hasVariants: data['hasVariants'] ?? false,
         variants: variants,
         availableAttributes: finalAvailableAttributes,
+        returnDays: data['returnDays'] as int?,
+        replacementDays: data['replacementDays'] as int?,
+        cancellationCharge: data['cancellationCharge']?.toDouble(),
       );
 
       return product;
@@ -408,6 +419,9 @@ class Product {
       'variants': variants.map((v) => v.toFirestore()).toList(),
       'hasVariants': hasVariants,
       'availableAttributes': availableAttributes,
+      if (returnDays != null) 'returnDays': returnDays,
+      if (replacementDays != null) 'replacementDays': replacementDays,
+      if (cancellationCharge != null) 'cancellationCharge': cancellationCharge,
     };
   }
 
