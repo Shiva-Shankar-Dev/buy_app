@@ -453,114 +453,9 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
               ],
             ),
             const SizedBox(height: 16),
-            _buildOrderProgress(),
-            const SizedBox(height: 20),
             _buildStatusTimeline(),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildOrderProgress() {
-    final status = currentOrder.status.toLowerCase();
-    final isDelivered = [
-      'delivered',
-      'request for return',
-      'request for replacement',
-    ].contains(status);
-
-    String progressText;
-    double progressValue;
-    Color progressColor;
-
-    switch (status) {
-      case 'confirmed':
-      case 'placed':
-        progressText = 'Order Confirmed - Preparing for packing';
-        progressValue = 0.25;
-        progressColor = Colors.orange;
-        break;
-      case 'packed':
-        progressText = 'Order Packed - Ready for shipment';
-        progressValue = 0.5;
-        progressColor = Colors.blue;
-        break;
-      case 'shipped':
-        progressText = 'Order Shipped - On the way to you';
-        progressValue = 0.75;
-        progressColor = Colors.indigo;
-        break;
-      case 'delivered':
-        progressText = 'Order Delivered Successfully';
-        progressValue = 1.0;
-        progressColor = Colors.green;
-        break;
-      case 'request for return':
-        progressText = 'Return Request Submitted';
-        progressValue = 1.0;
-        progressColor = Colors.purple;
-        break;
-      case 'request for replacement':
-        progressText = 'Replacement Request Submitted';
-        progressValue = 1.0;
-        progressColor = Colors.indigo;
-        break;
-      case 'cancelled':
-        progressText = 'Order Cancelled';
-        progressValue = 0.0;
-        progressColor = Colors.red;
-        break;
-      default:
-        progressText = 'Processing Order';
-        progressValue = 0.1;
-        progressColor = Colors.grey;
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [progressColor.withAlpha(25), Colors.white],
-        ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: progressColor.withAlpha(77)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.trending_up, color: progressColor, size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  progressText,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: progressColor,
-                  ),
-                ),
-              ),
-              Text(
-                '${(progressValue * 100).toInt()}%',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: progressColor,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          LinearProgressIndicator(
-            value: progressValue,
-            backgroundColor: Colors.grey.shade200,
-            valueColor: AlwaysStoppedAnimation<Color>(progressColor),
-            minHeight: 6,
-          ),
-        ],
       ),
     );
   }
@@ -570,12 +465,18 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
     final status =
         (currentOrder.status.isEmpty ? 'confirmed' : currentOrder.status)
             .toLowerCase();
-    bool hasReturnRequest = status == 'request for return';
-    bool hasReplacementRequest = status == 'request for replacement';
+    bool hasReturnRequest =
+        status == 'request for return' || status == 'return approved';
+    bool hasReplacementRequest =
+        status == 'request for replacement' || status == 'replacement approved';
+    bool isReturnApproved = status == 'return approved';
+    bool isReplacementApproved = status == 'replacement approved';
     bool isDelivered = [
       'delivered',
       'request for return',
       'request for replacement',
+      'return approved',
+      'replacement approved',
     ].contains(status);
 
     // Build timeline based on order status
@@ -629,7 +530,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
           currentStatusIndex = 0;
       }
     } else if (hasReturnRequest || hasReplacementRequest) {
-      // Case 3: Return/Replacement - Show Placed->Delivered->Request
+      // Case 3: Return/Replacement - Show Placed->Delivered->Request(->Approved)
       statuses = [
         {
           'name': 'Order Placed',
@@ -653,7 +554,19 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
               : 'Replacement request submitted',
         },
       ];
-      currentStatusIndex = 2; // All three steps completed
+
+      if (isReturnApproved || isReplacementApproved) {
+        statuses.add({
+          'name': isReturnApproved ? 'Return Approved' : 'Replacement Approved',
+          'icon': Icons.check_circle,
+          'description': isReturnApproved
+              ? 'Your return request has been approved'
+              : 'Your replacement request has been approved',
+        });
+        currentStatusIndex = 3; // All four steps completed
+      } else {
+        currentStatusIndex = 2; // Three steps completed (up to request)
+      }
     } else {
       // Case 2: After delivered - Show simplified Placed->Delivered
       statuses = [
@@ -1041,6 +954,8 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
               'delivered',
               'request for return',
               'request for replacement',
+              'return approved',
+              'replacement approved',
             ].contains(currentOrder.status.toLowerCase()))
               FutureBuilder<String>(
                 future: _fetchExpectedDeliveryDate(),
@@ -1065,6 +980,8 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
               'delivered',
               'request for return',
               'request for replacement',
+              'return approved',
+              'replacement approved',
             ].contains(currentOrder.status.toLowerCase()))
               _buildInfoRow(
                 'Delivered On',
@@ -1095,6 +1012,8 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
       'delivered',
       'request for return',
       'request for replacement',
+      'return approved',
+      'replacement approved',
     ].contains(currentOrder.status.toLowerCase());
 
     return Card(
@@ -1519,8 +1438,12 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
         return Colors.green;
       case 'request for return':
         return Colors.purple;
+      case 'return approved':
+        return Colors.green;
       case 'request for replacement':
         return Colors.indigo;
+      case 'replacement approved':
+        return Colors.green;
       case 'cancelled':
         return Colors.red;
       default:
@@ -2009,28 +1932,6 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
       print(
         'Submitting return request for order: ${currentOrder.orderId}',
       ); // Debug log
-
-      // Add return request document
-      await FirebaseFirestore.instance.collection('return_requests').add({
-        'orderId': currentOrder.orderId,
-        'customerEmail': currentOrder.customerEmail,
-        'reason': reason,
-        'requestType': 'return',
-        'status': 'pending',
-        'requestDate': Timestamp.now(),
-        'items': currentOrder.items
-            .map(
-              (item) => {
-                'productId': item.productId,
-                'productTitle': item.productTitle,
-                'quantity': item.quantity,
-                'price': item.productPrice,
-                'variantId': item.variantId,
-                'variantAttributes': item.variantAttributes,
-              },
-            )
-            .toList(),
-      });
 
       // Update order status to 'Request for Return'
       await FirebaseFirestore.instance
