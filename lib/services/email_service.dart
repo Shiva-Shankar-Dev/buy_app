@@ -2,12 +2,13 @@ import 'dart:convert';
 import 'package:buy_app/services/stock_service.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:http/http.dart' as http;
 import 'package:buy_app/services/addresses.dart';
 import 'package:buy_app/services/seller_service.dart';
 import 'package:buy_app/services/cart_manager.dart';
 import 'package:buy_app/services/pdf_service.dart';
 import 'package:buy_app/models/models.dart'; // Import from models file
+import 'package:buy_app/services/order_service.dart';
 
 class EmailService {
   static const String _emailServerUrl = 'http://13.203.224.103:3000/send';
@@ -413,12 +414,17 @@ class EmailService {
   }
 }
 
-Future<void> placeOrder(Map<String, dynamic> customer, Address address) async {
+Future<void> placeOrder({
+  required Map<String, dynamic> customer,
+  required Address address,
+  String paymentMethod = 'COD',
+  String txnId = 'N/A',
+}) async {
   final cartItems = Cart.instance.items;
-  final orderId = 'ORD_${DateTime.now().millisecondsSinceEpoch}';
+  // removed early declaration of orderId
 
   try {
-    debugPrint('📦 Processing order: $orderId');
+    debugPrint('📦 Processing new order...');
 
     // Step 1: Check stock availability for all items
     for (final item in cartItems) {
@@ -432,95 +438,101 @@ Future<void> placeOrder(Map<String, dynamic> customer, Address address) async {
     }
     debugPrint('✅ Stock availability verified');
 
-    // Step 2: Create the order in Firestore
-    final orderRef = await FirebaseFirestore.instance.collection('orders').add({
-      'userId': customer['uid'] ?? 'guest',
-      'items': cartItems
-          .map(
-            (item) => {
-              'productId': item.product.pid,
-              'name': item.product.name,
-              'quantity': item.quantity,
-              'price': item.product.price,
-              'selectedVariantId': item.selectedVariantId,
-              'selectedAttributes': item.selectedAttributes,
-              'brand': item.product.brand,
-              'category': item.product.category,
-            },
-          )
-          .toList(),
-      'totalAmount': cartItems.fold(
-        0.0,
-        (total, item) => total + (item.product.price * item.quantity),
-      ),
-      'status': 'confirmed',
-      'createdAt': FieldValue.serverTimestamp(),
-    });
-    debugPrint('✅ Order created: ${orderRef.id}');
+    // Use OrderService to create order (handles DB storage in user_orders and stock decrement)
+    final orderId = await OrderService.createOrder(
+      cartItems: cartItems,
+      totalAmount: Cart.instance.totalAmount,
+      paymentMethod: paymentMethod,
+      shippingAddress: {
+        'first': address.first,
+        'last': address.last,
+        'line1': address.line1,
+        'line2': address.line2,
+        'city': address.city,
+        'state': address.state,
+        'pincode': address.pincode,
+      },
+    );
 
-    // Step 3: Decrement stock for each item
-    for (final item in cartItems) {
-      final stockUpdated = await StockService.decrementStock(
-        item.product.pid,
-        item.quantity,
-      );
-      if (!stockUpdated) {
-        throw Exception('Failed to update stock for ${item.product.name}');
-      }
+    if (orderId == null) {
+      throw Exception('Failed to create order via OrderService');
     }
-    debugPrint('✅ Stock quantities updated');
+    debugPrint('✅ Order created via OrderService: $orderId');
 
-    // Step 4: Send customer confirmation with PDF invoice
-    try {
-      // TODO: Fix SMTP credentials on server before enabling
-      debugPrint('📧 Skipping email (server credentials not configured)');
-      /* 
-      await EmailService.sendCustomerConfirmationEmail(
-        customerEmail: customer['email'] ?? '',
-        customerName: customer['name'] ?? 'Customer',
-        shippingAddress: address,
-        orderedItems: cartItems,
-        ordId: orderId,
-        paymentMethod: 'COD',
-        txnId: 'N/A',
-      );
-      debugPrint('✅ Customer confirmation email sent');
-      */
+    // Trigger background notifications (Fire and forget)
+    _sendBackgroundNotifications(
+      customer: customer,
+      address: address,
+      cartItems: List.from(cartItems), // Create a copy of the list
+      orderId: orderId,
+      paymentMethod: paymentMethod,
+      txnId: txnId,
+    );
 
-      // Send PDF invoice automatically
-      await EmailService.sendOrderInvoiceEmail(
-        customerEmail: customer['email'] ?? '',
-        customerName: customer['name'] ?? 'Customer',
-        shippingAddress: address,
-        orderedItems: cartItems,
-        orderId: orderId,
-        paymentMethod: 'COD',
-        txnId: 'N/A',
-      );
-      debugPrint('✅ PDF invoice email sent');
-    } catch (e) {
-      debugPrint('⚠️ Failed to send customer email: $e');
-    }
-
-    // Step 5: Send order to admin/sellers
-    try {
-      await EmailService.sendOrderDetailsToSellers(
-        customer: customer,
-        shippingAddress: address,
-        ordId: orderId,
-        paymentMethod: 'COD',
-        txnId: 'N/A',
-      );
-      debugPrint('✅ Seller notifications sent');
-    } catch (e) {
-      debugPrint('⚠️ Failed to send seller notifications: $e');
-    }
-
-    // Step 6: Clear cart after successful order
+    // Step 6: Clear cart after successful order (Immediate UI feedback)
     Cart.instance.clear();
     debugPrint('✅ Order placed successfully: $orderId');
   } catch (e) {
     debugPrint('❌ Order placement failed: $e');
     rethrow;
   }
+}
+
+/// Helper method to send notifications in background
+Future<void> _sendBackgroundNotifications({
+  required Map<String, dynamic> customer,
+  required Address address,
+  required List<CartItem> cartItems,
+  required String orderId,
+  required String paymentMethod,
+  required String txnId,
+}) async {
+  debugPrint('🚀 Starting background notifications for order: $orderId');
+
+  // Step 4: Send customer confirmation
+  try {
+    // TODO: Fix SMTP credentials on server before enabling
+    debugPrint('📧 Skipping email (server credentials not configured)');
+    /* 
+      await EmailService.sendCustomerConfirmationEmail(
+        customerEmail: customer['email'] ?? '',
+        customerName: customer['name'] ?? 'Customer',
+        shippingAddress: address,
+        orderedItems: cartItems,
+        ordId: orderId,
+        paymentMethod: paymentMethod,
+        txnId: txnId,
+      );
+      debugPrint('✅ Customer confirmation email sent');
+      */
+
+    // Send PDF invoice automatically
+    await EmailService.sendOrderInvoiceEmail(
+      customerEmail: customer['email'] ?? '',
+      customerName: customer['name'] ?? 'Customer',
+      shippingAddress: address,
+      orderedItems: cartItems,
+      orderId: orderId,
+      paymentMethod: paymentMethod,
+      txnId: txnId,
+    );
+    debugPrint('✅ PDF invoice email sent');
+  } catch (e) {
+    debugPrint('⚠️ Failed to send customer email: $e');
+  }
+
+  // Step 5: Send order to admin/sellers
+  try {
+    await EmailService.sendOrderDetailsToSellers(
+      customer: customer,
+      shippingAddress: address,
+      ordId: orderId,
+      paymentMethod: paymentMethod,
+      txnId: txnId,
+    );
+    debugPrint('✅ Seller notifications sent');
+  } catch (e) {
+    debugPrint('⚠️ Failed to send seller notifications: $e');
+  }
+  debugPrint('🏁 Background notifications completed for order: $orderId');
 }

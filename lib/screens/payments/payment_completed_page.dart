@@ -55,19 +55,21 @@ class _PaymentCompletedPageState extends State<PaymentCompletedPage> {
 
   Future<void> _processOrder() async {
     try {
-      // First save the order
+      // First save the order (Must wait for this)
       await _saveOrderToDatabase();
 
-      // Then send notifications if needed
       if (widget.shouldSendEmails) {
-        await _sendEmailNotifications();
-      } else {
-        // Just clear cart and navigate
-        Cart.instance.clear();
-        await Future.delayed(const Duration(seconds: 2));
-        if (mounted) {
-          Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
-        }
+        // Send emails in background (Fire and forget)
+        _sendEmailNotifications(); // Not awaited
+      }
+
+      // Clear cart immediately
+      Cart.instance.clear();
+
+      // Navigate to home after short delay for UI feedback
+      await Future.delayed(const Duration(seconds: 2));
+      if (mounted) {
+        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
       }
     } catch (e) {
       debugPrint('❌ Error processing order: $e');

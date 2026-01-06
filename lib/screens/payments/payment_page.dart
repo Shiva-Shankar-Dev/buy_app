@@ -1,7 +1,6 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:buy_app/services/auth.dart';
-import 'package:buy_app/services/sms_service.dart';
 import 'package:buy_app/services/email_service.dart';
 import 'package:buy_app/services/cart_manager.dart';
 import 'package:buy_app/services/selected_address_service.dart';
@@ -10,6 +9,8 @@ import 'package:buy_app/screens/payments/payment_cod_page.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:intl/intl.dart';
+import 'package:buy_app/services/razorpay_service.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 String generateOrderId() {
   final now = DateTime.now();
@@ -32,6 +33,7 @@ class PaymentPage extends StatefulWidget {
 class _PaymentPageState extends State<PaymentPage> {
   final AuthService _authService = AuthService();
   final selectedAddressService = SelectedAddressService.instance;
+  late RazorpayService _razorpayService;
   Map<String, dynamic>? customer;
   String? _selectedPaymentMode = 'COD';
   bool _isProcessing = false;
@@ -47,6 +49,55 @@ class _PaymentPageState extends State<PaymentPage> {
     super.initState();
     loadCustomer();
     _selectedPaymentMode = 'COD';
+    _razorpayService = RazorpayService(
+      onSuccess: _handlePaymentSuccess,
+      onFailure: _handlePaymentError,
+      onExternalWallet: _handleExternalWallet,
+    );
+    _razorpayService.init();
+  }
+
+  @override
+  void dispose() {
+    _razorpayService.dispose();
+    super.dispose();
+  }
+
+  void _handlePaymentSuccess(PaymentSuccessResponse response) {
+    if (!mounted) return;
+    setState(() => _isProcessing = false);
+    // You can use response.paymentId, response.orderId, response.signature here
+    debugPrint("Payment Success: ${response.paymentId}");
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => OrderSuccessPage(
+          isCOD: false,
+          sendNotifications: () =>
+              _handleOrderPlacement(txnId: response.paymentId!),
+        ),
+      ),
+    );
+  }
+
+  void _handlePaymentError(PaymentFailureResponse response) {
+    if (!mounted) return;
+    setState(() => _isProcessing = false);
+    debugPrint("Payment Error: ${response.code} - ${response.message}");
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Payment Failed: ${response.message}")),
+    );
+  }
+
+  void _handleExternalWallet(ExternalWalletResponse response) {
+    if (!mounted) return;
+    setState(() => _isProcessing = false);
+    debugPrint("External Wallet: ${response.walletName}");
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("External Wallet Selected: ${response.walletName}"),
+      ),
+    );
   }
 
   String formatPhoneNumber(String rawPhone) {
@@ -65,58 +116,17 @@ class _PaymentPageState extends State<PaymentPage> {
     });
   }
 
-  Future<void> _sendOrderNotifications() async {
-    final cart = Cart.instance;
-    final email = customer!['email'];
-    final name = customer!['name'] ?? 'Customer';
-    final phone = formatPhoneNumber(customer?['phone'] ?? '');
+  Future<void> _handleOrderPlacement({String txnId = 'N/A'}) async {
     final paymentMethod = _selectedPaymentMode ?? 'COD';
 
-    try {
-      final ordId = generateOrderId();
-      final txnId = paymentMethod == 'COD' ? 'N/A' : ordId;
-
-      // 1. Send confirmation email to customer
-      // Fix: Use orderedItems instead of orderedProducts
-      await EmailService.sendCustomerConfirmationEmail(
-        customerEmail: email,
-        customerName: name,
-        shippingAddress: selectedAddressService.selectedAddress!,
-        orderedItems: cart.items, // Changed from orderedProducts
-        ordId: ordId,
-        paymentMethod: paymentMethod,
-        txnId: txnId,
-      );
-
-      // 2. Send order details to sellers
-      await EmailService.sendOrderDetailsToSellers(
-        customer: customer!,
-        shippingAddress: selectedAddressService.selectedAddress!,
-        ordId: ordId,
-        paymentMethod: paymentMethod,
-        txnId: txnId,
-      );
-
-      // 3. Send SMS to customer
-      if (phone.isNotEmpty) {
-        final address = selectedAddressService.selectedAddress!;
-        await sendSMS(
-          phone,
-          "$name,\nYour Order has been placed!\n\nShipping Address:\n"
-          "${address.line1}, ${address.line2},\n"
-          "${address.city}, ${address.state} - ${address.pincode}",
-        );
-      }
-
-      // 4. Clear cart after notifications
-      debugPrint('🛒 Clearing cart after notifications sent successfully');
-      cart.clear();
-      debugPrint('🛒 Cart cleared. Items count: ${cart.items.length}');
-    } catch (e) {
-      debugPrint("❌ Error sending notifications: $e");
-      // Clear cart even on error to prevent duplicate orders
-      cart.clear();
-    }
+    // Use the comprehensive placeOrder function from email_service.dart
+    // This handles DB storage, Stock updates, and PDF Invoices
+    await placeOrder(
+      customer: customer!,
+      address: selectedAddressService.selectedAddress!,
+      paymentMethod: paymentMethod,
+      txnId: txnId,
+    );
   }
 
   void _handlePayment() async {
@@ -134,37 +144,19 @@ class _PaymentPageState extends State<PaymentPage> {
           ),
         ),
       );
-    } else if (_selectedPaymentMode == 'UPI') {
-      setState(() => _isProcessing = false);
-      Navigator.of(context).pushNamed(
-        '/payment_upi',
-        arguments: {
-          'customer': customer,
-          'address': selectedAddressService.selectedAddress,
-        },
-      );
-      return;
-    } else if (_selectedPaymentMode == 'Card') {
-      setState(() => _isProcessing = false);
-      Navigator.of(context).pushNamed(
-        '/payment_card',
-        arguments: {
-          'customer': customer,
-          'address': selectedAddressService.selectedAddress,
-        },
-      );
-      return;
     } else {
-      await Future.delayed(Duration(seconds: 2));
-      setState(() => _isProcessing = false);
-      if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => OrderSuccessPage(
-            isCOD: false,
-            sendNotifications: _sendOrderNotifications,
-          ),
-        ),
+      // Online Payment (Razorpay)
+      final email = customer!['email'] ?? 'customer@example.com';
+      final phone = customer!['phone'] ?? '';
+
+      _razorpayService.openCheckout(
+        amount: totalAmount / 10000,
+        contact: phone,
+        email: email,
+        name: 'Buy App',
+        description: 'Payment for Order',
+        orderId:
+            generateOrderId(), // Note: Razorpay usually generates its own order ID from backend, but for testing we can pass a dummy or omit if just testing standard checkout
       );
     }
   }
@@ -247,27 +239,15 @@ class _PaymentPageState extends State<PaymentPage> {
                   ),
                   Divider(height: 1),
                   ListTile(
-                    title: Text("UPI Payment"),
-                    subtitle: Text("Pay using UPI apps"),
+                    title: Text("Online Payment"),
+                    subtitle: Text("Cards, UPI, Netbanking, Wallets"),
                     leading: Radio<String>(
-                      value: 'UPI',
+                      value: 'ONLINE',
                       groupValue: _selectedPaymentMode,
                       onChanged: (val) =>
                           setState(() => _selectedPaymentMode = val),
                     ),
-                    trailing: Icon(Icons.account_balance_wallet),
-                  ),
-                  Divider(height: 1),
-                  ListTile(
-                    title: Text("Credit/Debit Card"),
-                    subtitle: Text("Pay using card"),
-                    leading: Radio<String>(
-                      value: 'Card',
-                      groupValue: _selectedPaymentMode,
-                      onChanged: (val) =>
-                          setState(() => _selectedPaymentMode = val),
-                    ),
-                    trailing: Icon(Icons.credit_card),
+                    trailing: Icon(Icons.payment),
                   ),
                 ],
               ),
