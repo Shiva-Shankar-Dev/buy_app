@@ -1,0 +1,109 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ======== CUSTOMERS COLLECTION ========
+    // Users can only read/write their own data
+    match /customers/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // ======== ORDERS COLLECTION ========
+    // Most restrictive rules - orders contain sensitive customer data
+    match /user_orders/{orderId} {
+      // 1. Customers can read only their own orders
+      allow read: if request.auth != null && 
+                     request.auth.uid == resource.data.userId;
+      
+      // 2. Sellers can read orders that contain their products
+      allow read: if request.auth != null && 
+                     request.auth.uid in resource.data.sellerIds;
+      
+      // 3. Only customers can create orders (when userId matches auth user)
+      allow create: if request.auth != null && 
+                       request.auth.uid == request.resource.data.userId &&
+                       request.resource.data.keys().hasAll(['userId', 'customerName', 'items', 'totalAmount', 'orderDate']);
+      
+      // 4. Only customers can update their own orders (status updates, etc)
+      allow update: if request.auth != null && 
+                       request.auth.uid == resource.data.userId;
+      
+      // 5. Never allow delete (orders should be archived, not deleted)
+      allow delete: if false;
+    }
+
+    // ======== SELLERS COLLECTION ========
+    // Sellers can only view their own complete profile
+    // Customers should NOT access this collection directly
+    match /sellers/{sellerId} {
+      // Sellers can read their own complete profile
+      allow read: if request.auth != null && request.auth.uid == sellerId;
+      
+      // Sellers can update their own profile
+      allow write: if request.auth != null && request.auth.uid == sellerId;
+      
+      // Customers and other sellers cannot read
+      allow delete: if false;
+    }
+
+    // ======== PRODUCTS COLLECTION ========
+    // Products are readable by all authenticated users (they need to browse)
+    // But only sellers can modify their own products
+    match /products/{document=**} {
+      // Anyone authenticated can read products for shopping
+      allow read: if request.auth != null;
+      
+      // Only the seller who created the product can modify it
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && 
+                       request.auth.uid == resource.data.sellerId;
+      allow delete: if request.auth != null && 
+                       request.auth.uid == resource.data.sellerId;
+    }
+
+    // ======== PRODUCT COMMENTS ========
+    // Reviews should be public but protect personal data
+    match /product_comments/{commentId} {
+      // Any authenticated user can read reviews
+      allow read: if request.auth != null;
+      
+      // Users can create their own reviews
+      allow create: if request.auth != null && 
+                       request.auth.uid == request.resource.data.userId;
+      
+      // Users can only update/delete their own reviews
+      allow update, delete: if request.auth != null && 
+                               request.auth.uid == resource.data.userId;
+    }
+
+    // ======== WISHLISTS ========
+    // Personal wishlists - only accessible to the user
+    match /user_wishlists/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // ======== ADDRESSES ========
+    // Personal addresses - only accessible to the user
+    match /user_addresses/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // ======== CART (if exists) ========
+    match /user_cart/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // ======== AUDIT LOGS ========
+    // Only backend can write, only admins can read
+    match /audit_logs/{document=**} {
+      allow write: if false; // Cloud Functions will write directly
+      allow read: if false;  // Restrict to admin panel
+    }
+
+    // ======== DEFAULT DENY ALL ========
+    // This catches any collection not explicitly defined above
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

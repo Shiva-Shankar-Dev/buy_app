@@ -360,4 +360,129 @@ class OrderService {
       return false;
     }
   }
+
+  // ===== SELLER METHODS =====
+
+  /// Get orders for a seller (products they've sold)
+  /// This method filters orders to only show products from the specific seller
+  static Future<List<Order>> getSellerOrders(String sellerId) async {
+    try {
+      debugPrint('🔍 Loading orders for seller: $sellerId');
+
+      final querySnapshot = await _firestore
+          .collection(_collection)
+          .where('sellerIds', arrayContains: sellerId)
+          .orderBy('orderDate', descending: true)
+          .get();
+
+      final orders = <Order>[];
+      for (final doc in querySnapshot.docs) {
+        try {
+          final order = Order.fromFirestore(doc);
+
+          // Filter items to only show this seller's products
+          final sellerItems = order.items
+              .where((item) => item.sellerId == sellerId)
+              .toList();
+
+          if (sellerItems.isNotEmpty) {
+            // Create a modified order with only this seller's items
+            final sellerOrder = Order(
+              orderId: order.orderId,
+              userId: order.userId,
+              customerName: order.customerName,
+              customerEmail: order.customerEmail,
+              items: sellerItems,
+              totalAmount: sellerItems.fold(
+                0.0,
+                (sum, item) => sum + (item.productPrice * item.quantity),
+              ),
+              paymentMethod: order.paymentMethod,
+              status: order.status,
+              orderDate: order.orderDate,
+              shippingAddress: order.shippingAddress,
+              sellerIds: [sellerId],
+              lastUpdated: order.lastUpdated,
+            );
+            orders.add(sellerOrder);
+          }
+        } catch (e) {
+          debugPrint('❌ Error parsing order: $e');
+        }
+      }
+
+      debugPrint('✅ Loaded ${orders.length} orders for seller');
+      return orders;
+    } catch (e) {
+      debugPrint('❌ Error fetching seller orders: $e');
+      return [];
+    }
+  }
+
+  /// Get stock consumed by orders for a seller's products
+  /// Returns a map of productId -> quantity sold
+  static Future<Map<String, int>> getStockConsumedByOrders(
+    String sellerId,
+  ) async {
+    try {
+      debugPrint('📊 Calculating stock consumed for seller: $sellerId');
+
+      final orders = await getSellerOrders(sellerId);
+      final stockMap = <String, int>{};
+
+      for (final order in orders) {
+        for (final item in order.items) {
+          final key = item.productId;
+          stockMap[key] = (stockMap[key] ?? 0) + item.quantity;
+        }
+      }
+
+      debugPrint('📊 Stock consumed: $stockMap');
+      return stockMap;
+    } catch (e) {
+      debugPrint('❌ Error calculating stock consumed: $e');
+      return {};
+    }
+  }
+
+  /// Get stock analytics for seller
+  /// Shows remaining stock accounting for orders
+  static Future<Map<String, dynamic>> getSellerStockAnalytics(
+    String sellerId,
+  ) async {
+    try {
+      final consumed = await getStockConsumedByOrders(sellerId);
+
+      // Query all products from this seller
+      final productsSnapshot = await _firestore
+          .collection('products')
+          .where('sellerId', isEqualTo: sellerId)
+          .get();
+
+      final analytics = <String, dynamic>{};
+
+      for (final doc in productsSnapshot.docs) {
+        final data = doc.data();
+        final productId = data['pid'] as String;
+        final productName = data['name'] as String;
+        final totalStock = (data['stockQuantity'] as num?)?.toInt() ?? 0;
+        final consumedByOrders = consumed[productId] ?? 0;
+        final remaining = totalStock - consumedByOrders;
+
+        analytics[productId] = {
+          'productName': productName,
+          'totalStock': totalStock,
+          'consumedByOrders': consumedByOrders,
+          'remaining': remaining,
+          'percentageSold': totalStock > 0 ? (consumedByOrders / totalStock) * 100 : 0,
+        };
+      }
+
+      debugPrint('📊 Stock analytics: $analytics');
+      return analytics;
+    } catch (e) {
+      debugPrint('❌ Error calculating stock analytics: $e');
+      return {};
+    }
+  }
 }

@@ -266,4 +266,91 @@ class StockService {
       return false;
     }
   }
+
+  /// Get remaining stock for a specific product variant
+  /// Returns current available stock accounting for all decrements
+  static Future<Map<String, dynamic>> getStockStatus(
+    String productId, {
+    String? variantId,
+  }) async {
+    try {
+      if (productId.isEmpty) {
+        return {'error': 'Product ID is empty'};
+      }
+
+      // Query by 'pid' field
+      final querySnapshot = await _firestore
+          .collection('products')
+          .where('pid', isEqualTo: productId)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isEmpty) {
+        return {'error': 'Product not found'};
+      }
+
+      final productData = querySnapshot.docs.first.data();
+      int remainingStock = 0;
+      String productName = productData['name'] as String? ?? 'Unknown Product';
+
+      if (variantId != null) {
+        // Get variant-specific stock
+        final variants = List<dynamic>.from(productData['variants'] ?? []);
+        for (final variant in variants) {
+          final variantMap = variant as Map<String, dynamic>;
+          if (variantMap['variantId'] == variantId) {
+            remainingStock =
+                (variantMap['stockQuantity'] as num?)?.toInt() ?? 0;
+            break;
+          }
+        }
+      } else {
+        // Get base product stock
+        int baseStock = 0;
+        if (productData['stockQuantity'] is int) {
+          baseStock = productData['stockQuantity'] as int;
+        } else if (productData['stockQuantity'] is double) {
+          baseStock = (productData['stockQuantity'] as double).toInt();
+        } else if (productData['stockQuantity'] is String) {
+          baseStock =
+              int.tryParse(productData['stockQuantity'] as String) ?? 0;
+        }
+        remainingStock = baseStock;
+      }
+
+      return {
+        'productId': productId,
+        'productName': productName,
+        'variantId': variantId,
+        'remainingStock': remainingStock,
+        'status': remainingStock > 0 ? 'in-stock' : 'out-of-stock',
+        'lastUpdate': productData['lastStockUpdate'],
+        'success': true,
+      };
+    } catch (e) {
+      debugPrint('❌ Error getting stock status: $e');
+      return {'error': 'Could not fetch stock: $e', 'success': false};
+    }
+  }
+
+  /// Get stock levels for multiple products
+  /// Useful for seller dashboard
+  static Future<List<Map<String, dynamic>>> getMultipleProductsStock(
+    List<String> productIds,
+  ) async {
+    try {
+      final results = <Map<String, dynamic>>[];
+
+      for (final productId in productIds) {
+        final status = await getStockStatus(productId);
+        results.add(status);
+      }
+
+      return results;
+    } catch (e) {
+      debugPrint('❌ Error getting multiple products stock: $e');
+      return [];
+    }
+  }
 }
+
