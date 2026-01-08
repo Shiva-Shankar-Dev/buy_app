@@ -26,10 +26,10 @@ class _LoginPage extends State<LoginPage> {
       password: passwordController.text,
     );
     if (result == null) {
-      if(!mounted) return;
+      if (!mounted) return;
       Navigator.pushNamed(context, '/home');
     } else {
-      if(!mounted) return;
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(result)));
@@ -46,57 +46,62 @@ class _LoginPage extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(toolbarHeight: 0, backgroundColor: Colors.white,),
+      appBar: AppBar(toolbarHeight: 0, backgroundColor: Colors.white),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.only(left: 5.0, right: 5.0, top: 50.0, bottom: 10.0),
+          padding: const EdgeInsets.only(
+            left: 5.0,
+            right: 5.0,
+            top: 50.0,
+            bottom: 10.0,
+          ),
           child: Column(
             children: [
               Container(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        ColorPallete.color1,
-                        ColorPallete.color2,
-                      ]
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [ColorPallete.color1, ColorPallete.color2],
                   ),
                   color: Colors.grey.shade200,
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(15.0),
-                  child: Icon(Icons.person_2_outlined, size: 50, color: Colors.white,),
+                  child: Icon(
+                    Icons.person_2_outlined,
+                    size: 50,
+                    color: Colors.white,
+                  ),
                 ),
               ),
-              SizedBox(height: 10,),
+              SizedBox(height: 10),
               Column(
                 children: [
-                  Text('Welcome', style: TextStyle(
-                      fontSize: 40,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: "Poppins"
-                    ),
-                  ).animate().slideY(
-                    begin: 0.5,
-                    duration: Duration(milliseconds: 500),
-                  ).then().fadeIn(
-                     duration: Duration(milliseconds: 1500)
-                  ),
-                  Text('Continue with your Email and Password', style: TextStyle(
-                      fontSize: 15,
-                      color: Colors.grey
-                  ),
-                  ).animate().slideY(
-                    begin: 0.5,
-                    duration: Duration(milliseconds: 500),
-                  ).then().fadeIn(
-                      duration: Duration(milliseconds: 1500)
-                  ),
+                  Text(
+                        'Welcome',
+                        style: TextStyle(
+                          fontSize: 40,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: "Poppins",
+                        ),
+                      )
+                      .animate()
+                      .slideY(begin: 0.5, duration: Duration(milliseconds: 500))
+                      .then()
+                      .fadeIn(duration: Duration(milliseconds: 1500)),
+                  Text(
+                        'Continue with your Email and Password',
+                        style: TextStyle(fontSize: 15, color: Colors.grey),
+                      )
+                      .animate()
+                      .slideY(begin: 0.5, duration: Duration(milliseconds: 500))
+                      .then()
+                      .fadeIn(duration: Duration(milliseconds: 1500)),
                 ],
               ),
-              SizedBox(height: 20.0,),
+              SizedBox(height: 20.0),
               Form(
                 key: _formKey,
                 child: Column(
@@ -108,29 +113,26 @@ class _LoginPage extends State<LoginPage> {
                     ),
                     AuthPassword(
                       passwordController: passwordController,
+                      onFieldSubmitted: (_) => loginHandle(),
                     ),
                     SizedBox(height: 10),
                     AuthButton(
                       hintText: 'Login',
                       onPressed: () {
-                        FadeEffect(
-                          duration: Duration(milliseconds: 500),
-                        );
+                        FadeEffect(duration: Duration(milliseconds: 500));
                         loginHandle();
                       },
                     ),
                   ],
                 ),
-              ).animate().fadeIn(
-                  duration: Duration(milliseconds: 1000)
-              ).then(),
-              SizedBox(height: 20,),
+              ).animate().fadeIn(duration: Duration(milliseconds: 1000)).then(),
+              SizedBox(height: 20),
               Container(
                 width: MediaQuery.of(context).size.width - 30,
                 height: 56,
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(15)
+                  borderRadius: BorderRadius.circular(15),
                 ),
                 child: Center(
                   child: RichText(
@@ -140,8 +142,12 @@ class _LoginPage extends State<LoginPage> {
                       children: [
                         TextSpan(
                           text: 'Phone Number instead?',
-                          style: TextStyle(color: ColorPallete.color1, fontSize: 15),
-                          recognizer: TapGestureRecognizer()..onTap = () {
+                          style: TextStyle(
+                            color: ColorPallete.color1,
+                            fontSize: 15,
+                          ),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () {
                               Navigator.pushNamed(context, '/mobile');
                             },
                         ),
@@ -150,13 +156,13 @@ class _LoginPage extends State<LoginPage> {
                   ),
                 ),
               ),
-              SizedBox(height: 12,),
+              SizedBox(height: 12),
               Container(
                 width: MediaQuery.of(context).size.width - 30,
                 height: 56,
                 decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(15)
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(15),
                 ),
                 child: Center(
                   child: RichText(
@@ -166,10 +172,14 @@ class _LoginPage extends State<LoginPage> {
                       children: [
                         TextSpan(
                           text: 'Sign Up Now',
-                          style: TextStyle(color: ColorPallete.color1, fontSize: 15),
-                          recognizer: TapGestureRecognizer()..onTap = () {
-                            Navigator.pushNamed(context, '/signup');
-                          },
+                          style: TextStyle(
+                            color: ColorPallete.color1,
+                            fontSize: 15,
+                          ),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () {
+                              Navigator.pushNamed(context, '/signup');
+                            },
                         ),
                       ],
                     ),

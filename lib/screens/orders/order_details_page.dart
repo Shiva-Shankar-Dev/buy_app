@@ -15,282 +15,286 @@ class OrderDetailsPage extends StatefulWidget {
 class _OrderDetailsPageState extends State<OrderDetailsPage> {
   late Order currentOrder;
   bool isProcessing = false;
+  bool isCheckingEligibility = true;
+  List<OrderItem> eligibleReturnItems = [];
+  List<OrderItem> eligibleReplacementItems = [];
 
   @override
   void initState() {
     super.initState();
     currentOrder = widget.order;
+    _checkEligibility();
     print('Order Details - Order ID: ${currentOrder.orderId}'); // Debug log
     print('Order Details - Status: ${currentOrder.status}'); // Debug log
+  }
+
+  Future<void> _checkEligibility() async {
+    if (!mounted) return;
+
+    try {
+      final List<OrderItem> returns = [];
+      final List<OrderItem> replacements = [];
+      final now = DateTime.now();
+
+      print('=== Starting Eligibility Check ===');
+      print('Order Items Count: ${currentOrder.items.length}');
+
+      // Get all product IDs from the order items
+      for (final item in currentOrder.items) {
+        if (item.productId.isEmpty) {
+          print('Skipping item with empty productId: ${item.productTitle}');
+          continue;
+        }
+
+        print('Checking item: ${item.productTitle} (ID: ${item.productId})');
+
+        try {
+          // Use query to find product by pid field (not document ID)
+          final productQuery = await FirebaseFirestore.instance
+              .collection('products')
+              .where('pid', isEqualTo: item.productId)
+              .limit(1)
+              .get();
+
+          if (productQuery.docs.isNotEmpty) {
+            final productDoc = productQuery.docs.first;
+            final data = productDoc.data();
+
+            print('Product found. Firebase Doc ID: ${productDoc.id}');
+            print('Product data keys: ${data.keys.toList()}');
+
+            // Check return eligibility
+            if (data.containsKey('returnDays')) {
+              final returnDaysValue = data['returnDays'];
+              int days = 0;
+
+              // Handle both int and String types
+              if (returnDaysValue is int) {
+                days = returnDaysValue;
+              } else if (returnDaysValue is String) {
+                final daysMatch = RegExp(r'(\d+)').firstMatch(returnDaysValue);
+                days = daysMatch != null ? int.parse(daysMatch.group(1)!) : 0;
+              }
+
+              print(
+                'Return check: ${item.productTitle} - returnDays: $returnDaysValue (parsed: $days)',
+              );
+
+              // Only allow returns if days > 0
+              if (days > 0) {
+                // Calculate deadline: orderDate + returnDays
+                final deadline = currentOrder.orderDate.add(
+                  Duration(days: days),
+                );
+                print('Return deadline: $deadline, Current: $now');
+
+                // Check if within window
+                if (now.isBefore(deadline)) {
+                  returns.add(item);
+                  print(
+                    '✅ Return eligible: ${item.productTitle} - ${days} days',
+                  );
+                } else {
+                  print(
+                    '❌ Return expired: ${item.productTitle} - deadline passed',
+                  );
+                }
+              } else {
+                print(
+                  '❌ Return not allowed: ${item.productTitle} - days: $days',
+                );
+              }
+            } else {
+              print(
+                '❌ Return not allowed: ${item.productTitle} - returnDays field missing',
+              );
+            }
+
+            // Check replacement eligibility
+            if (data.containsKey('replacementDays')) {
+              final replacementDaysValue = data['replacementDays'];
+              int days = 0;
+
+              // Handle both int and String types
+              if (replacementDaysValue is int) {
+                days = replacementDaysValue;
+              } else if (replacementDaysValue is String) {
+                final daysMatch = RegExp(
+                  r'(\d+)',
+                ).firstMatch(replacementDaysValue);
+                days = daysMatch != null ? int.parse(daysMatch.group(1)!) : 0;
+              }
+
+              print(
+                'Replacement check: ${item.productTitle} - replacementDays: $replacementDaysValue (parsed: $days)',
+              );
+
+              // Only allow replacements if days > 0
+              if (days > 0) {
+                final deadline = currentOrder.orderDate.add(
+                  Duration(days: days),
+                );
+                print('Replacement deadline: $deadline, Current: $now');
+
+                if (now.isBefore(deadline)) {
+                  replacements.add(item);
+                  print(
+                    '✅ Replacement eligible: ${item.productTitle} - ${days} days',
+                  );
+                } else {
+                  print(
+                    '❌ Replacement expired: ${item.productTitle} - deadline passed',
+                  );
+                }
+              } else {
+                print(
+                  '❌ Replacement not allowed: ${item.productTitle} - days: $days',
+                );
+              }
+            } else {
+              print(
+                '❌ Replacement not allowed: ${item.productTitle} - replacementDays field missing',
+              );
+            }
+          } else {
+            print(
+              '❌ Product not found in database: ${item.productTitle} (ID: ${item.productId})',
+            );
+
+            // Try fallback with document ID
+            print('Trying fallback with document ID...');
+            final fallbackDoc = await FirebaseFirestore.instance
+                .collection('products')
+                .doc(item.productId)
+                .get();
+
+            if (fallbackDoc.exists) {
+              print('✅ Found product using document ID');
+              final data = fallbackDoc.data()!;
+
+              // Repeat the same logic for fallback
+              if (data.containsKey('returnDays')) {
+                final returnDaysValue = data['returnDays'];
+                int days = 0;
+                if (returnDaysValue is int) {
+                  days = returnDaysValue;
+                } else if (returnDaysValue is String) {
+                  final daysMatch = RegExp(
+                    r'(\d+)',
+                  ).firstMatch(returnDaysValue);
+                  days = daysMatch != null ? int.parse(daysMatch.group(1)!) : 0;
+                }
+
+                if (days > 0) {
+                  final deadline = currentOrder.orderDate.add(
+                    Duration(days: days),
+                  );
+                  if (now.isBefore(deadline)) {
+                    returns.add(item);
+                    print(
+                      '✅ Return eligible (fallback): ${item.productTitle} - ${days} days',
+                    );
+                  }
+                }
+              }
+
+              if (data.containsKey('replacementDays')) {
+                final replacementDaysValue = data['replacementDays'];
+                int days = 0;
+                if (replacementDaysValue is int) {
+                  days = replacementDaysValue;
+                } else if (replacementDaysValue is String) {
+                  final daysMatch = RegExp(
+                    r'(\d+)',
+                  ).firstMatch(replacementDaysValue);
+                  days = daysMatch != null ? int.parse(daysMatch.group(1)!) : 0;
+                }
+
+                if (days > 0) {
+                  final deadline = currentOrder.orderDate.add(
+                    Duration(days: days),
+                  );
+                  if (now.isBefore(deadline)) {
+                    replacements.add(item);
+                    print(
+                      '✅ Replacement eligible (fallback): ${item.productTitle} - ${days} days',
+                    );
+                  }
+                }
+              }
+            } else {
+              print('❌ Product not found even with document ID fallback');
+            }
+          }
+        } catch (itemError) {
+          print('❌ Error checking item ${item.productTitle}: $itemError');
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          eligibleReturnItems = returns;
+          eligibleReplacementItems = replacements;
+          isCheckingEligibility = false;
+        });
+
+        // Debug output
+        print('=== Final Eligibility Results ===');
+        print('Eligible return items: ${returns.length}');
+        for (final item in returns) {
+          print('  - ${item.productTitle}');
+        }
+        print('Eligible replacement items: ${replacements.length}');
+        for (final item in replacements) {
+          print('  - ${item.productTitle}');
+        }
+        print('====================================');
+      }
+    } catch (e, stackTrace) {
+      print('❌ Error in _checkEligibility: $e');
+      print('Stack trace: $stackTrace');
+      debugPrint('Error checking eligibility: $e');
+      if (mounted) {
+        setState(() {
+          isCheckingEligibility = false;
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: const Text(
           'Order Details',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: ColorPallete.color1,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [ColorPallete.color1, ColorPallete.color1.withAlpha(204)],
-            ),
-          ),
-        ),
+        backgroundColor: Colors.white,
+        elevation: 0.5,
+        leading: BackButton(color: Colors.black),
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [ColorPallete.color1.withAlpha(13), Colors.white],
-          ),
-        ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildOrderHeader(),
-              const SizedBox(height: 20),
-              _buildOrderStatus(),
-              const SizedBox(height: 20),
-              _buildOrderActions(),
-              const SizedBox(height: 20),
-              _buildDeliveryInfo(),
-              const SizedBox(height: 20),
-              _buildPaymentInfo(),
-              const SizedBox(height: 20),
-              _buildOrderItems(),
-              const SizedBox(height: 20),
-              _buildPricingSummary(),
-              const SizedBox(height: 30),
-              _buildInvoiceInfo(),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOrderActions() {
-    final status = currentOrder.status.toLowerCase();
-    final canCancel = ['confirmed', 'packed'].contains(status);
-    final canCancelWithFee = status == 'shipped';
-    final canReturnReplace = status == 'delivered';
-
-    if (!canCancel && !canCancelWithFee && !canReturnReplace) {
-      return SizedBox.shrink();
-    }
-
-    return Card(
-      elevation: 6,
-      shadowColor: Colors.red.withAlpha(51),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Colors.white, Colors.red.shade50.withAlpha(77)],
-          ),
-        ),
-        padding: const EdgeInsets.all(20),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withAlpha(25),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.manage_accounts,
-                    color: Colors.red.shade700,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Order Actions',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red.shade700,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Cancellation Options
-            if (canCancel || canCancelWithFee) ...[
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.red.shade400, Colors.red.shade600],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.red.withAlpha(77),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: isProcessing
-                        ? null
-                        : () => _showCancellationDialog(canCancelWithFee),
-                    borderRadius: BorderRadius.circular(12),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          if (isProcessing) ...[
-                            SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation(
-                                  Colors.white,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                          ] else ...[
-                            Icon(
-                              Icons.cancel_outlined,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 12),
-                          ],
-                          Text(
-                            canCancelWithFee
-                                ? 'Cancel Order (Charges Apply)'
-                                : 'Cancel Order (Free)',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-
-            // Return/Replace Options
-            if (canReturnReplace) ...[
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Colors.blue.shade400, Colors.blue.shade600],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () => _showReturnDialog(),
-                          borderRadius: BorderRadius.circular(12),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.keyboard_return,
-                                  color: Colors.white,
-                                  size: 18,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Return',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.green.shade400,
-                            Colors.green.shade600,
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () => _showReplacementDialog(),
-                          borderRadius: BorderRadius.circular(12),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.swap_horizontal_circle,
-                                  color: Colors.white,
-                                  size: 18,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Replace',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+            _buildOrderHeader(),
+            const SizedBox(height: 12),
+            _buildOrderItems(),
+            const SizedBox(height: 12),
+            _buildOrderStatus(),
+            const SizedBox(height: 12),
+            _buildDeliveryInfo(),
+            const SizedBox(height: 12),
+            _buildPaymentInfo(),
+            const SizedBox(height: 12),
+            _buildPricingSummary(),
+            const SizedBox(height: 20),
+            _buildOrderActions(),
+            const SizedBox(height: 20),
+            _buildInvoiceInfo(),
           ],
         ),
       ),
@@ -298,179 +302,119 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
   }
 
   Widget _buildOrderHeader() {
-    // Use persisted order status directly (fallback to Confirmed)
-    final String currentStatus = (currentOrder.status.isNotEmpty
+    final status = currentOrder.status.isNotEmpty
         ? currentOrder.status
-        : 'Confirmed');
+        : 'Confirmed';
 
-    return Card(
-      elevation: 8,
-      shadowColor: ColorPallete.color1.withAlpha(77),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Colors.white, ColorPallete.color1.withAlpha(5)],
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withAlpha(20),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
-        ),
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: ColorPallete.color1.withAlpha(25),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.receipt_long,
-                    color: ColorPallete.color1,
-                    size: 24,
-                  ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Order ID: ${currentOrder.orderId}',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[600],
                 ),
-                const SizedBox(width: 12),
-                Text(
-                  'Order Information',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: ColorPallete.color1,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _buildInfoRow('Order ID', '#${currentOrder.orderId}'),
-            _buildInfoRow(
-              'Order Date',
-              _formatDateTime(currentOrder.orderDate),
-            ),
-            _buildInfoRow('Total Items', '${currentOrder.items.length}'),
-            _buildInfoRow('Customer', currentOrder.customerName),
-            _buildInfoRow('Email', currentOrder.customerEmail),
-            if (currentOrder.lastUpdated != null)
-              _buildInfoRow(
-                'Last Updated',
-                _formatDateTime(currentOrder.lastUpdated!),
               ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Status:',
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Text(
+                'Ordered on ${_formatDateTime(currentOrder.orderDate)}',
+                style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+              ),
+              Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: _getStatusColor(status).withAlpha(30),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: _getStatusColor(status).withAlpha(100),
+                  ),
+                ),
+                child: Text(
+                  status.toUpperCase(),
                   style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade700,
-                    fontWeight: FontWeight.w500,
+                    color: _getStatusColor(status),
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        _getStatusColor(currentStatus),
-                        _getStatusColor(currentStatus).withAlpha(204),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(25),
-                    boxShadow: [
-                      BoxShadow(
-                        color: _getStatusColor(currentStatus).withAlpha(77),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Text(
-                    currentStatus.toUpperCase(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildOrderStatus() {
-    return Card(
-      elevation: 6,
-      shadowColor: Colors.grey.withAlpha(51),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Colors.white, Colors.grey.shade50],
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withAlpha(20),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
-        ),
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: ColorPallete.color1.withAlpha(25),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.local_shipping,
-                    color: ColorPallete.color1,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Order Status Timeline',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: ColorPallete.color1,
-                  ),
-                ),
-              ],
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Order Status',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
             ),
-            const SizedBox(height: 16),
-            _buildStatusTimeline(),
-          ],
-        ),
+          ),
+          const SizedBox(height: 16),
+          _buildStatusTimeline(),
+        ],
       ),
     );
   }
 
   Widget _buildStatusTimeline() {
-    // Check current order status
     final status =
         (currentOrder.status.isEmpty ? 'confirmed' : currentOrder.status)
             .toLowerCase();
+
     bool hasReturnRequest =
         status == 'request for return' || status == 'return approved';
     bool hasReplacementRequest =
         status == 'request for replacement' || status == 'replacement approved';
     bool isReturnApproved = status == 'return approved';
     bool isReplacementApproved = status == 'replacement approved';
+    bool isCancelled = status == 'cancelled';
     bool isDelivered = [
       'delivered',
       'request for return',
@@ -479,704 +423,345 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
       'replacement approved',
     ].contains(status);
 
-    // Build timeline based on order status
-    List<Map<String, dynamic>> statuses = [];
-    int currentStatusIndex = 0;
+    // Build timeline events
+    List<Map<String, dynamic>> events = [];
 
-    if (!isDelivered) {
-      // Case 1: Until delivered - Show full progression
-      statuses = [
+    if (isCancelled) {
+      events = [
         {
-          'name': 'Order Placed',
-          'icon': Icons.shopping_cart,
-          'description': 'Your order has been confirmed',
+          'title': 'Order Placed',
+          'description': 'Your order has been placed',
+          'active': true,
+          'completed': true,
         },
         {
-          'name': 'Order Packed',
-          'icon': Icons.inventory_2,
-          'description': 'Your order is being packed',
-        },
-        {
-          'name': 'Order Shipped',
-          'icon': Icons.local_shipping,
-          'description': 'Your order is on the way',
-        },
-        {
-          'name': 'Order Delivered',
-          'icon': Icons.home,
-          'description': 'Package delivered successfully',
+          'title': 'Cancelled',
+          'description': 'Your order has been cancelled',
+          'active': true,
+          'completed': true, // Final state
+          'isError': true,
         },
       ];
-
-      // Determine current step based on status
-      switch (status) {
-        case 'confirmed':
-        case 'placed':
-          currentStatusIndex = 0;
-          break;
-        case 'packed':
-          currentStatusIndex = 1;
-          break;
-        case 'shipped':
-          currentStatusIndex = 2;
-          break;
-        case 'delivered':
-          currentStatusIndex = 3;
-          break;
-        case 'cancelled':
-          currentStatusIndex = 0;
-          break;
-        default:
-          currentStatusIndex = 0;
-      }
-    } else if (hasReturnRequest || hasReplacementRequest) {
-      // Case 3: Return/Replacement - Show Placed->Delivered->Request(->Approved)
-      statuses = [
-        {
-          'name': 'Order Placed',
-          'icon': Icons.shopping_cart,
-          'description': 'Your order has been confirmed',
-        },
-        {
-          'name': 'Order Delivered',
-          'icon': Icons.home,
-          'description': 'Package delivered successfully',
-        },
-        {
-          'name': hasReturnRequest
-              ? 'Request for Return'
-              : 'Request for Replacement',
-          'icon': hasReturnRequest
-              ? Icons.keyboard_return
-              : Icons.swap_horizontal_circle,
-          'description': hasReturnRequest
-              ? 'Return request submitted'
-              : 'Replacement request submitted',
-        },
-      ];
-
-      if (isReturnApproved || isReplacementApproved) {
-        statuses.add({
-          'name': isReturnApproved ? 'Return Approved' : 'Replacement Approved',
-          'icon': Icons.check_circle,
-          'description': isReturnApproved
-              ? 'Your return request has been approved'
-              : 'Your replacement request has been approved',
-        });
-        currentStatusIndex = 3; // All four steps completed
-      } else {
-        currentStatusIndex = 2; // Three steps completed (up to request)
-      }
     } else {
-      // Case 2: After delivered - Show simplified Placed->Delivered
-      statuses = [
+      // Standard flow
+      events = [
         {
-          'name': 'Order Placed',
-          'icon': Icons.shopping_cart,
-          'description': 'Your order has been confirmed',
+          'title': 'Order Placed',
+          'description': 'We have received your order',
+          'status_key': 'placed',
         },
         {
-          'name': 'Order Delivered',
-          'icon': Icons.home,
-          'description': 'Package delivered successfully',
+          'title': 'Packed',
+          'description': 'Seller has packed your order',
+          'status_key': 'packed',
+        },
+        {
+          'title': 'Shipped',
+          'description': 'Your order is on the way',
+          'status_key': 'shipped',
+        },
+        {
+          'title': 'Delivered',
+          'description': 'Package delivered',
+          'status_key': 'delivered',
         },
       ];
-      currentStatusIndex = 1; // Both steps completed
+
+      // Insert return/replacement if active
+      if (hasReturnRequest || hasReplacementRequest) {
+        // Assume delivered is completed
+        events.add({
+          'title': hasReturnRequest
+              ? 'Return Requested'
+              : 'Replacement Requested',
+          'description': 'Request submitted for review',
+          'active': true,
+          'completed': isReturnApproved || isReplacementApproved,
+        });
+
+        if (isReturnApproved || isReplacementApproved) {
+          events.add({
+            'title': isReturnApproved
+                ? 'Return Approved'
+                : 'Replacement Approved',
+            'description': isReturnApproved
+                ? 'Return request accepted'
+                : 'Replacement request accepted',
+            'active': true,
+            'completed': true,
+          });
+        }
+      }
+    }
+
+    // Determine state for standard flow
+    if (!isCancelled) {
+      int currentIdx = 0;
+      if (status == 'confirmed' || status == 'placed')
+        currentIdx = 0;
+      else if (status == 'packed')
+        currentIdx = 1;
+      else if (status == 'shipped')
+        currentIdx = 2;
+      else if (status == 'delivered' || isDelivered)
+        currentIdx = 3;
+
+      for (int i = 0; i < events.length; i++) {
+        if (i < 4) {
+          // Handling standard events
+          if (i <= currentIdx) {
+            events[i]['active'] = true;
+            events[i]['completed'] =
+                (i < currentIdx) || (i == 3 && isDelivered);
+          } else {
+            events[i]['active'] = false;
+            events[i]['completed'] = false;
+          }
+        }
+      }
     }
 
     return Column(
-      children: statuses.asMap().entries.map((entry) {
-        final index = entry.key;
-        final status = entry.value;
-        final isCompleted = index <= currentStatusIndex;
-        final isCurrent = index == currentStatusIndex;
-        final isLast = index == statuses.length - 1;
-        final isDelivered = currentStatusIndex >= 1 && index == 1;
-        final isRequestStatus =
-            (hasReturnRequest || hasReplacementRequest) &&
-            index == statuses.length - 1;
+      children: List.generate(events.length, (index) {
+        final event = events[index];
+        final isLast = index == events.length - 1;
+        final isActive = event['active'] == true;
+        final isCompleted = event['completed'] == true;
+        final isError = event['isError'] == true;
 
-        return Column(
-          children: [
-            IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Timeline indicator column
-                  Column(
-                    children: [
-                      // Circle with icon
-                      Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: isCompleted
-                              ? LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: isRequestStatus
-                                      ? (hasReturnRequest
-                                            ? [
-                                                Colors.purple.shade400,
-                                                Colors.purple.shade600,
-                                              ]
-                                            : [
-                                                Colors.indigo.shade400,
-                                                Colors.indigo.shade600,
-                                              ])
-                                      : (isCurrent && index == 0)
-                                      ? [
-                                          Colors.orange.shade400,
-                                          Colors.orange.shade600,
-                                        ]
-                                      : [
-                                          Colors.green.shade400,
-                                          Colors.green.shade600,
-                                        ],
-                                )
-                              : LinearGradient(
-                                  colors: [
-                                    Colors.grey.shade300,
-                                    Colors.grey.shade400,
-                                  ],
-                                ),
-                          border: Border.all(
-                            color: isCompleted
-                                ? (isRequestStatus
-                                      ? (hasReturnRequest
-                                            ? Colors.purple.shade200
-                                            : Colors.indigo.shade200)
-                                      : (isCurrent && index == 0)
-                                      ? Colors.orange.shade200
-                                      : Colors.green.shade200)
-                                : Colors.grey.shade300,
-                            width: 3,
-                          ),
-                          boxShadow: isCompleted
-                              ? [
-                                  BoxShadow(
-                                    color:
-                                        (isRequestStatus
-                                                ? (hasReturnRequest
-                                                      ? Colors.purple
-                                                      : Colors.indigo)
-                                                : (isCurrent && index < 3)
-                                                ? Colors.orange
-                                                : Colors.green)
-                                            .withAlpha(77),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 3),
-                                  ),
-                                ]
-                              : null,
-                        ),
-                        child: Icon(
-                          status['icon'] as IconData,
-                          size: 24,
-                          color: isCompleted
-                              ? Colors.white
-                              : Colors.grey.shade600,
-                        ),
-                      ),
-                      // Connecting line (except for last item)
-                      if (!isLast)
-                        Container(
-                          width: 3,
-                          height: 30,
-                          margin: const EdgeInsets.symmetric(vertical: 6),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: isCompleted
-                                  ? [
-                                      isCurrent
-                                          ? Colors.orange.shade300
-                                          : Colors.green.shade300,
-                                      index + 1 <= currentStatusIndex
-                                          ? Colors.green.shade300
-                                          : Colors.grey.shade300,
-                                    ]
-                                  : [
-                                      Colors.grey.shade300,
-                                      Colors.grey.shade300,
-                                    ],
-                            ),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(width: 16),
-                  // Content column
-                  Expanded(
-                    child: Container(
-                      margin: const EdgeInsets.only(top: 6),
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: isCompleted
-                              ? (isRequestStatus
-                                    ? (hasReturnRequest
-                                          ? [
-                                              Colors.purple.shade50,
-                                              Colors.white,
-                                            ]
-                                          : [
-                                              Colors.indigo.shade50,
-                                              Colors.white,
-                                            ])
-                                    : (isCurrent && index == 0)
-                                    ? [Colors.orange.shade50, Colors.white]
-                                    : [Colors.green.shade50, Colors.white])
-                              : [Colors.grey.shade50, Colors.white],
-                        ),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: isCompleted
-                              ? (isRequestStatus
-                                    ? (hasReturnRequest
-                                          ? Colors.purple.shade200
-                                          : Colors.indigo.shade200)
-                                    : (isCurrent && index == 0)
-                                    ? Colors.orange.shade200
-                                    : Colors.green.shade200)
-                              : Colors.grey.shade200,
-                          width: 1.5,
-                        ),
-                        boxShadow: isCompleted
-                            ? [
-                                BoxShadow(
-                                  color:
-                                      (isRequestStatus
-                                              ? (hasReturnRequest
-                                                    ? Colors.purple
-                                                    : Colors.indigo)
-                                              : (isCurrent && index == 0)
-                                              ? Colors.orange
-                                              : Colors.green)
-                                          .withAlpha(25),
-                                  blurRadius: 5,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ]
-                            : null,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  status['name'] as String,
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
-                                    color: isCompleted
-                                        ? (isCurrent && !isDelivered)
-                                              ? Colors.orange.shade700
-                                              : Colors.green.shade700
-                                        : Colors.grey.shade600,
-                                  ),
-                                ),
-                              ),
-                              if (isCompleted)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 3,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: (isCurrent && !isDelivered)
-                                        ? Colors.orange
-                                        : Colors.green,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    (isCurrent && !isDelivered)
-                                        ? 'CURRENT'
-                                        : 'DONE',
-                                    style: const TextStyle(
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            status['description'] as String,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: isCompleted
-                                  ? Colors.grey.shade700
-                                  : Colors.grey.shade500,
-                            ),
-                          ),
-                          if (isCurrent) ...[
-                            const SizedBox(height: 6),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.schedule,
-                                  size: 13,
-                                  color: Colors.grey.shade600,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Updated: ${_formatDateTime(currentOrder.lastUpdated)}',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.grey.shade600,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (!isLast) const SizedBox(height: 6),
-          ],
-        );
-      }).toList(),
-    );
-  }
+        Color dotColor;
+        if (isError) {
+          dotColor = Colors.red;
+        } else if (isCompleted) {
+          dotColor = Colors.green;
+        } else if (isActive) {
+          dotColor = Colors.blue;
+        } else {
+          dotColor = Colors.grey[300]!;
+        }
 
-  Widget _buildDeliveryInfo() {
-    return Card(
-      elevation: 6,
-      shadowColor: Colors.blue.withAlpha(51),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Colors.white, Colors.blue.shade50.withAlpha(77)],
-          ),
-        ),
-        padding: const EdgeInsets.all(20),
-        child: Column(
+        return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            Column(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(10),
+                  margin: const EdgeInsets.only(top: 2),
+                  width: 16,
+                  height: 16,
                   decoration: BoxDecoration(
-                    color: Colors.blue.withAlpha(25),
-                    borderRadius: BorderRadius.circular(12),
+                    color: dotColor,
+                    shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    Icons.location_on,
-                    color: Colors.blue.shade700,
-                    size: 22,
-                  ),
+                  child: isCompleted
+                      ? Icon(Icons.check, size: 10, color: Colors.white)
+                      : null,
                 ),
-                const SizedBox(width: 12),
-                Text(
-                  'Delivery Information',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue.shade700,
+                if (!isLast)
+                  Container(
+                    height: 40,
+                    width: 2,
+                    color: isCompleted ? Colors.green : Colors.grey[300],
+                    margin: const EdgeInsets.symmetric(vertical: 2),
                   ),
-                ),
               ],
             ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Colors.blue.shade50, Colors.white],
-                ),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue.shade200, width: 1.5),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.blue.withAlpha(25),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
+            const SizedBox(width: 12),
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${currentOrder.shippingAddress['first'] ?? ''} ${currentOrder.shippingAddress['last'] ?? ''}'
-                        .trim(),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                    event['title'],
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: isActive || isCompleted
+                          ? Colors.black
+                          : Colors.grey,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${currentOrder.shippingAddress['line1'] ?? ''}',
-                    style: const TextStyle(fontSize: 14),
+                    event['description'],
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
-                  if (currentOrder.shippingAddress['line2']?.isNotEmpty ==
-                      true) ...[
-                    Text(
-                      '${currentOrder.shippingAddress['line2']}',
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                  ],
-                  const SizedBox(height: 4),
-                  Text(
-                    '${currentOrder.shippingAddress['city'] ?? ''}, ${currentOrder.shippingAddress['state'] ?? ''} - ${currentOrder.shippingAddress['pincode'] ?? ''}',
-                    style: const TextStyle(fontSize: 14),
-                  ),
+                  const SizedBox(height: 24), // Spacing for line
                 ],
               ),
             ),
-            const SizedBox(height: 12),
-            // Only show expected delivery if order is not yet delivered
-            if (![
-              'delivered',
-              'request for return',
-              'request for replacement',
-              'return approved',
-              'replacement approved',
-            ].contains(currentOrder.status.toLowerCase()))
-              FutureBuilder<String>(
-                future: _fetchExpectedDeliveryDate(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return _buildInfoRow('Expected Delivery', 'Calculating...');
-                  } else if (snapshot.hasError) {
-                    return _buildInfoRow(
-                      'Expected Delivery',
-                      'Error loading date',
-                    );
-                  } else {
-                    return _buildInfoRow(
-                      'Expected Delivery',
-                      snapshot.data ?? 'Unknown',
-                    );
-                  }
-                },
-              ),
-            // Show actual delivery date if delivered
-            if ([
-              'delivered',
-              'request for return',
-              'request for replacement',
-              'return approved',
-              'replacement approved',
-            ].contains(currentOrder.status.toLowerCase()))
-              _buildInfoRow(
-                'Delivered On',
-                currentOrder.lastUpdated != null
-                    ? _formatDateTime(currentOrder.lastUpdated!)
-                    : _formatDateTime(
-                        currentOrder.orderDate.add(const Duration(days: 4)),
-                      ),
-              ),
-            // Show tracking information
-            if ([
-              'packed',
-              'shipped',
-            ].contains(currentOrder.status.toLowerCase()))
-              _buildInfoRow(
-                'Tracking ID',
-                'TRK${currentOrder.orderId.substring(0, 8).toUpperCase()}',
-              ),
           ],
-        ),
+        );
+      }),
+    );
+  }
+
+  Widget _buildDeliveryInfo() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withAlpha(20),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Delivery Address',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            '${currentOrder.shippingAddress['first'] ?? ''} ${currentOrder.shippingAddress['last'] ?? ''}'
+                .trim(),
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${currentOrder.shippingAddress['line1'] ?? ''}',
+            style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+          ),
+          if (currentOrder.shippingAddress['line2']?.isNotEmpty == true) ...[
+            Text(
+              '${currentOrder.shippingAddress['line2']}',
+              style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+            ),
+          ],
+          const SizedBox(height: 4),
+          Text(
+            '${currentOrder.shippingAddress['city'] ?? ''}, ${currentOrder.shippingAddress['state'] ?? ''} - ${currentOrder.shippingAddress['pincode'] ?? ''}',
+            style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+          ),
+          const SizedBox(height: 8),
+          if (currentOrder.shippingAddress['phone'] != null)
+            Text(
+              'Phone: ${currentOrder.shippingAddress['phone']}',
+              style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+            ),
+        ],
       ),
     );
   }
 
   Widget _buildPaymentInfo() {
-    // Determine if order is delivered based on order status
-    final isDelivered = [
-      'delivered',
-      'request for return',
-      'request for replacement',
-      'return approved',
-      'replacement approved',
-    ].contains(currentOrder.status.toLowerCase());
-
-    return Card(
-      elevation: 6,
-      shadowColor: Colors.green.withAlpha(51),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Colors.white, Colors.green.shade50.withAlpha(77)],
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withAlpha(20),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
-        ),
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withAlpha(25),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.payment,
-                    color: Colors.green.shade700,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Payment Information',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green.shade700,
-                  ),
-                ),
-              ],
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Payment Details',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
             ),
-            const SizedBox(height: 16),
-            _buildInfoRow('Payment Method', currentOrder.paymentMethod),
-            _buildInfoRow(
-              'Payment Status',
-              currentOrder.paymentMethod.toLowerCase().contains('cash')
-                  ? (isDelivered ? 'Paid' : 'Pay on Delivery')
-                  : 'Paid',
-            ),
-            if (!currentOrder.paymentMethod.toLowerCase().contains('cash'))
-              _buildInfoRow(
-                'Transaction ID',
-                'TXN${currentOrder.orderId.substring(4)}',
-              ),
-            _buildInfoRow(
-              'Payment Date',
-              currentOrder.paymentMethod.toLowerCase().contains('cash')
-                  ? (isDelivered ? 'On Delivery Date' : 'On Delivery')
-                  : _formatDateTime(currentOrder.orderDate),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 8),
+          _buildInfoRow('Payment Method', currentOrder.paymentMethod),
+          // Only show status if relevant
+          if (!currentOrder.paymentMethod.toLowerCase().contains('cash') ||
+              currentOrder.status == 'delivered')
+            _buildInfoRow('Status', 'Paid', isBold: false),
+        ],
       ),
     );
   }
 
   Widget _buildOrderItems() {
-    return Card(
-      elevation: 6,
-      shadowColor: Colors.orange.withAlpha(51),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Colors.white, Colors.orange.shade50.withAlpha(77)],
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withAlpha(20),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
-        ),
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              'Order Items',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+          ...currentOrder.items.map(
+            (item) => Column(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withAlpha(25),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.shopping_bag,
-                    color: Colors.orange.shade700,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Order Items',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.orange.shade700,
-                  ),
-                ),
+                Divider(height: 1, color: Colors.grey[200]),
+                _buildItemCard(item),
               ],
             ),
-            const SizedBox(height: 16),
-            ...currentOrder.items.map((item) => _buildItemCard(item)),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildItemCard(OrderItem item) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+    return Padding(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withAlpha(25),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Product Image
           Container(
-            width: 70,
-            height: 70,
+            width: 80,
+            height: 80,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  ColorPallete.color1.withAlpha(25),
-                  ColorPallete.color1.withAlpha(13),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: ColorPallete.color1.withAlpha(51),
-                width: 1,
-              ),
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey.shade200),
             ),
-            child: Icon(
-              Icons.shopping_bag_outlined,
-              color: ColorPallete.color1,
-              size: 28,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: item.productImage != null && item.productImage!.isNotEmpty
+                  ? Image.network(
+                      item.productImage!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          Icon(Icons.image, color: Colors.grey[400]),
+                    )
+                  : Icon(Icons.image, color: Colors.grey[400]),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
+          // Details
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1184,78 +769,44 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                 Text(
                   item.productTitle,
                   style: const TextStyle(
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.w600,
+                    color: Colors.black87,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  'Quantity: ${item.quantity}',
-                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-                ),
-                const SizedBox(height: 4),
-                // Display variant details if available
-                if (item.variantId != null &&
-                    item.variantAttributes != null &&
+                // Variant info if exists
+                if (item.variantAttributes != null &&
                     item.variantAttributes!.isNotEmpty)
-                  Container(
-                    margin: const EdgeInsets.only(top: 6),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: ColorPallete.color1.withAlpha(25),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: ColorPallete.color1.withAlpha(77),
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Variant Details:',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: ColorPallete.color1,
-                          ),
-                        ),
-                        ...item.variantAttributes!.entries.map((entry) {
-                          return Text(
-                            '${entry.key}: ${entry.value}',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: ColorPallete.color1,
-                            ),
-                          );
-                        }),
-                      ],
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text(
+                      item.variantAttributes!.values.join(', '),
+                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                     ),
                   ),
-                const SizedBox(height: 4),
-                Text(
-                  '₹${item.productPrice.toStringAsFixed(2)} each',
-                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Qty: ${item.quantity}',
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    ),
+                    Text(
+                      '₹${(item.productPrice * item.quantity).toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '₹${(item.productPrice * item.quantity).toStringAsFixed(2)}',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: ColorPallete.color1,
-                ),
-              ),
-            ],
           ),
         ],
       ),
@@ -1374,7 +925,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
+  Widget _buildInfoRow(String label, String value, {bool isBold = true}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -1395,6 +946,125 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOrderActions() {
+    final status = currentOrder.status.toLowerCase();
+    final canCancel = ['confirmed', 'packed'].contains(status);
+    final canCancelWithFee = status == 'shipped';
+    final canReturnReplace = status == 'delivered';
+
+    if (!canCancel && !canCancelWithFee && !canReturnReplace) {
+      return SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withAlpha(20),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Actions',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (canCancel || canCancelWithFee)
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: isProcessing
+                    ? null
+                    : () => _showCancellationDialog(canCancelWithFee),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red[50],
+                  foregroundColor: Colors.red,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    side: BorderSide(color: Colors.red.shade200),
+                  ),
+                ),
+                child: isProcessing
+                    ? SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation(Colors.red),
+                        ),
+                      )
+                    : Text(
+                        canCancelWithFee
+                            ? 'Cancel Order (Charges Apply)'
+                            : 'Cancel Order',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+              ),
+            ),
+          if (canReturnReplace) ...[
+            if (eligibleReturnItems.isEmpty && eligibleReplacementItems.isEmpty)
+              Text(
+                'No eligible items for return/replace',
+                style: TextStyle(color: Colors.grey),
+              )
+            else
+              Row(
+                children: [
+                  if (eligibleReturnItems.isNotEmpty)
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => _showReturnDialog(),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.black87,
+                          side: BorderSide(color: Colors.grey.shade300),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text('Return'),
+                      ),
+                    ),
+                  if (eligibleReturnItems.isNotEmpty &&
+                      eligibleReplacementItems.isNotEmpty)
+                    const SizedBox(width: 12),
+                  if (eligibleReplacementItems.isNotEmpty)
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => _showReplacementDialog(),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.black87,
+                          side: BorderSide(color: Colors.grey.shade300),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text('Replace'),
+                      ),
+                    ),
+                ],
+              ),
+          ],
         ],
       ),
     );
@@ -1451,86 +1121,6 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
     }
   }
 
-  Future<String> _fetchExpectedDeliveryDate() async {
-    try {
-      print('=== Delivery Date Debug ===');
-      int? maxDeliveryDays;
-      bool foundValidDeliveryTime = false;
-
-      // Get all unique product IDs from order items
-      final productIds = currentOrder.items
-          .map((item) => item.productId)
-          .toSet();
-      print('Product IDs: $productIds');
-
-      // Fetch delivery times for all products
-      for (final productId in productIds) {
-        print('Fetching product with productId: $productId');
-        final productQuery = await FirebaseFirestore.instance
-            .collection('products')
-            .where('pid', isEqualTo: productId)
-            .limit(1)
-            .get();
-
-        if (productQuery.docs.isNotEmpty) {
-          final productDoc = productQuery.docs.first;
-          final data = productDoc.data();
-          print('Product found. Firebase ID: ${productDoc.id}');
-          print('Product exists. All fields: ${data.keys.toList()}');
-
-          // Get the delivery time from the correct field
-          String? deliveryTimeStr = data['deliveryTime'] as String?;
-          print('deliveryTime field value: $deliveryTimeStr');
-
-          if (deliveryTimeStr != null && deliveryTimeStr.isNotEmpty) {
-            // Parse delivery time string (e.g., "3days", "5days")
-            final daysMatch = RegExp(r'(\d+)').firstMatch(deliveryTimeStr);
-            if (daysMatch != null) {
-              final days = int.tryParse(daysMatch.group(1)!);
-              if (days != null) {
-                print('Parsed $days days from "$deliveryTimeStr"');
-                foundValidDeliveryTime = true;
-                // Use the maximum delivery time among all products
-                if (maxDeliveryDays == null || days > maxDeliveryDays) {
-                  maxDeliveryDays = days;
-                }
-              } else {
-                print('Failed to parse number from: ${daysMatch.group(1)}');
-              }
-            } else {
-              print(
-                'No number found in delivery time string: $deliveryTimeStr',
-              );
-            }
-          } else {
-            print('deliveryTime field is null or empty for product $productId');
-          }
-        } else {
-          print('Product document does not exist: $productId');
-        }
-      }
-
-      print('Found valid delivery time: $foundValidDeliveryTime');
-      print('Max delivery days: $maxDeliveryDays');
-
-      if (foundValidDeliveryTime && maxDeliveryDays != null) {
-        final expectedDate = currentOrder.orderDate.add(
-          Duration(days: maxDeliveryDays),
-        );
-        final formattedDate = _formatDateOnly(expectedDate);
-        print('Calculated expected delivery: $formattedDate');
-        return formattedDate;
-      } else {
-        print('No valid delivery time found in any product');
-        return 'Delivery time not available';
-      }
-    } catch (e, stackTrace) {
-      print('Error fetching delivery dates: $e');
-      print('Stack trace: $stackTrace');
-      return 'Error calculating delivery date';
-    }
-  }
-
   String _formatDateTime(DateTime dateTime) {
     const months = [
       'Jan',
@@ -1548,25 +1138,6 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
     ];
 
     return '${dateTime.day} ${months[dateTime.month - 1]} ${dateTime.year}, ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
-  }
-
-  String _formatDateOnly(DateTime dateTime) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-
-    return '${dateTime.day} ${months[dateTime.month - 1]} ${dateTime.year}';
   }
 
   void _showCancellationDialog(bool hasCharges) {
@@ -1736,30 +1307,117 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
   }
 
   void _showReturnDialog() {
-    String reason = '';
+    if (eligibleReturnItems.isEmpty) return;
+
+    final List<String> returnReasons = [
+      'Defective/Damaged',
+      'Wrong Item Received',
+      'Item Missing',
+      'Quality Not As Expected',
+      'Size/Fit Issue',
+      'Other',
+    ];
+
+    // Initially select all eligible items
+    final Set<OrderItem> selectedItems = Set.from(eligibleReturnItems);
+    String? selectedReasonCategory;
+    String detailedReason = '';
+
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
           title: const Text('Return Request'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Please provide a reason for the return:'),
-              const SizedBox(height: 12),
-              TextField(
-                onChanged: (value) {
-                  setState(() {
-                    reason = value;
-                  });
-                },
-                decoration: const InputDecoration(
-                  labelText: 'Return Reason',
-                  border: OutlineInputBorder(),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Select items to return:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                maxLines: 3,
-              ),
-            ],
+                const SizedBox(height: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    children: eligibleReturnItems.map((item) {
+                      final isSelected = selectedItems.contains(item);
+                      return CheckboxListTile(
+                        value: isSelected,
+                        onChanged: (bool? value) {
+                          setState(() {
+                            if (value == true) {
+                              selectedItems.add(item);
+                            } else {
+                              selectedItems.remove(item);
+                            }
+                          });
+                        },
+                        title: Text(
+                          item.productTitle,
+                          style: const TextStyle(fontSize: 14),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        controlAffinity: ListTileControlAffinity.leading,
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        activeColor: Colors.blue,
+                      );
+                    }).toList(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Reason for Return:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
+                  ),
+                  hint: const Text('Select a reason'),
+                  value: selectedReasonCategory,
+                  items: returnReasons.map((String reason) {
+                    return DropdownMenuItem<String>(
+                      value: reason,
+                      child: Text(reason, style: const TextStyle(fontSize: 14)),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      selectedReasonCategory = newValue;
+                    });
+                  },
+                ),
+                if (selectedReasonCategory != null) ...[
+                  const SizedBox(height: 16),
+                  const Text('Additional Comments:'),
+                  const SizedBox(height: 8),
+                  TextField(
+                    onChanged: (value) {
+                      setState(() {
+                        detailedReason = value;
+                      });
+                    },
+                    decoration: const InputDecoration(
+                      hintText: 'Describe the issue in detail...',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 3,
+                  ),
+                ],
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -1767,13 +1425,17 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: reason.trim().isEmpty
+              onPressed: selectedItems.isEmpty || selectedReasonCategory == null
                   ? null
                   : () {
                       Navigator.pop(context);
-                      _submitReturnRequest(reason);
+                      _submitReturnRequest(
+                        selectedItems.toList(),
+                        selectedReasonCategory!,
+                        detailedReason,
+                      );
                     },
-              child: const Text('Submit Return Request'),
+              child: const Text('Submit Request'),
             ),
           ],
         ),
@@ -1782,30 +1444,116 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
   }
 
   void _showReplacementDialog() {
-    String reason = '';
+    if (eligibleReplacementItems.isEmpty) return;
+
+    final List<String> replacementReasons = [
+      'Defective/Damaged',
+      'Wrong Item Received',
+      'Item Missing',
+      'Quality Not As Expected',
+      'Other',
+    ];
+
+    // Initially select all eligible items
+    final Set<OrderItem> selectedItems = Set.from(eligibleReplacementItems);
+    String? selectedReasonCategory;
+    String detailedReason = '';
+
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
           title: const Text('Replacement Request'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Please provide a reason for the replacement:'),
-              const SizedBox(height: 12),
-              TextField(
-                onChanged: (value) {
-                  setState(() {
-                    reason = value;
-                  });
-                },
-                decoration: const InputDecoration(
-                  labelText: 'Replacement Reason',
-                  border: OutlineInputBorder(),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Select items to replace:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                maxLines: 3,
-              ),
-            ],
+                const SizedBox(height: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    children: eligibleReplacementItems.map((item) {
+                      final isSelected = selectedItems.contains(item);
+                      return CheckboxListTile(
+                        value: isSelected,
+                        onChanged: (bool? value) {
+                          setState(() {
+                            if (value == true) {
+                              selectedItems.add(item);
+                            } else {
+                              selectedItems.remove(item);
+                            }
+                          });
+                        },
+                        title: Text(
+                          item.productTitle,
+                          style: const TextStyle(fontSize: 14),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        controlAffinity: ListTileControlAffinity.leading,
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        activeColor: Colors.blue,
+                      );
+                    }).toList(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Reason for Replacement:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
+                  ),
+                  hint: const Text('Select a reason'),
+                  value: selectedReasonCategory,
+                  items: replacementReasons.map((String reason) {
+                    return DropdownMenuItem<String>(
+                      value: reason,
+                      child: Text(reason, style: const TextStyle(fontSize: 14)),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      selectedReasonCategory = newValue;
+                    });
+                  },
+                ),
+                if (selectedReasonCategory != null) ...[
+                  const SizedBox(height: 16),
+                  const Text('Additional Comments:'),
+                  const SizedBox(height: 8),
+                  TextField(
+                    onChanged: (value) {
+                      setState(() {
+                        detailedReason = value;
+                      });
+                    },
+                    decoration: const InputDecoration(
+                      hintText: 'Describe the issue in detail...',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 3,
+                  ),
+                ],
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -1813,13 +1561,17 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: reason.trim().isEmpty
+              onPressed: selectedItems.isEmpty || selectedReasonCategory == null
                   ? null
                   : () {
                       Navigator.pop(context);
-                      _submitReplacementRequest(reason);
+                      _submitReplacementRequest(
+                        selectedItems.toList(),
+                        selectedReasonCategory!,
+                        detailedReason,
+                      );
                     },
-              child: const Text('Submit Replacement Request'),
+              child: const Text('Submit Request'),
             ),
           ],
         ),
@@ -1922,7 +1674,11 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
     }
   }
 
-  Future<void> _submitReturnRequest(String reason) async {
+  Future<void> _submitReturnRequest(
+    List<OrderItem> items,
+    String category,
+    String comments,
+  ) async {
     try {
       // Validate order ID
       if (currentOrder.orderId.isEmpty) {
@@ -1932,6 +1688,29 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
       print(
         'Submitting return request for order: ${currentOrder.orderId}',
       ); // Debug log
+
+      // Create return request document
+      await FirebaseFirestore.instance.collection('return_requests').add({
+        'orderId': currentOrder.orderId,
+        'customerEmail': currentOrder.customerEmail,
+        'reasonCategory': category,
+        'reasonDetails': comments,
+        'requestType': 'return',
+        'status': 'pending',
+        'requestDate': Timestamp.now(),
+        'items': items
+            .map(
+              (item) => {
+                'productId': item.productId,
+                'productTitle': item.productTitle,
+                'quantity': item.quantity,
+                'price': item.productPrice,
+                'variantId': item.variantId,
+                'variantAttributes': item.variantAttributes,
+              },
+            )
+            .toList(),
+      });
 
       // Update order status to 'Request for Return'
       await FirebaseFirestore.instance
@@ -1943,42 +1722,50 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
           });
 
       // Update local state
-      setState(() {
-        currentOrder = Order(
-          orderId: currentOrder.orderId,
-          userId: currentOrder.userId,
-          customerEmail: currentOrder.customerEmail,
-          customerName: currentOrder.customerName,
-          items: currentOrder.items,
-          totalAmount: currentOrder.totalAmount,
-          paymentMethod: currentOrder.paymentMethod,
-          orderDate: currentOrder.orderDate,
-          status: 'Request for Return',
-          shippingAddress: currentOrder.shippingAddress,
-          sellerIds: currentOrder.sellerIds,
-          lastUpdated: DateTime.now(),
-        );
-      });
+      if (mounted) {
+        setState(() {
+          currentOrder = Order(
+            orderId: currentOrder.orderId,
+            userId: currentOrder.userId,
+            customerEmail: currentOrder.customerEmail,
+            customerName: currentOrder.customerName,
+            items: currentOrder.items,
+            totalAmount: currentOrder.totalAmount,
+            paymentMethod: currentOrder.paymentMethod,
+            orderDate: currentOrder.orderDate,
+            status: 'Request for Return',
+            shippingAddress: currentOrder.shippingAddress,
+            sellerIds: currentOrder.sellerIds,
+            lastUpdated: DateTime.now(),
+          );
+        });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Return request submitted successfully'),
-          backgroundColor: Colors.green,
-        ),
-      );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Return request submitted successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
     } catch (e) {
       print('Error submitting return request: $e'); // Debug logging
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to submit return request: ${e.toString()}'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 5),
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to submit return request: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 5),
+          ),
+        );
+      }
     }
   }
 
-  Future<void> _submitReplacementRequest(String reason) async {
+  Future<void> _submitReplacementRequest(
+    List<OrderItem> items,
+    String category,
+    String comments,
+  ) async {
     try {
       // Validate order ID
       if (currentOrder.orderId.isEmpty) {
@@ -1993,11 +1780,12 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
       await FirebaseFirestore.instance.collection('replacement_requests').add({
         'orderId': currentOrder.orderId,
         'customerEmail': currentOrder.customerEmail,
-        'reason': reason,
+        'reasonCategory': category,
+        'reasonDetails': comments,
         'requestType': 'replacement',
         'status': 'pending',
         'requestDate': Timestamp.now(),
-        'items': currentOrder.items
+        'items': items
             .map(
               (item) => {
                 'productId': item.productId,
@@ -2021,148 +1809,100 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
           });
 
       // Update local state
-      setState(() {
-        currentOrder = Order(
-          orderId: currentOrder.orderId,
-          userId: currentOrder.userId,
-          customerEmail: currentOrder.customerEmail,
-          customerName: currentOrder.customerName,
-          items: currentOrder.items,
-          totalAmount: currentOrder.totalAmount,
-          paymentMethod: currentOrder.paymentMethod,
-          orderDate: currentOrder.orderDate,
-          status: 'Request for Replacement',
-          shippingAddress: currentOrder.shippingAddress,
-          sellerIds: currentOrder.sellerIds,
-          lastUpdated: DateTime.now(),
-        );
-      });
+      if (mounted) {
+        setState(() {
+          currentOrder = Order(
+            orderId: currentOrder.orderId,
+            userId: currentOrder.userId,
+            customerEmail: currentOrder.customerEmail,
+            customerName: currentOrder.customerName,
+            items: currentOrder.items,
+            totalAmount: currentOrder.totalAmount,
+            paymentMethod: currentOrder.paymentMethod,
+            orderDate: currentOrder.orderDate,
+            status: 'Request for Replacement',
+            shippingAddress: currentOrder.shippingAddress,
+            sellerIds: currentOrder.sellerIds,
+            lastUpdated: DateTime.now(),
+          );
+        });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Replacement request submitted successfully'),
-          backgroundColor: Colors.green,
-        ),
-      );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Replacement request submitted successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
     } catch (e) {
       print('Error submitting replacement request: $e'); // Debug logging
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Failed to submit replacement request: ${e.toString()}',
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Failed to submit replacement request: ${e.toString()}',
+            ),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 5),
           ),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 5),
-        ),
-      );
+        );
+      }
     }
   }
 
   Widget _buildInvoiceInfo() {
-    return Card(
-      elevation: 6,
-      shadowColor: Colors.purple.withAlpha(51),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Colors.white, Colors.purple.shade50.withAlpha(77)],
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withAlpha(20),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
-        ),
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Invoice Information',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue.withAlpha(10),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue.withAlpha(30)),
+            ),
+            child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.purple.withAlpha(25),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.receipt_long,
-                    color: Colors.purple.shade700,
-                    size: 22,
-                  ),
-                ),
+                Icon(Icons.info_outline, color: Colors.blue, size: 20),
                 const SizedBox(width: 12),
-                Text(
-                  'Invoice Information',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.purple.shade700,
+                Expanded(
+                  child: Text(
+                    'Invoice sent to ${currentOrder.customerEmail}',
+                    style: TextStyle(fontSize: 13, color: Colors.blue[900]),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Colors.purple.shade50, Colors.white],
-                ),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.purple.shade200, width: 1.5),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.purple.withAlpha(25),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    color: Colors.blue.shade700,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Invoice Sent Automatically',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.blue.shade800,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'A detailed PDF invoice was automatically sent to your registered email address when this order was placed.',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.blue.shade700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            _buildInfoRow('Invoice ID', 'INV-${currentOrder.orderId}'),
-            _buildInfoRow('Sent to Email', currentOrder.customerEmail),
-            _buildInfoRow(
-              'Invoice Date',
-              _formatDateTime(currentOrder.orderDate),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 12),
+          _buildInfoRow('Invoice ID', 'INV-${currentOrder.orderId}'),
+          _buildInfoRow(
+            'Invoice Date',
+            _formatDateTime(currentOrder.orderDate),
+          ),
+        ],
       ),
     );
   }

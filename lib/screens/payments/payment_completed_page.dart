@@ -5,6 +5,7 @@ import 'package:buy_app/services/order_service.dart';
 import 'package:buy_app/colorPallete/color_pallete.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'package:buy_app/models/models.dart';
 import 'package:intl/intl.dart';
 
 /// Generates a unique Order ID
@@ -54,13 +55,17 @@ class _PaymentCompletedPageState extends State<PaymentCompletedPage> {
   }
 
   Future<void> _processOrder() async {
+    final cartItems = List<CartItem>.from(
+      Cart.instance.items,
+    ); // Capture items immediately
+
     try {
       // First save the order (Must wait for this)
       await _saveOrderToDatabase();
 
       if (widget.shouldSendEmails) {
         // Send emails in background (Fire and forget)
-        _sendEmailNotifications(); // Not awaited
+        _sendEmailNotifications(cartItems); // Not awaited
       }
 
       // Clear cart immediately
@@ -118,7 +123,7 @@ class _PaymentCompletedPageState extends State<PaymentCompletedPage> {
     }
   }
 
-  Future<void> _sendEmailNotifications() async {
+  Future<void> _sendEmailNotifications(List<CartItem> cartItems) async {
     if (!_orderSaved || _orderId == null) {
       debugPrint('❌ Cannot send emails: Order not saved yet');
       return;
@@ -128,7 +133,6 @@ class _PaymentCompletedPageState extends State<PaymentCompletedPage> {
     final address = widget.address;
     final email = customer['email'] ?? '';
     final name = customer['name'] ?? 'Customer';
-    final cart = Cart.instance;
 
     try {
       debugPrint('📧 Sending confirmation email to customer...');
@@ -138,7 +142,7 @@ class _PaymentCompletedPageState extends State<PaymentCompletedPage> {
             customerEmail: email,
             customerName: name,
             shippingAddress: address,
-            orderedItems: cart.items,
+            orderedItems: cartItems, // Use captured items
             ordId: _orderId!,
             paymentMethod: widget.paymentMethod,
             txnId: widget.txnId,
@@ -150,7 +154,7 @@ class _PaymentCompletedPageState extends State<PaymentCompletedPage> {
         customerEmail: email,
         customerName: name,
         shippingAddress: address,
-        orderedItems: cart.items,
+        orderedItems: cartItems, // Use captured items
         orderId: _orderId!,
         paymentMethod: widget.paymentMethod,
         txnId: widget.txnId,
@@ -163,6 +167,7 @@ class _PaymentCompletedPageState extends State<PaymentCompletedPage> {
         ordId: _orderId!,
         paymentMethod: widget.paymentMethod,
         txnId: widget.txnId,
+        items: cartItems, // Passed required items
       );
 
       if (mounted) {
@@ -205,9 +210,9 @@ class _PaymentCompletedPageState extends State<PaymentCompletedPage> {
       }
     }
 
-    // Always clear the cart and navigate
-    cart.clear();
-    debugPrint('🛒 Cart cleared. Items count: ${cart.items.length}');
+    // Always clear the cart (redundant but safe) and navigate
+    // Cart is already cleared in _processOrder, but we can verify
+    // debugPrint('🛒 Cart cleared. Items count: ${cart.items.length}'); // cart variable removed
 
     // Navigate away after delay
     if (mounted) {

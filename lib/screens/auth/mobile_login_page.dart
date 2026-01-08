@@ -44,7 +44,9 @@ class _MobileLoginPageState extends State<MobileLoginPage> {
           .where('phone', isEqualTo: phone)
           .get();
 
-      debugPrint("📊 Firestore query result: ${result.docs.length} users found");
+      debugPrint(
+        "📊 Firestore query result: ${result.docs.length} users found",
+      );
 
       if (result.docs.isEmpty) {
         _showError(
@@ -64,7 +66,7 @@ class _MobileLoginPageState extends State<MobileLoginPage> {
           debugPrint("🎉 Auto verification completed!");
           try {
             await FirebaseAuth.instance.signInWithCredential(credential);
-            if(!mounted) return;
+            if (!mounted) return;
             Navigator.pushReplacementNamed(context, '/home');
           } catch (e) {
             debugPrint("❌ Auto verification failed: $e");
@@ -98,7 +100,9 @@ class _MobileLoginPageState extends State<MobileLoginPage> {
           _showError(errorMessage);
         },
         codeSent: (String verificationId, int? resendToken) {
-          debugPrint("📨 OTP sent successfully! Verification ID: $verificationId");
+          debugPrint(
+            "📨 OTP sent successfully! Verification ID: $verificationId",
+          );
           setState(() => _isSending = false);
           Navigator.pushNamed(
             context,
@@ -135,7 +139,7 @@ class _MobileLoginPageState extends State<MobileLoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: CloseButton(color: Colors.black,),
+        leading: CloseButton(color: Colors.black),
         backgroundColor: Colors.white,
       ),
       body: Padding(
@@ -151,18 +155,19 @@ class _MobileLoginPageState extends State<MobileLoginPage> {
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [
-                      ColorPallete.color1,
-                      ColorPallete.color2,
-                    ]
+                    colors: [ColorPallete.color1, ColorPallete.color2],
                   ),
                   borderRadius: BorderRadius.circular(15),
-                  border: Border.all(color: Colors.grey)
+                  border: Border.all(color: Colors.grey),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Icon(Icons.call_outlined, size: 50, color: Colors.white,),
-                )
+                  child: Icon(
+                    Icons.call_outlined,
+                    size: 50,
+                    color: Colors.white,
+                  ),
+                ),
               ),
             ),
             Padding(
@@ -198,13 +203,17 @@ class _MobileLoginPageState extends State<MobileLoginPage> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(15),
-                    borderSide: BorderSide(color: ColorPallete.color1, width: 1.5),
+                    borderSide: BorderSide(
+                      color: ColorPallete.color1,
+                      width: 1.5,
+                    ),
                   ),
                   hintText: 'Mobile',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(15),
                   ),
                 ),
+                onSubmitted: (_) => _sendOtp(),
               ),
             ),
             SizedBox(height: 50),
@@ -227,8 +236,11 @@ class _MobileLoginPageState extends State<MobileLoginPage> {
                     backgroundColor: ColorPallete.color4,
                   ),
                   onPressed: _isSending ? null : _sendOtp,
-                  child: _isSending ? CircularProgressIndicator() : Text(
-                          'Send OTP', style: TextStyle(color: Colors.white, fontSize: 18),
+                  child: _isSending
+                      ? CircularProgressIndicator()
+                      : Text(
+                          'Send OTP',
+                          style: TextStyle(color: Colors.white, fontSize: 18),
                         ),
                 ),
               ),

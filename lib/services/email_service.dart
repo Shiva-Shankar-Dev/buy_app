@@ -155,16 +155,15 @@ class EmailService {
     required String ordId,
     required String paymentMethod,
     required String txnId,
+    required List<CartItem> items,
   }) async {
-    final cart = Cart.instance;
-
-    if (cart.items.isEmpty) {
-      debugPrint("❌ No items in cart to send to sellers");
+    if (items.isEmpty) {
+      debugPrint("❌ No items to send to sellers");
       return false;
     }
 
     debugPrint(
-      "🛒 Cart items: ${cart.items.map((item) => item.product.name).toList()}",
+      "🛒 Items to notify sellers: ${items.map((item) => item.product.name).toList()}",
     );
 
     // Group cart items by seller ID (if available from a separate source)
@@ -172,7 +171,7 @@ class EmailService {
     Map<String?, List<CartItem>> itemsBySeller = {};
     int itemsWithoutSellerId = 0;
 
-    for (final item in cart.items) {
+    for (final item in items) {
       // For now, grouping all items together
       final sellerId = item.product.sellerId;
       if (itemsBySeller[sellerId] == null) {
@@ -491,9 +490,8 @@ Future<void> _sendBackgroundNotifications({
 
   // Step 4: Send customer confirmation
   try {
-    // TODO: Fix SMTP credentials on server before enabling
-    debugPrint('📧 Skipping email (server credentials not configured)');
-    /* 
+    // Step 4: Send customer confirmation
+    try {
       await EmailService.sendCustomerConfirmationEmail(
         customerEmail: customer['email'] ?? '',
         customerName: customer['name'] ?? 'Customer',
@@ -504,7 +502,9 @@ Future<void> _sendBackgroundNotifications({
         txnId: txnId,
       );
       debugPrint('✅ Customer confirmation email sent');
-      */
+    } catch (e) {
+      debugPrint('⚠️ Failed to send customer email: $e');
+    }
 
     // Send PDF invoice automatically
     await EmailService.sendOrderInvoiceEmail(
@@ -529,6 +529,7 @@ Future<void> _sendBackgroundNotifications({
       ordId: orderId,
       paymentMethod: paymentMethod,
       txnId: txnId,
+      items: cartItems,
     );
     debugPrint('✅ Seller notifications sent');
   } catch (e) {

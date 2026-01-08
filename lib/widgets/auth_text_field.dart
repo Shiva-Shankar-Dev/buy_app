@@ -48,7 +48,12 @@ class AuthTextField extends StatelessWidget {
 
 class AuthPassword extends StatefulWidget {
   final TextEditingController passwordController;
-  const AuthPassword({super.key, required this.passwordController});
+  final Function(String)? onFieldSubmitted;
+  const AuthPassword({
+    super.key,
+    required this.passwordController,
+    this.onFieldSubmitted,
+  });
 
   @override
   State<AuthPassword> createState() => _AuthPasswordState();
@@ -89,6 +94,7 @@ class _AuthPasswordState extends State<AuthPassword> {
                   : Icon(Icons.visibility_off_outlined),
             ),
           ),
+          onFieldSubmitted: widget.onFieldSubmitted,
           controller: widget.passwordController,
           validator: (value) {
             if (value == null || value.isEmpty) {
@@ -101,4 +107,3 @@ class _AuthPasswordState extends State<AuthPassword> {
     );
   }
 }
-
