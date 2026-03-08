@@ -443,7 +443,11 @@ class _HomePage extends State<HomePage> with TickerProviderStateMixin {
                             borderRadius: BorderRadius.circular(28),
                             child: Container(
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.grey[800]
+                                    : Colors.white,
                                 borderRadius: BorderRadius.circular(28),
                               ),
                               child: Padding(

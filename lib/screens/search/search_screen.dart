@@ -36,7 +36,9 @@ class _SearchScreenState extends State<SearchScreen> {
               },
               controller: _searchController,
               decoration: InputDecoration(
-                fillColor: Colors.white,
+                fillColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey[800]
+                    : Colors.white,
                 filled: true,
                 hintText: "Search",
                 prefixIcon: Icon(Icons.search),

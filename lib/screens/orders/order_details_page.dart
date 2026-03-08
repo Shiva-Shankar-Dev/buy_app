@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Order;
 import '../../services/order_service.dart';
 import '../../colorPallete/color_pallete.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class OrderDetailsPage extends StatefulWidget {
   final Order order;
@@ -397,6 +398,8 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
             ),
           ),
           const SizedBox(height: 16),
+          _buildOrderTracker().animate().fadeIn().slideY(begin: 0.2, end: 0),
+          const SizedBox(height: 24),
           _buildStatusTimeline(),
         ],
       ),
@@ -592,6 +595,167 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
           ],
         );
       }),
+    );
+  }
+
+  Widget _buildOrderTracker() {
+    final status =
+        (currentOrder.status.isEmpty ? 'confirmed' : currentOrder.status)
+            .toLowerCase();
+
+    // Map status to step index
+    // 0: Placed
+    // 1: Packed
+    // 2: Shipped
+    // 3: Delivered
+    int currentStep = 0;
+    if (status == 'confirmed' ||
+        status == 'placed' ||
+        status == 'order placed') {
+      currentStep = 0;
+    } else if (status == 'packed') {
+      currentStep = 1;
+    } else if (status == 'shipped' || status == 'out for delivery') {
+      currentStep = 2;
+    } else if ([
+      'delivered',
+      'return requested',
+      'replacement requested',
+      'return approved',
+      'replacement approved',
+    ].contains(status)) {
+      currentStep = 3;
+    } else if (status == 'cancelled') {
+      // Handle cancelled separately if needed, for now show as stuck at 0 or red
+      currentStep = -1;
+    }
+
+    final steps = [
+      {'title': 'Placed', 'icon': Icons.shopping_bag_outlined},
+      {'title': 'Packed', 'icon': Icons.inventory_2_outlined},
+      {'title': 'Shipped', 'icon': Icons.local_shipping_outlined},
+      {'title': 'Delivered', 'icon': Icons.check_circle_outline},
+    ];
+
+    if (status == 'cancelled') {
+      return Container(
+        padding: EdgeInsets.all(16),
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.red.withAlpha(20),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.red.withAlpha(50)),
+        ),
+        child: Column(
+          children: [
+            Icon(Icons.cancel, color: Colors.red, size: 40),
+            SizedBox(height: 8),
+            Text(
+              "Order Cancelled",
+              style: TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: List.generate(steps.length, (index) {
+              final step = steps[index];
+              final bool isCompleted = index <= currentStep;
+              final bool isActive = index == currentStep;
+
+              return Expanded(
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        // Left Line
+                        Expanded(
+                          child: Container(
+                            height: 3,
+                            color: index == 0
+                                ? Colors.transparent
+                                : (index <= currentStep
+                                      ? ColorPallete.color1
+                                      : Colors.grey[200]),
+                          ),
+                        ),
+                        // Icon Circle
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: isCompleted
+                                ? ColorPallete.color1
+                                : Colors.white,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isCompleted
+                                  ? ColorPallete.color1
+                                  : Colors.grey[300]!,
+                              width: 2,
+                            ),
+                            boxShadow: isActive
+                                ? [
+                                    BoxShadow(
+                                      color: ColorPallete.color1.withAlpha(60),
+                                      blurRadius: 8,
+                                      spreadRadius: 2,
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          child: Icon(
+                            step['icon'] as IconData,
+                            size: 18,
+                            color: isCompleted
+                                ? Colors.white
+                                : Colors.grey[400],
+                          ),
+                        ),
+                        // Right Line
+                        Expanded(
+                          child: Container(
+                            height: 3,
+                            color: index == steps.length - 1
+                                ? Colors.transparent
+                                : (index < currentStep
+                                      ? ColorPallete.color1
+                                      : Colors.grey[200]),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                          step['title'] as String,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: isActive
+                                ? FontWeight.bold
+                                : FontWeight.w500,
+                            color: isCompleted ? Colors.black87 : Colors.grey,
+                          ),
+                        )
+                        .animate(target: isActive ? 1 : 0)
+                        .scale(begin: Offset(1, 1), end: Offset(1.1, 1.1)),
+                  ],
+                ),
+              );
+            }),
+          ),
+        ),
+      ],
     );
   }
 

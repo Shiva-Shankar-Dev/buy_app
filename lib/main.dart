@@ -1,5 +1,6 @@
 import 'package:buy_app/splash_screen.dart';
 import 'package:buy_app/colorPallete/color_pallete.dart';
+import 'package:buy_app/services/theme_service.dart';
 import 'package:buy_app/index.dart';
 import 'package:buy_app/screens/account/account_page.dart'; // FIXED: Changed from address/account_page.dart
 import 'package:buy_app/screens/address/add_new_address.dart';
@@ -34,6 +35,8 @@ void main() async {
   } catch (e) {
     debugPrint("Firebase initialization error: $e");
   }
+
+  await ThemeService().init();
   runApp(MyApp());
 }
 
@@ -42,73 +45,104 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'SSF Shop',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.light,
-        scaffoldBackgroundColor: ColorPallete.color6,
-        appBarTheme: AppBarTheme(
-          backgroundColor: ColorPallete.color1,
-          elevation: 0,
-          titleTextStyle: TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            fontFamily: 'PlayfairDisplay',
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeService().themeMode,
+      builder: (context, themeMode, _) {
+        return MaterialApp(
+          title: 'SSF Shop',
+          debugShowCheckedModeBanner: false,
+          themeMode: themeMode,
+          theme: ThemeData(
+            brightness: Brightness.light,
+            scaffoldBackgroundColor: ColorPallete.color6,
+            appBarTheme: AppBarTheme(
+              backgroundColor: ColorPallete.color1,
+              elevation: 0,
+              titleTextStyle: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                fontFamily: 'PlayfairDisplay',
+              ),
+              toolbarHeight: 70,
+              iconTheme: IconThemeData(color: Colors.white),
+            ),
+            useMaterial3: true,
           ),
-          toolbarHeight: 70,
-          iconTheme: IconThemeData(color: Colors.white),
-        ),
-      ),
-      initialRoute: '/',
-      routes: {
-        '/': (context) => AnimatedSplashScreenWidget(),
-        '/login': (context) => LoginPage(),
-        '/signup': (context) => SignUpPage(),
-        '/home': (context) => Index(),
-        '/mobile': (context) => MobileLoginPage(),
-        '/cart': (context) => CartPage(),
-        '/add': (context) => AddPage(),
-        '/checkout': (context) => CheckoutPage(),
-        '/account': (context) => AccountPage(),
-        '/address_select': (context) => AddressSelectionPage(),
-        '/add_address': (context) => AddNewAddressPage(),
-        '/payment': (context) => PaymentPage(),
-        '/order_history': (context) => OrderHistoryPage(),
-        '/search': (context) => SearchScreen(),
-        '/results': (context) => SearchResults(query: ''),
-        //'/razorpay': (context) => RazorpayPage(),
-      },
-      onGenerateRoute: (settings) {
-        if (settings.name == '/otp') {
-          final args = settings.arguments as Map<String, dynamic>;
-          return MaterialPageRoute(
-            builder: (_) => OtpPage(
-              phone: args['phone'],
-              verificationId: args['verificationId'],
+          darkTheme: ThemeData(
+            brightness: Brightness.dark,
+            scaffoldBackgroundColor: Color(0xFF121212),
+            primaryColor: ColorPallete.color1,
+            colorScheme: ColorScheme.dark(
+              primary: ColorPallete.color1,
+              secondary: ColorPallete.color2,
+              surface: Color(0xFF1E1E1E),
+              background: Color(0xFF121212),
             ),
-          );
-        }
-        if (settings.name == '/payment_upi') {
-          final args = settings.arguments as Map<String, dynamic>;
-          return MaterialPageRoute(
-            builder: (_) => PaymentUpiPage(
-              customer: args['customer'],
-              address: args['address'],
+            appBarTheme: AppBarTheme(
+              backgroundColor: Color(0xFF1E1E1E),
+              elevation: 0,
+              titleTextStyle: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                fontFamily: 'PlayfairDisplay',
+              ),
+              toolbarHeight: 70,
+              iconTheme: IconThemeData(color: Colors.white),
             ),
-          );
-        }
-        if (settings.name == '/payment_card') {
-          final args = settings.arguments as Map<String, dynamic>;
-          return MaterialPageRoute(
-            builder: (_) => PaymentCardPage(
-              customer: args['customer'],
-              address: args['address'],
-            ),
-          );
-        }
-        return null;
+            useMaterial3: true,
+          ),
+          initialRoute: '/',
+          routes: {
+            '/': (context) => AnimatedSplashScreenWidget(),
+            '/login': (context) => LoginPage(),
+            '/signup': (context) => SignUpPage(),
+            '/home': (context) => Index(),
+            '/mobile': (context) => MobileLoginPage(),
+            '/cart': (context) => CartPage(),
+            '/add': (context) => AddPage(),
+            '/checkout': (context) => CheckoutPage(),
+            '/account': (context) => AccountPage(),
+            '/address_select': (context) => AddressSelectionPage(),
+            '/add_address': (context) => AddNewAddressPage(),
+            '/payment': (context) => PaymentPage(),
+            '/order_history': (context) => OrderHistoryPage(),
+            '/search': (context) => SearchScreen(),
+            '/results': (context) => SearchResults(query: ''),
+            //'/razorpay': (context) => RazorpayPage(),
+          },
+          onGenerateRoute: (settings) {
+            if (settings.name == '/otp') {
+              final args = settings.arguments as Map<String, dynamic>;
+              return MaterialPageRoute(
+                builder: (_) => OtpPage(
+                  phone: args['phone'],
+                  verificationId: args['verificationId'],
+                ),
+              );
+            }
+            if (settings.name == '/payment_upi') {
+              final args = settings.arguments as Map<String, dynamic>;
+              return MaterialPageRoute(
+                builder: (_) => PaymentUpiPage(
+                  customer: args['customer'],
+                  address: args['address'],
+                ),
+              );
+            }
+            if (settings.name == '/payment_card') {
+              final args = settings.arguments as Map<String, dynamic>;
+              return MaterialPageRoute(
+                builder: (_) => PaymentCardPage(
+                  customer: args['customer'],
+                  address: args['address'],
+                ),
+              );
+            }
+            return null;
+          },
+        );
       },
     );
   }

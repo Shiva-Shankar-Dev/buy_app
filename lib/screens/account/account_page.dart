@@ -4,6 +4,7 @@ import 'package:buy_app/services/auth.dart';
 import 'package:buy_app/screens/account/saved_addresses.dart';
 import 'package:buy_app/screens/account/wishlist_page.dart'; // Add this import
 import 'package:buy_app/screens/orders/order_history.dart';
+import '../../services/theme_service.dart';
 
 class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
@@ -53,7 +54,7 @@ class _AccountPageState extends State<AccountPage> {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.grey.shade300)
+          border: Border.all(color: Colors.grey.shade300),
         ),
         child: ListTile(
           shape: RoundedRectangleBorder(
@@ -65,7 +66,11 @@ class _AccountPageState extends State<AccountPage> {
               color: (iconColor ?? ColorPallete.color1).withAlpha(10),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: iconColor ?? ColorPallete.color1, size: 24),
+            child: Icon(
+              icon,
+              color: iconColor ?? ColorPallete.color1,
+              size: 24,
+            ),
           ),
           title: Text(
             title,
@@ -165,7 +170,8 @@ class _AccountPageState extends State<AccountPage> {
                               child: _buildMenuItem(
                                 icon: Icons.receipt_long,
                                 title: 'Orders',
-                                subtitle: 'View your past orders and track current ones',
+                                subtitle:
+                                    'View your past orders and track current ones',
                                 onTap: () {
                                   Navigator.push(
                                     context,
@@ -186,7 +192,9 @@ class _AccountPageState extends State<AccountPage> {
                                 onTap: () {
                                   Navigator.push(
                                     context,
-                                    MaterialPageRoute(builder: (context) => WishlistPage()),
+                                    MaterialPageRoute(
+                                      builder: (context) => WishlistPage(),
+                                    ),
                                   );
                                 },
                               ),
@@ -215,7 +223,9 @@ class _AccountPageState extends State<AccountPage> {
                           onTap: () {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Payment Methods feature coming soon!'),
+                                content: Text(
+                                  'Payment Methods feature coming soon!',
+                                ),
                                 backgroundColor: Colors.blue,
                               ),
                             );
@@ -238,7 +248,9 @@ class _AccountPageState extends State<AccountPage> {
                           onTap: () {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Notification settings coming soon!'),
+                                content: Text(
+                                  'Notification settings coming soon!',
+                                ),
                                 backgroundColor: Colors.purple,
                               ),
                             );
@@ -372,11 +384,14 @@ class _AccountPageState extends State<AccountPage> {
             ListTile(
               leading: Icon(Icons.dark_mode),
               title: Text('Dark Mode'),
-              trailing: Switch(
-                value: false,
-                onChanged: (value) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Dark mode coming soon!')),
+              trailing: ValueListenableBuilder<ThemeMode>(
+                valueListenable: ThemeService().themeMode,
+                builder: (context, themeMode, _) {
+                  return Switch(
+                    value: themeMode == ThemeMode.dark,
+                    onChanged: (value) {
+                      ThemeService().toggleTheme();
+                    },
                   );
                 },
               ),
