@@ -54,6 +54,8 @@ dependencies:
   smooth_page_indicator: ^1.2.1
   intl: ^0.18.1
   flutter_animate: ^4.5.2
+  image_picker: ^1.2.2
+  google_generative_ai: ^0.4.7
 
 flutter_launcher_icons:
   image_path_android: "assets/Logo.png"

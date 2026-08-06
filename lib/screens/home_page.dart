@@ -3,6 +3,7 @@
 import 'package:buy_app/colorPallete/color_pallete.dart';
 import 'package:buy_app/screens/orders/product_details.dart';
 import 'package:buy_app/screens/category_page.dart';
+import 'package:buy_app/screens/orders/image_order_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:buy_app/services/auth.dart';
@@ -472,10 +473,19 @@ class _HomePage extends State<HomePage> with TickerProviderStateMixin {
                                         ),
                                       ),
                                     ),
-                                    Icon(
-                                      Icons.camera_alt_outlined,
-                                      color: Colors.grey[600],
-                                      size: 20,
+                                    GestureDetector(
+                                      onTap: () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const ImageOrderScreen(),
+                                        ),
+                                      ),
+                                      child: Icon(
+                                        Icons.camera_alt_outlined,
+                                        color: Colors.grey[600],
+                                        size: 20,
+                                      ),
                                     ),
                                   ],
                                 ),

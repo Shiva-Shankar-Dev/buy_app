@@ -31,7 +31,7 @@ class RazorpayService {
     String? name,
   }) {
     var options = {
-      'key': 'rzp_live_SOa3iEuupmTpqL',
+      'key': 'rzp_live_TMTAu3pB0PYUq7',
       // Amount is in paice (multiply by 100)
       'amount': (amount * 100).toInt(),
       'name': name ?? 'Buy App',
