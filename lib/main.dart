@@ -49,7 +49,7 @@ class MyApp extends StatelessWidget {
       valueListenable: ThemeService().themeMode,
       builder: (context, themeMode, _) {
         return MaterialApp(
-          title: 'SSF Shop',
+          title: 'BUY APP',
           debugShowCheckedModeBanner: false,
           themeMode: themeMode,
           theme: ThemeData(

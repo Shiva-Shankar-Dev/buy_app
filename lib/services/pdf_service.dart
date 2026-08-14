@@ -32,7 +32,7 @@ class PdfService {
     }
 
     try {
-      final ByteData appIconData = await rootBundle.load('AppIcon.png');
+      final ByteData appIconData = await rootBundle.load('Logo.png');
       appIconImage = pw.MemoryImage(appIconData.buffer.asUint8List());
     } catch (e) {
       // App icon loading failed, continue without it
