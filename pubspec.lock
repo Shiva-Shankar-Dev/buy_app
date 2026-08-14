@@ -776,14 +776,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.2.0"
+  package_info_plus:
+    dependency: transitive
+    description:
+      name: package_info_plus
+      sha256: "7e76fad405b3e4016cd39d08f455a4eb5199723cf594cd1b8916d47140d93017"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.2.0"
+  package_info_plus_platform_interface:
+    dependency: transitive
+    description:
+      name: package_info_plus_platform_interface
+      sha256: "9bc8ba46813a4cc42c66ab781470711781940780fd8beddd0c3da62506d3a6c6"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.1"
   page_transition:
     dependency: transitive
     description:
       name: page_transition
-      sha256: "9d2a780d7d68b53ae82fbcc43e06a16195e6775e9aae40e55dc0cbb593460f9d"
+      sha256: "61dac670e80ebdd7da847c21841e1dfd8f9ab483b3a0c5fddc877ad8d23b69ee"
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.1"
+    version: "2.2.2"
   path:
     dependency: transitive
     description:
@@ -920,6 +936,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
+  razorpay_web:
+    dependency: "direct main"
+    description:
+      name: razorpay_web
+      sha256: "9508cd61d8b8380d26053beac4b43d09b3828b05f153e6429b5eb716fd8898e0"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.4.2"
   shared_preferences:
     dependency: "direct main"
     description:
@@ -1093,6 +1117,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
+  universal_platform:
+    dependency: transitive
+    description:
+      name: universal_platform
+      sha256: "64e16458a0ea9b99260ceb5467a214c1f298d647c659af1bff6d3bf82536b1ec"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
   vector_math:
     dependency: transitive
     description:
